@@ -1,3 +1,8 @@
+logic_bazi.py
+logic_meihua.py
+logic_common.py
+hexagrams.json
+faq.json
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
