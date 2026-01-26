@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIwIDAgMjAwIDIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICAgIDxwYXRoIGQ9Ik0gMTQ1LDE5MCBMIDU1LDE5MCBBIDQ1LDQ1IDAgMCAxIDEwLDE0NSBBIDQ1LDQ1IDAgMCAwIDEwMCwxNDUgTCAxMDAsMTAwIEwgMTQ1LDEwMCBBIDQ1LDQ1IDAgMCAxIDE0NSwxOTAgWiIgZmlsbD0iI0IxQURBMSIgLz4KICAgIDxwYXRoIGQ9Ik0gNTUsMTAgTCAxNDUsMTAgQSA0NSw0NSAwIDAgMSAxNDUsMTAwIEwgMTAwLDEwMCBMIDEwMCwxNDUgQSA0NSw0NSAwIDAgMSAxMCwxNDUgTCAxMCw1NSBBIDQ1LDQ1IDAgMCAxIDU1LDEwIFoiIGZpbGw9IiNEQTc3NTYiIC8+Cjwvc3ZnPg==">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PBlossom</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/custom.css') }}">
+</head>
+<body class="bg-bg text-ink font-serif overflow-hidden h-screen w-full flex selection:bg-accent selection:text-white">
+
+<aside class="w-[80px] flex flex-col items-center py-8 border-r border-border bg-sidebar flex-shrink-0 z-20 h-full">
+    <div class="w-12 h-12 mb-12 text-accent transition-transform duration-500 cursor-default" onclick="resetToHome()">
+        <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+            <path d="M 145,190 L 55,190 A 45,45 0 0 1 10,145 A 45,45 0 0 0 100,145 L 100,100 L 145,100 A 45,45 0 0 1 145,190 Z" fill="#B1ADA1"/>
+            <path d="M 55,10 L 145,10 A 45,45 0 0 1 145,100 L 100,100 L 100,145 A 45,45 0 0 1 10,145 L 10,55 A 45,45 0 0 1 55,10 Z" fill="#DA7756"/>
+        </svg>
+    </div>
+
+    <div class="flex flex-col w-full px-4 items-center gap-4">
+        <div class="relative group w-full">
+            <button id="nav-calc" onclick="resetToHome()" class="w-full aspect-square rounded-2xl flex items-center justify-center transition-all duration-300 bg-active text-ink shadow-inner">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+            </button>
+            <div class="absolute left-full ml-3 top-1/2 -translate-y-1/2 px-3 py-1.5 bg-ink text-white text-sm rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap pointer-events-none shadow-lg z-50">
+                新占<div class="absolute right-full top-1/2 -translate-y-1/2 border-4 border-transparent border-r-ink"></div>
+            </div>
+        </div>
+
+        <div class="relative group w-full">
+            <button id="nav-history" onclick="switchTab('history')" class="w-full aspect-square rounded-2xl flex items-center justify-center transition-all duration-300 text-inkLight hover:bg-white/50">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            </button>
+            <div class="absolute left-full ml-3 top-1/2 -translate-y-1/2 px-3 py-1.5 bg-ink text-white text-sm rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap pointer-events-none shadow-lg z-50">
+                往昔<div class="absolute right-full top-1/2 -translate-y-1/2 border-4 border-transparent border-r-ink"></div>
+            </div>
+        </div>
+
+        <div class="w-8 h-[1px] bg-border/40 my-2"></div>
+
+        <div class="relative group w-full">
+            <button id="nav-calendar" onclick="switchTab('calendar')" class="w-full aspect-square rounded-2xl flex items-center justify-center transition-all duration-300 text-inkLight hover:bg-white/50">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+            </button>
+            <div class="absolute left-full ml-3 top-1/2 -translate-y-1/2 px-3 py-1.5 bg-ink text-white text-sm rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap pointer-events-none shadow-lg z-50">
+                时令<div class="absolute right-full top-1/2 -translate-y-1/2 border-4 border-transparent border-r-ink"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-auto w-full px-4">
+        <div class="relative group w-full">
+            <button id="nav-help" onclick="switchTab('help')" class="w-full aspect-square rounded-2xl flex items-center justify-center transition-all duration-300 text-inkLight hover:bg-white/50">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+            </button>
+            <div class="absolute left-full ml-3 top-1/2 -translate-y-1/2 px-3 py-1.5 bg-ink text-white text-sm rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap pointer-events-none shadow-lg z-50">
+                常见问题<div class="absolute right-full top-1/2 -translate-y-1/2 border-4 border-transparent border-r-ink"></div>
+            </div>
+        </div>
+    </div>
+</aside>
+
+<main class="flex-1 flex flex-col h-full overflow-hidden relative">
+    <div id="content-scroll" class="flex-1 overflow-y-auto no-scrollbar"></div>
+
+    <div id="bottom-input-bar" class="absolute bottom-0 left-0 w-full glass-panel z-10 p-6 md:p-8 transition-transform duration-300 ease-out translate-y-full">
+        <div class="max-w-2xl mx-auto flex items-center gap-4">
+            <div class="flex-1 relative group">
+                <input id="input-nums" type="text" placeholder="输入三个数字" class="w-full bg-transparent text-left text-2xl text-ink outline-none placeholder:text-border placeholder:font-light font-serif tracking-wide border-b border-border/50 focus:border-accent transition-all py-2" oninput="checkInput(this)" onkeydown="if(event.key === 'Enter') handleCalculate()">
+            </div>
+            <button id="btn-submit" onclick="handleCalculate()" class="text-border transition-all duration-500 opacity-50 p-2" disabled>
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+            </button>
+        </div>
+    </div>
+
+    <div id="bottom-calendar-bar" class="absolute bottom-0 left-0 w-full z-30 transition-transform duration-300 ease-out translate-y-full h-24">
+
+        <div id="bazi-btn-init" class="w-full h-full absolute top-0 left-0 transition-opacity duration-300 z-20">
+            <button onclick="toggleGenderSelect(true)" class="w-full h-full bg-accent text-white flex items-center justify-center gap-3 group hover:brightness-110 shadow-lg-up">
+                <span class="text-3xl font-serif tracking-[0.5em] font-bold pl-2">识命</span>
+                <svg class="w-8 h-8 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path></svg>
+            </button>
+        </div>
+
+        <div id="bazi-btn-select" class="w-full h-full absolute top-0 left-0 flex opacity-0 pointer-events-none transition-all duration-300 transform translate-y-full z-10 shadow-lg-up bg-active">
+            <button onclick="handleBaziAnalyze(1)" class="flex-1 h-full bg-active text-ink hover:bg-accent hover:text-white transition-all duration-300 flex flex-col items-center justify-center gap-1 border-r border-border/50 hover:border-accent group relative overflow-hidden">
+                <span class="text-2xl font-serif font-bold group-hover:scale-110 transition-transform relative z-10">乾造</span>
+                <span class="text-[10px] opacity-60 tracking-widest uppercase relative z-10 group-hover:opacity-80">Male</span>
+            </button>
+
+            <button onclick="handleBaziAnalyze(0)" class="flex-1 h-full bg-active text-ink hover:bg-accent hover:text-white transition-all duration-300 flex flex-col items-center justify-center gap-1 group relative overflow-hidden">
+                <span class="text-2xl font-serif font-bold group-hover:scale-110 transition-transform relative z-10">坤造</span>
+                <span class="text-[10px] opacity-60 tracking-widest uppercase relative z-10 group-hover:opacity-80">Female</span>
+            </button>
+        </div>
+
+    </div>
+</main>
+
+<script src="{{ url_for('static', filename='js/config.js') }}"></script>
+<script src="{{ url_for('static', filename='js/utils.js') }}"></script>
+
+<script src="{{ url_for('static', filename='js/pages/calc.js') }}"></script>
+<script src="{{ url_for('static', filename='js/pages/history.js') }}"></script>
+<script src="{{ url_for('static', filename='js/pages/help.js') }}"></script>
+<script src="{{ url_for('static', filename='js/pages/calendar.js') }}"></script>
+<script src="{{ url_for('static', filename='js/pages/bazi.js') }}"></script>
+
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+
+</body>
+</html>

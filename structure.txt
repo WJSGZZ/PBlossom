@@ -1,0 +1,26 @@
+/你的项目根目录
+│
+├── app.py                # [后端入口] 极简版，只负责路由分发
+├── logic_common.py       # [核心模块] 通用工具、常量、数据加载
+├── logic_meihua.py       # [核心模块] 梅花易数算法、卦象排盘
+├── logic_bazi.py         # [核心模块] 八字四柱算法、大运、文本报告
+├── hexagrams.json        # [数据] 卦辞数据
+├── faq.json              # [数据] 问答数据
+│
+├── templates/
+│   └── index.html        # 前端入口
+│
+└── static/
+    ├── css/
+    │   └── custom.css    # 样式
+    │
+    └── js/
+        ├── config.js     # 配置
+        ├── utils.js      # 工具
+        ├── main.js       # 主控
+        └── pages/
+            ├── calc.js       # 新卦
+            ├── history.js    # 往昔
+            ├── help.js       # 帮助
+            ├── calendar.js   # 时令
+            └── bazi.js       # 识命

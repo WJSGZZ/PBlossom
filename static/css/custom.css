@@ -1,0 +1,27 @@
+/* 自定义滚动条隐藏 */
+.no-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+
+.no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+
+/* 淡入动画 */
+@keyframes fadeInSlow {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.animate-fade-slow {
+    animation: fadeInSlow 0.3s ease-in-out forwards;
+}
+
+/* 毛玻璃效果面板 */
+.glass-panel {
+    background: rgba(245, 242, 235, 0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-top: 1px solid rgba(220, 216, 208, 0.6);
+}
