@@ -12,42 +12,42 @@ PBlossom 是一款将传统易理逻辑与现代数字化技术相结合的探�
 ## 界面展示
 <div align="center">
   <figure>
-    <img width="1080" src="https://github.com/user-attachments/assets/860e4394-89b3-42b9-a9ab-4b3498d80c05"/>
+    <img width="1280" height="667" alt="20e1bd0a98c24057866e9d809e4b9d64" src="https://github.com/user-attachments/assets/c48ebfd2-f6be-4d85-b532-fcbd5a702723" />
     <p>首页 (Index)</p>
   </figure>
 
   <figure>
-    <img width="1080" src="https://github.com/user-attachments/assets/305f8fd1-e65b-4658-87d1-b21f7e22e7ae"/>
+    <img width="1280" height="670" alt="e5c594843bebab7a37c9b308223eee94" src="https://github.com/user-attachments/assets/96dcc4ef-a9fc-4c38-a034-9b021349c6ad" />
     <p>新占 (Divination)</p>
   </figure>
 
   <figure>
-    <img width="1080" src="https://github.com/user-attachments/assets/76db4fef-513a-4a2f-8eb0-d231264c9371"/>
+    <img width="1280" height="668" alt="ea6c70e317e9f631faa4161535fe6de1" src="https://github.com/user-attachments/assets/80f34cd4-cbb1-4798-8027-d391b7f5c531" />
     <p>往昔 (History)</p>
   </figure>
 
   <figure>
-    <img width="1080" src="https://github.com/user-attachments/assets/f36ee521-74db-4990-9e28-dc99c50e397e"/>
+    <img width="1280" height="671" alt="aa8a2d8bf757f94ef5ba8331e3509cc6" src="https://github.com/user-attachments/assets/0cb75b4f-c2dc-4962-b075-f1c1a7c58c08" />
     <p>时令 (Calendar)</p>
   </figure>
 
   <figure>
-    <img width="1080" src="https://github.com/user-attachments/assets/468de40d-7ccd-40cd-ab18-c4b79fbfb8f6"/>
+    <img width="1280" height="671" alt="aa8a2d8bf757f94ef5ba8331e3509cc6" src="https://github.com/user-attachments/assets/5cc43bfb-5660-449d-a87d-b2aad60bf2f2" />
     <p>识命1 (Destiny 1)</p>
   </figure>
 
   <figure>
-    <img width="1080" src="https://github.com/user-attachments/assets/2a4584d4-13da-4dc2-aac8-aa640053f350"/>
+    <img width="1280" height="673" alt="e7caa8e085271ac39f01257747956b4b" src="https://github.com/user-attachments/assets/040cdb58-8a09-4fd1-ab0b-d0b8bd21ab54" />
     <p>识命2 (Destiny 2)</p>
   </figure>
 
   <figure>
-    <img width="1080" src="https://github.com/user-attachments/assets/15ba0c02-3416-4521-a4eb-924d9d5b7a90"/>
+    <img width="1280" height="668" alt="151e22d64aca54e6847ad6316a8cc013" src="https://github.com/user-attachments/assets/5cecefc2-ca5c-4f73-9b21-377ebaba96bf" />
     <p>识命3 (Destiny 3)</p>
   </figure>
 
   <figure>
-    <img width="1080" src="https://github.com/user-attachments/assets/336f86c4-bfd5-4835-b39a-b593cce1aac5"/>
+    <img width="1280" height="670" alt="43a24cbef9d6fbe4180c1edf39668f21" src="https://github.com/user-attachments/assets/86998fff-48e5-4b1d-bc7e-f091206f51b3" />
     <p>常见问题 (FAQ)</p>
   </figure>
 </div>
