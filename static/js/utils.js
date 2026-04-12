@@ -150,7 +150,7 @@ function renderHexagramColumn(guaData) {
     `;
 
     // 卦名使用 'gua' 模式，避免错误染色
-    const coloredName = highlightText(guaData.name, 'gua');
+    const coloredName = guaData.name;
 
     return `
         <div class="flex flex-col h-full bg-white/40 p-8 rounded-xl border border-border/60 hover:border-border transition-all duration-300 shadow-sm hover:shadow-md">

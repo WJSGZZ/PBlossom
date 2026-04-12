@@ -69,35 +69,12 @@
     <div id="bottom-input-bar" class="absolute bottom-0 left-0 w-full glass-panel z-10 p-6 md:p-8 transition-transform duration-300 ease-out translate-y-full">
         <div class="max-w-2xl mx-auto flex items-center gap-4">
             <div class="flex-1 relative group">
-                <input id="input-nums" type="text" placeholder="输入三个数字" class="w-full bg-transparent text-left text-2xl text-ink outline-none placeholder:text-border placeholder:font-light font-serif tracking-wide border-b border-border/50 focus:border-accent transition-all py-2" oninput="checkInput(this)" onkeydown="if(event.key === 'Enter') handleCalculate()">
+                <input id="input-nums" type="text" inputmode="numeric" placeholder="输入三个整数" class="w-full bg-transparent text-left text-2xl text-ink outline-none placeholder:text-inkLight placeholder:font-light font-serif tracking-wide border-b border-border/50 focus:border-accent transition-all py-2" oninput="filterIntInput(this);checkInput(this)" onkeydown="if(event.key === 'Enter') handleCalculate()">
             </div>
             <button id="btn-submit" onclick="handleCalculate()" class="text-border transition-all duration-500 opacity-50 p-2" disabled>
                 <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
             </button>
         </div>
-    </div>
-
-    <div id="bottom-calendar-bar" class="absolute bottom-0 left-0 w-full z-30 transition-transform duration-300 ease-out translate-y-full h-24">
-
-        <div id="bazi-btn-init" class="w-full h-full absolute top-0 left-0 transition-opacity duration-300 z-20">
-            <button onclick="toggleGenderSelect(true)" class="w-full h-full bg-accent text-white flex items-center justify-center gap-3 group hover:brightness-110 shadow-lg-up">
-                <span class="text-3xl font-serif tracking-[0.5em] font-bold pl-2">识命</span>
-                <svg class="w-8 h-8 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path></svg>
-            </button>
-        </div>
-
-        <div id="bazi-btn-select" class="w-full h-full absolute top-0 left-0 flex opacity-0 pointer-events-none transition-all duration-300 transform translate-y-full z-10 shadow-lg-up bg-active">
-            <button onclick="handleBaziAnalyze(1)" class="flex-1 h-full bg-active text-ink hover:bg-accent hover:text-white transition-all duration-300 flex flex-col items-center justify-center gap-1 border-r border-border/50 hover:border-accent group relative overflow-hidden">
-                <span class="text-2xl font-serif font-bold group-hover:scale-110 transition-transform relative z-10">乾造</span>
-                <span class="text-[10px] opacity-60 tracking-widest uppercase relative z-10 group-hover:opacity-80">Male</span>
-            </button>
-
-            <button onclick="handleBaziAnalyze(0)" class="flex-1 h-full bg-active text-ink hover:bg-accent hover:text-white transition-all duration-300 flex flex-col items-center justify-center gap-1 group relative overflow-hidden">
-                <span class="text-2xl font-serif font-bold group-hover:scale-110 transition-transform relative z-10">坤造</span>
-                <span class="text-[10px] opacity-60 tracking-widest uppercase relative z-10 group-hover:opacity-80">Female</span>
-            </button>
-        </div>
-
     </div>
 </main>
 
@@ -108,7 +85,6 @@
 <script src="{{ url_for('static', filename='js/pages/history.js') }}"></script>
 <script src="{{ url_for('static', filename='js/pages/help.js') }}"></script>
 <script src="{{ url_for('static', filename='js/pages/calendar.js') }}"></script>
-<script src="{{ url_for('static', filename='js/pages/bazi.js') }}"></script>
 
 <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 

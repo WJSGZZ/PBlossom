@@ -17,6 +17,17 @@ function updateBottomInputBar() {
     }
 }
 
+// 过滤非整数字符（只保留数字、逗号、空格、负号）
+function filterIntInput(el) {
+    const pos = el.selectionStart;
+    const original = el.value;
+    const filtered = original.replace(/[^\d,\s\-]/g, '');
+    if (filtered !== original) {
+        el.value = filtered;
+        el.setSelectionRange(pos - 1, pos - 1);
+    }
+}
+
 // 检查输入有效性
 function checkInput(el) {
     const btn = document.getElementById('btn-submit');
@@ -43,7 +54,7 @@ async function handleCalculate() {
     const nums = val.replace(/,/g, ',').replace(/\s+/g, ',').split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n));
 
     if (nums.length !== 3) {
-        alert("请确保输入三个数字");
+        alert("请确保输入三个整数");
         return;
     }
 
@@ -62,6 +73,7 @@ async function handleCalculate() {
         if (res.status === 'success') {
             const newRecord = { ...res.data, id: Date.now(), input_nums: nums };
             state.result = newRecord;
+            state.resultContextTab = null;
             state.history.unshift(newRecord);
             localStorage.setItem('pblossom_history', JSON.stringify(state.history));
             renderMain();
@@ -156,7 +168,7 @@ function getCalcPageHtml() {
     if (!state.result) {
         return `
             <div class="h-full flex flex-col items-center justify-center p-8 animate-fade-slow min-h-[500px]">
-                <div class="text-4xl text-ink font-serif tracking-[0.1em] mb-4 opacity-90 font-light text-center">Plum Blossom Divination</div>
+                <div class="text-5xl text-ink font-serif tracking-[0.1em] mb-4 opacity-90 font-light text-center">Plum Blossom</div>
                 <div class="text-xs text-inkLight tracking-[0.3em] uppercase opacity-50 text-center mb-12">Ancient Wisdom, Modern Elegance</div>
             </div>`;
     } else {
