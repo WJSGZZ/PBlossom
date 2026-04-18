@@ -4,9 +4,9 @@
 PBlossom 是一款将传统易理逻辑与现代数字化技术相结合的探索工具。我们致力于通过代码重构复杂的计算模型，让普通用户也能通过AI解读玄学结果，零门槛接触千年智慧。
 
 ## 开始使用
-- **本地**：https://github.com/WJSGZZ/PBlossom/releases
 - **网页**：https://pblossom.onrender.com/
 - **小程序**：微信搜索 **PBlossom**
+- **本地使用**：https://github.com/WJSGZZ/PBlossom/releases
 
 ## 功能简介
 - **新占** (Xinzhan/Divination)：实现了梅花易数起卦与逻辑分析功能，支持自动推演本、互、变三卦及其与年月日时干支的生克关系。
