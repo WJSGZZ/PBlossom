@@ -88,7 +88,23 @@ function renderMain() {
     }
 }
 
+// 将 localStorage 中旧的 ISO 格式时间戳迁移为小程序格式 MM/DD/YYYY HH:MM:SS
+function migrateTimestamps() {
+    const ISO_RE = /^(\d{4})-(\d{2})-(\d{2}) (\d{2}:\d{2}:\d{2})$/;
+    let changed = false;
+    state.history = state.history.map(r => {
+        if (r.timestamp && ISO_RE.test(r.timestamp)) {
+            const [, y, m, d, t] = r.timestamp.match(ISO_RE);
+            r = { ...r, timestamp: `${m}/${d}/${y} ${t}` };
+            changed = true;
+        }
+        return r;
+    });
+    if (changed) localStorage.setItem('pblossom_history', JSON.stringify(state.history));
+}
+
 document.addEventListener("DOMContentLoaded", () => {
+    migrateTimestamps();
     renderMain();
     setTimeout(() => document.getElementById("input-nums")?.focus(), 200);
 });

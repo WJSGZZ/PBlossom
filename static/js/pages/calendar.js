@@ -261,11 +261,11 @@ function renderRightPanelHtml(info) {
         
         <div class="flex-1 flex flex-col items-center justify-center z-20 py-6">
             <div class="grid grid-cols-4 gap-3 w-full">
-                <div class="flex flex-col items-center bg-white/60 py-3 rounded-2xl border border-border/20 shadow-[0_2px_10px_rgba(0,0,0,0.02)] hover:bg-white transition-all"><span class="text-[9px] text-inkLight opacity-50 mb-2 tracking-widest uppercase font-sans">Year</span><span class="text-2xl font-serif tracking-widest">${highlightText(info.gz_year)}</span><span class="text-[10px] text-ink opacity-40 mt-2 font-serif">\u5e74\u67f1</span></div>
-                <div class="flex flex-col items-center bg-white/60 py-3 rounded-2xl border border-border/20 shadow-[0_2px_10px_rgba(0,0,0,0.02)] hover:bg-white transition-all"><span class="text-[9px] text-inkLight opacity-50 mb-2 tracking-widest uppercase font-sans">Month</span><span class="text-2xl font-serif tracking-widest">${highlightText(info.gz_month)}</span><span class="text-[10px] text-ink opacity-40 mt-2 font-serif">\u6708\u67f1</span></div>
-                <div class="flex flex-col items-center bg-white/60 py-3 rounded-2xl border border-border/20 shadow-[0_2px_10px_rgba(0,0,0,0.02)] hover:bg-white transition-all"><span class="text-[9px] text-inkLight opacity-50 mb-2 tracking-widest uppercase font-sans">Day</span><span class="text-2xl font-serif tracking-widest">${highlightText(info.gz_day)}</span><span class="text-[10px] text-ink opacity-40 mt-2 font-serif">\u65e5\u67f1</span></div>
+                <div class="flex flex-col items-center bg-white/60 py-3 rounded-2xl border border-border/20 shadow-[0_2px_10px_rgba(0,0,0,0.02)] hover:bg-white transition-all duration-200"><span class="text-[9px] text-inkLight opacity-50 mb-2 tracking-widest uppercase font-sans">Year</span><span class="text-2xl font-serif tracking-widest">${highlightText(info.gz_year)}</span><span class="text-[10px] text-ink opacity-40 mt-2 font-serif">\u5e74\u67f1</span></div>
+                <div class="flex flex-col items-center bg-white/60 py-3 rounded-2xl border border-border/20 shadow-[0_2px_10px_rgba(0,0,0,0.02)] hover:bg-white transition-all duration-200"><span class="text-[9px] text-inkLight opacity-50 mb-2 tracking-widest uppercase font-sans">Month</span><span class="text-2xl font-serif tracking-widest">${highlightText(info.gz_month)}</span><span class="text-[10px] text-ink opacity-40 mt-2 font-serif">\u6708\u67f1</span></div>
+                <div class="flex flex-col items-center bg-white/60 py-3 rounded-2xl border border-border/20 shadow-[0_2px_10px_rgba(0,0,0,0.02)] hover:bg-white transition-all duration-200"><span class="text-[9px] text-inkLight opacity-50 mb-2 tracking-widest uppercase font-sans">Day</span><span class="text-2xl font-serif tracking-widest">${highlightText(info.gz_day)}</span><span class="text-[10px] text-ink opacity-40 mt-2 font-serif">\u65e5\u67f1</span></div>
                 
-                <div id="hour-card" class="relative flex flex-col items-center bg-white/60 py-3 rounded-2xl border border-border/20 shadow-[0_2px_10px_rgba(0,0,0,0.02)] hover:bg-white hover:border-accent/40 transition-all cursor-pointer group" onclick="toggleHourPicker(event)">
+                <div id="hour-card" class="relative flex flex-col items-center bg-white/60 py-3 rounded-2xl border border-border/20 shadow-[0_2px_10px_rgba(0,0,0,0.02)] hover:bg-white hover:border-accent/40 transition-all duration-200 cursor-pointer group" onclick="toggleHourPicker(event)">
                     <span class="text-[9px] text-inkLight opacity-50 mb-2 tracking-widest uppercase font-sans">Hour</span>
                     <span id="hour-display" class="text-2xl font-serif tracking-widest text-inkLight/30"><span class="font-bold">\u672a\u9009</span></span>
                     <span id="hour-label" class="text-[10px] text-ink opacity-40 mt-2 font-serif">\u65f6\u67f1</span>
@@ -278,7 +278,7 @@ function renderRightPanelHtml(info) {
                             return CALENDAR_ZHI_LIST.map((zhi, idx) => {
                                 const ganIdx = (startIdx + idx) % 10;
                                 const hourGZ = CALENDAR_GAN_LIST[ganIdx] + zhi;
-                                return `<li onclick="selectHour(${idx}); event.stopPropagation();" class="px-5 py-3 cursor-pointer transition-colors text-ink hover:bg-accent/5"><div class="flex items-center justify-between"><span class="font-serif text-lg">${highlightText(hourGZ)}</span><span class="text-[10px] opacity-50 font-sans">${zhi}\u65f6 ${CALENDAR_TIME_RANGES[idx]}</span></div></li>`;
+                                return `<li onclick="selectHour(${idx}); event.stopPropagation();" class="px-5 py-3 cursor-pointer transition-all duration-200 text-ink hover:bg-accent/5"><div class="flex items-center justify-between"><span class="font-serif text-lg">${highlightText(hourGZ)}</span><span class="text-[10px] opacity-50 font-sans">${zhi}\u65f6 ${CALENDAR_TIME_RANGES[idx]}</span></div></li>`;
                             }).join("");
                         })()}
                         </ul>
@@ -317,32 +317,34 @@ function getCalendarPageHtml() {
     const rightPanelContent = renderRightPanelHtml(state.calendar.selectedData);
 
     return `
-        <div class="p-8 lg:p-16 animate-fade-slow pb-6 h-full flex flex-col relative">
-            <div class="absolute top-8 right-8 group z-20">
-                <button id="calendar-copy-btn" onclick="handleCopyCalendarInfo()" class="text-inkLight hover:text-accent transition-colors p-2 rounded-full hover:bg-white/50">
-                    ${ICONS.copy}
-                </button>
-                <div id="calendar-copy-label" class="absolute top-full left-1/2 -translate-x-1/2 mt-2 px-3 py-1.5 bg-ink text-white text-sm rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap pointer-events-none shadow-lg z-50">
-                    \u590d\u5236
-                    <div class="absolute bottom-full left-1/2 -translate-x-1/2 border-4 border-transparent border-b-ink"></div>
+        <div class="p-8 lg:p-16 animate-fade-slow pb-6 h-full flex flex-col">
+            <div class="flex items-end justify-between border-b border-border/30 pb-4 mb-12">
+                <h2 class="text-3xl font-light text-ink tracking-wider">\u65f6\u4ee4</h2>
+                <div class="relative group">
+                    <button id="calendar-copy-btn" onclick="handleCopyCalendarInfo()" class="w-9 h-9 flex items-center justify-center rounded-xl text-inkLight hover:text-ink hover:bg-white/60 transition-all duration-200">
+                        ${ICONS.copy}
+                    </button>
+                    <div id="calendar-copy-label" class="absolute top-full left-1/2 -translate-x-1/2 mt-2 px-3 py-1.5 bg-ink text-white text-sm rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap pointer-events-none shadow-lg z-50">
+                        \u590d\u5236
+                        <div class="absolute bottom-full left-1/2 -translate-x-1/2 border-4 border-transparent border-b-ink"></div>
+                    </div>
                 </div>
             </div>
-            <h2 class="text-3xl font-light text-ink mb-12 tracking-wider border-b border-border/30 pb-4">\u65f6\u4ee4</h2>
             <div class="flex flex-col lg:flex-row gap-8 max-w-[1000px] mx-auto w-full lg:h-[420px]">
                 <div class="w-full max-w-[360px] flex-shrink-0 mx-auto lg:mx-0 relative z-10 flex flex-col h-[420px]">
                     <div class="flex justify-between items-center mb-6 px-2">
-                        <button onclick="changeMonth(-1)" class="p-2 hover:bg-white/50 rounded-full text-inkLight transition-colors"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg></button>
+                        <button onclick="changeMonth(-1)" class="w-9 h-9 flex items-center justify-center rounded-xl text-inkLight hover:text-ink hover:bg-white/60 transition-all duration-200"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg></button>
                         <div class="flex items-center gap-3">
                             <div class="relative">
-                                <div onclick="toggleYearMenu(event)" class="flex items-center justify-between w-[110px] bg-white/40 hover:bg-white/70 border border-border/30 rounded-lg shadow-sm px-3 py-1 cursor-pointer transition-colors group select-none"><span id="cal-year-text" class="font-serif text-lg text-ink tracking-widest">${year}\u5e74</span><div class="text-inkLight group-hover:text-accent transition-colors"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></div></div>
+                                <div onclick="toggleYearMenu(event)" class="flex items-center justify-between w-[110px] bg-white/40 hover:bg-white/70 border border-border/30 rounded-lg shadow-sm px-3 py-1 cursor-pointer transition-all duration-200 group select-none"><span id="cal-year-text" class="font-serif text-lg text-ink tracking-widest">${year}\u5e74</span><div class="text-inkLight group-hover:text-accent transition-all duration-200"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></div></div>
                                 <div id="year-dropdown-menu" class="hidden absolute top-full left-0 mt-2 w-full max-h-[240px] overflow-y-auto bg-white/90 backdrop-blur-xl border border-border/50 rounded-lg shadow-xl z-50 text-sm no-scrollbar"><ul id="year-list-ul">${yearListHtml}</ul></div>
                             </div>
                             <div class="relative">
-                                <div onclick="toggleMonthMenu(event)" class="flex items-center justify-between w-[90px] bg-white/40 hover:bg-white/70 border border-border/30 rounded-lg shadow-sm px-3 py-1 cursor-pointer transition-colors group select-none"><span id="cal-month-text" class="font-serif text-lg text-ink tracking-widest">${month + 1}\u6708</span><div class="text-inkLight group-hover:text-accent transition-colors"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></div></div>
+                                <div onclick="toggleMonthMenu(event)" class="flex items-center justify-between w-[90px] bg-white/40 hover:bg-white/70 border border-border/30 rounded-lg shadow-sm px-3 py-1 cursor-pointer transition-all duration-200 group select-none"><span id="cal-month-text" class="font-serif text-lg text-ink tracking-widest">${month + 1}\u6708</span><div class="text-inkLight group-hover:text-accent transition-all duration-200"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></div></div>
                                 <div id="month-dropdown-menu" class="hidden absolute top-full left-0 mt-2 w-full max-h-[240px] overflow-y-auto bg-white/90 backdrop-blur-xl border border-border/50 rounded-lg shadow-xl z-50 text-sm no-scrollbar"><ul id="month-list-ul">${monthListHtml}</ul></div>
                             </div>
                         </div>
-                        <button onclick="changeMonth(1)" class="p-2 hover:bg-white/50 rounded-full text-inkLight transition-colors"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg></button>
+                        <button onclick="changeMonth(1)" class="w-9 h-9 flex items-center justify-center rounded-xl text-inkLight hover:text-ink hover:bg-white/60 transition-all duration-200"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg></button>
                     </div>
                     <div class="grid grid-cols-7 gap-2 mb-2 text-center pb-2">${weekDays.map((d) => `<div class="text-xs text-inkLight opacity-40 py-1 font-sans">${d}</div>`).join("")}</div>
                     <div id="cal-grid-container" class="grid grid-cols-7 gap-3 content-start relative z-0 h-[280px]">${gridContent}</div>

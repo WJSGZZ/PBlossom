@@ -1,5 +1,14 @@
 // static/js/utils.js
 
+function showToast(msg, duration = 1500) {
+    const el = document.getElementById('web-toast');
+    if (!el) return;
+    el.textContent = msg;
+    el.style.opacity = '1';
+    clearTimeout(el._timer);
+    el._timer = setTimeout(() => { el.style.opacity = '0'; }, duration);
+}
+
 // ==================================================================================
 // 工具函数 (Utilities)
 // ==================================================================================

@@ -78,6 +78,9 @@
     </div>
 </main>
 
+<div id="web-toast" class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 px-5 py-3 bg-ink text-white text-sm rounded-xl shadow-xl pointer-events-none opacity-0 transition-opacity duration-200 whitespace-nowrap font-serif tracking-wide"></div>
+<input id="import-file-input" type="file" accept=".txt" class="hidden" onchange="handleImportFile(this)">
+
 <script src="{{ url_for('static', filename='js/config.js') }}"></script>
 <script src="{{ url_for('static', filename='js/utils.js') }}"></script>
 

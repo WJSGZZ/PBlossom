@@ -183,21 +183,24 @@ function getCalcPageHtml() {
         const cleanGanzhi = data.ganzhi_str.replace(/[年月日时]/g, '');
 
         return `
-            <div class="p-8 lg:p-12 animate-fade-slow pb-6 relative">
-                
-                <div class="absolute top-8 right-8 group z-20">
-                    <button onclick="handleExport()" class="text-inkLight hover:text-accent transition-colors p-2 rounded-full hover:bg-white/50">
-                        ${ICONS.export}
-                    </button>
-                    <div class="absolute top-full left-1/2 -translate-x-1/2 mt-2 px-3 py-1.5 bg-ink text-white text-sm rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap pointer-events-none shadow-lg z-50">
-                        导出
-                        <div class="absolute bottom-full left-1/2 -translate-x-1/2 border-4 border-transparent border-b-ink"></div>
-                    </div>
-                </div>
+            <div class="p-8 lg:p-12 animate-fade-slow pb-6">
 
-                <div class="max-w-[1600px] mx-auto mb-6 pb-4 border-b border-border/60 px-4">
-                    <div class="text-xs text-inkLight mb-1 tracking-widest opacity-60">起卦时间: ${data.timestamp}</div>
-                    <div class="text-2xl font-light text-ink tracking-wide whitespace-nowrap mb-2">${colorizeGanZhi(cleanGanzhi)}</div>
+                <div class="max-w-[1600px] mx-auto mb-6 pb-4 border-b border-border/30 px-4">
+                    <div class="flex items-end justify-between mb-3">
+                        <div>
+                            <div class="text-xs text-inkLight mb-1 tracking-widest opacity-60">起卦时间: ${data.timestamp}</div>
+                            <div class="text-2xl font-light text-ink tracking-wide whitespace-nowrap">${colorizeGanZhi(cleanGanzhi)}</div>
+                        </div>
+                        <div class="relative group flex-shrink-0 ml-4">
+                            <button onclick="handleExport()" class="w-9 h-9 flex items-center justify-center rounded-xl text-inkLight hover:text-ink hover:bg-white/60 transition-all duration-200">
+                                ${ICONS.export}
+                            </button>
+                            <div class="absolute top-full left-1/2 -translate-x-1/2 mt-2 px-3 py-1.5 bg-ink text-white text-sm rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap pointer-events-none shadow-lg z-50">
+                                导出
+                                <div class="absolute bottom-full left-1/2 -translate-x-1/2 border-4 border-transparent border-b-ink"></div>
+                            </div>
+                        </div>
+                    </div>
                     <div class="w-full md:max-w-[160px] group relative">
                         <div class="flex items-center">
                             <span class="text-accent font-serif font-bold text-sm mr-2 select-none whitespace-nowrap opacity-80">注:</span>

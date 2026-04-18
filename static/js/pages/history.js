@@ -1,13 +1,80 @@
 // static/js/pages/history.js
 
-// 加载历史记录
+// 导入 txt 文件
+function tapImport() {
+    const input = document.getElementById('import-file-input');
+    if (input) {
+        input.value = '';  // 允许重复选同一文件
+        input.click();
+    }
+}
+
+function handleImportFile(input) {
+    const file = input.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const text = e.target.result;
+        const numsMatch = text.match(/数字[：:]\s*(\d+)\s+(\d+)\s+(\d+)/);
+        const timeMatch = text.match(/起卦时间[：:]\s*(.+)/);
+        const ganzhiMatch = text.match(/四柱八字[：:]\s*(.+)/);
+        const noteMatch = text.match(/【备注】[：:]\s*(.+)/);
+
+        if (!numsMatch || !timeMatch || !ganzhiMatch) {
+            showToast('格式无法识别');
+            return;
+        }
+
+        const [n1, n2, n3] = [numsMatch[1], numsMatch[2], numsMatch[3]];
+        const timestamp = timeMatch[1].trim();
+        const note = noteMatch ? noteMatch[1].trim() : '';
+
+        fetch('/api/divine', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ n1, n2, n3, timestamp })
+        })
+        .then(r => r.json())
+        .then(res => {
+            if (res.status === 'success') {
+                const record = { ...res.data, id: Date.now(), input_nums: [Number(n1), Number(n2), Number(n3)], note };
+                state.history.unshift(record);
+                localStorage.setItem('pblossom_history', JSON.stringify(state.history));
+                renderMain();
+                showToast('导入成功');
+            } else {
+                showToast('格式无法识别');
+            }
+        })
+        .catch(() => showToast('导入失败，请重试'));
+    };
+    reader.onerror = function() { showToast('文件读取失败'); };
+    reader.readAsText(file, 'utf-8');
+}
+
+// 加载历史记录（每次重新计算）
 function loadRecord(id) {
     const record = state.history.find(r => r.id === id);
-    if (record) {
-        state.result = record;
-        state.resultContextTab = 'history';
-        renderMain();
-    }
+    if (!record) return;
+
+    const [n1, n2, n3] = record.input_nums;
+    fetch('/api/divine', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ n1, n2, n3, timestamp: record.timestamp })
+    })
+    .then(r => r.json())
+    .then(res => {
+        if (res.status === 'success') {
+            const recalculated = { ...res.data, id: record.id, input_nums: record.input_nums, note: record.note || '' };
+            const idx = state.history.findIndex(r => r.id === id);
+            if (idx !== -1) state.history[idx] = recalculated;
+            state.result = recalculated;
+            state.resultContextTab = 'history';
+            renderMain();
+        }
+    });
 }
 
 // 删除记录
@@ -36,9 +103,9 @@ function deleteRecord(event, btn, id) {
         btn.dataset.status = 'confirm';
         window.activeDeleteId = id;
         btn.innerHTML = `<span style="font-size:11px;font-weight:700;color:#dc2626;line-height:1">确认</span>`;
-        btn.className = "delete-btn-tag peer rounded-lg bg-red-50 ring-1 ring-red-200 opacity-100 cursor-pointer transition-all flex items-center justify-center";
-        btn.style.width = '28px';
-        btn.style.height = '28px';
+        btn.className = "delete-btn-tag peer w-9 h-9 rounded-xl bg-red-50 ring-1 ring-red-200 opacity-100 cursor-pointer transition-all duration-200 flex items-center justify-center";
+        btn.style.width = '';
+        btn.style.height = '';
 
         if (window._deleteLeaveHandler && window._deleteLeaveBtn) {
             window._deleteLeaveBtn.removeEventListener('mouseleave', window._deleteLeaveHandler);
@@ -65,9 +132,9 @@ function resetDeleteBtnUI(id) {
             btn.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>`;
 
             // [关键修改] 恢复 'peer' 类
-            btn.className = "delete-btn-tag peer rounded-lg text-inkLight hover:text-red-600 hover:bg-red-50/50 transition-colors flex items-center justify-center";
-            btn.style.width = '28px';
-            btn.style.height = '28px';
+            btn.className = "delete-btn-tag peer rounded-xl text-inkLight hover:text-red-500 hover:bg-red-50/50 transition-all duration-200 flex items-center justify-center";
+            btn.style.width = '36px';
+            btn.style.height = '36px';
         }
     }
 }
@@ -90,7 +157,7 @@ function getHistoryPageHtml() {
 
                     <div class="absolute top-3 right-3 z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
                         <div class="relative">
-                            <button onclick="deleteRecord(event, this, ${record.id})" class="delete-btn-tag peer rounded-lg text-inkLight hover:text-red-500 hover:bg-red-50/50 transition-colors flex items-center justify-center" style="width:28px;height:28px">
+                            <button onclick="deleteRecord(event, this, ${record.id})" class="delete-btn-tag peer w-9 h-9 rounded-xl text-inkLight hover:text-red-500 hover:bg-red-50/50 transition-all duration-200 flex items-center justify-center">
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                             </button>
                             <div class="absolute top-full left-1/2 -translate-x-1/2 mt-2 px-3 py-1.5 bg-ink text-white text-sm rounded-lg opacity-0 invisible peer-hover:opacity-100 peer-hover:visible transition-all duration-200 whitespace-nowrap pointer-events-none shadow-lg z-50">
@@ -117,7 +184,22 @@ function getHistoryPageHtml() {
 
     return `
         <div class="p-8 lg:p-16 animate-fade-slow pb-6">
-            <h2 class="text-3xl font-light text-ink mb-12 tracking-wider border-b border-border/30 pb-4">往昔</h2>
+            <div class="flex items-end justify-between border-b border-border/30 pb-4 mb-12">
+                <h2 class="text-3xl font-light text-ink tracking-wider">往昔</h2>
+                <div class="relative group">
+                    <button onclick="tapImport()" class="w-9 h-9 flex items-center justify-center rounded-xl text-inkLight hover:text-ink hover:bg-white/60 transition-all duration-200">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="8" y="2" width="8" height="3" rx="1"/>
+                            <path d="M8 3H6a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2h-2"/>
+                            <path d="M12 10v6"/><path d="M9 13l3 3 3-3"/>
+                        </svg>
+                    </button>
+                    <div class="absolute top-full left-1/2 -translate-x-1/2 mt-2 px-3 py-1.5 bg-ink text-white text-sm rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap pointer-events-none shadow-lg z-50">
+                        导入
+                        <div class="absolute bottom-full left-1/2 -translate-x-1/2 border-4 border-transparent border-b-ink"></div>
+                    </div>
+                </div>
+            </div>
             ${historyContent}
         </div>`;
 }
