@@ -1,7 +1,25 @@
-# <img src="./logo.svg" width="25" /> PBlossom 
-**Ancient Wisdom, Modern Elegance**
+<!-- 顶部徽章 / 版本号 -->
+<p align="center">
+  <img src="./logo.svg" width="200" alt="PBlossom Logo"/>
+</p>
 
-PBlossom 是一款将传统易理逻辑与现代数字化技术相结合的探索工具。我们致力于通过代码重构复杂的计算模型，让普通用户也能通过AI解读玄学结果，零门槛接触千年智慧。
+<h1 align="center">PBlossom</h1>
+<p align="center"><em>Ancient Wisdom, Modern Elegance</em></p>
+
+<p align="center">
+  <!-- 版本号 -->
+  <img src="https://img.shields.io/badge/Version-2.6-8A2BE2?style=flat-square&logo=appveyor&logoColor=white" alt="Version"/>
+  <!-- 许可证 -->
+  <img src="https://img.shields.io/badge/License-MIT-228B22?style=flat-square&logo=github&logoColor=white" alt="License"/>
+</p>
+
+---
+
+<!-- 简介 -->
+<p>
+PBlossom 是一款将传统易理逻辑与现代数字化技术相结合的探索工具。
+我们致力于通过代码重构复杂的计算模型，让普通用户也能通过 AI 解读玄学结果，零门槛接触千年智慧。
+</p>
 
 ## 开始使用
 - **网页**：https://pblossom.onrender.com/
