@@ -24,6 +24,76 @@ function handleImportFile(input) {
     const reader = new FileReader();
     reader.onload = function(e) {
         const text = e.target.result;
+
+        // ── 六壬 format detection ──────────────────────────────────────
+        const isLiuren = text.indexOf('【六壬排盘】') >= 0
+            || text.indexOf('【起课信息】') >= 0
+            || text.indexOf('【三传】') >= 0
+            || (/阳历时[：:]/.test(text) && /月将[：:]/.test(text) && /干支[：:]/.test(text));
+
+        if (isLiuren) {
+            const dtMatch = text.match(/(?:北京时间|阳历时)[：:]\s*(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})\s+(\d{1,2})[：:](\d{1,2})/);
+            if (!dtMatch) { showToast('格式无法识别'); return; }
+
+            const [, y, mo, d, h, mi] = dtMatch;
+            const pad2 = n => String(n).padStart(2, '0');
+            const datetime_local = `${y}-${pad2(mo)}-${pad2(d)}T${pad2(h)}:${pad2(mi)}`;
+
+            const questionMatch = text.match(/问事[：:]\s*(.+)/);
+            const _q = questionMatch ? questionMatch[1].trim() : '';
+            const question = _q === '[暂未填写]' ? '' : _q;
+
+            const mgMatch = text.match(/月将[：:]\s*([子丑寅卯辰巳午未申酉戌亥])/);
+            const hbMatch = text.match(/占时[：:]\s*([子丑寅卯辰巳午未申酉戌亥])/);
+            const nmMatch = text.match(/贵人[：:]\s*(昼贵|夜贵)/);
+
+            const lonMatch = text.match(/东经([\d.]+)°/);
+
+            const liurenInput = {
+                question,
+                datetime_local,
+                timezone_offset_minutes: new Date().getTimezoneOffset(),
+                longitude: lonMatch ? parseFloat(lonMatch[1]) : null,
+                location_attempted: false,
+                overrides: {
+                    month_general: mgMatch ? mgMatch[1] : null,
+                    hour_branch: hbMatch ? hbMatch[1] : null,
+                    noble_mode: nmMatch ? (nmMatch[1] === '昼贵' ? 'day' : 'night') : null,
+                },
+            };
+
+            fetch('/api/liuren', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(liurenInput)
+            })
+            .then(r => r.json())
+            .then(res => {
+                if (res.status === 'success') {
+                    const data = res.data;
+                    const record = {
+                        type: 'liuren',
+                        id: Date.now(),
+                        title: (data.liuren.course_types && data.liuren.course_types.length) ? data.liuren.course_types[0] : '六壬',
+                        question: data.question || '',
+                        solar: data.calendar.solar,
+                        ganzhi: data.calendar.ganzhi,
+                        liuren_input: liurenInput,
+                        liuren_result: data,
+                    };
+                    state.history.unshift(record);
+                    localStorage.setItem('pblossom_history', JSON.stringify(state.history));
+                    renderMain();
+                    showToast('导入成功');
+                } else {
+                    showToast('格式无法识别');
+                }
+            })
+            .catch(() => showToast('导入失败，请重试'));
+            return;
+        }
+
+        // ── 梅花易数 format ────────────────────────────────────────────
         const numsMatch = text.match(/数字[：:]\s*(\d+)\s+(\d+)\s+(\d+)/);
         const timeMatch = text.match(/起卦时间[：:]\s*(.+)/);
         const ganzhiMatch = text.match(/四柱八字[：:]\s*(.+)/);
@@ -67,11 +137,45 @@ function loadRecord(id) {
     if (!record) return;
 
     if (record.type === "liuren") {
-        state.liuren.result = { ...record.liuren_result, _historyId: record.id };
-        state.liuren.form = null;
-        state.liuren.advancedOpen = false;
-        state.activeTab = "liuren";
-        renderMain();
+        if (!record.liuren_input) {
+            state.liuren.result = { ...record.liuren_result, _historyId: record.id };
+            state.liuren.form = null;
+            state.liuren.advancedOpen = false;
+            state.activeTab = "liuren";
+            renderMain();
+            return;
+        }
+        fetch('/api/liuren', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(record.liuren_input)
+        })
+        .then(r => r.json())
+        .then(res => {
+            if (res.status === 'success') {
+                const data = res.data;
+                data._historyId = record.id;
+                const recalculated = {
+                    ...record,
+                    title: (data.liuren.course_types && data.liuren.course_types.length) ? data.liuren.course_types[0] : "六壬",
+                    question: data.question || "",
+                    solar: data.calendar.solar,
+                    ganzhi: data.calendar.ganzhi,
+                    liuren_result: data,
+                };
+                const idx = state.history.findIndex(r => r.id === id);
+                if (idx !== -1) state.history[idx] = recalculated;
+                localStorage.setItem("pblossom_history", JSON.stringify(state.history));
+                state.liuren.result = data;
+                state.liuren.form = null;
+                state.liuren.advancedOpen = false;
+                state.activeTab = "liuren";
+                renderMain();
+            } else {
+                showToast(res.message || "排盘失败");
+            }
+        })
+        .catch(() => showToast('排盘失败，请重试'));
         return;
     }
 
@@ -175,7 +279,11 @@ function getHistoryPageHtml() {
                 <p class="font-light tracking-widest">暂无记录</p>
             </div>`;
     } else {
-        let itemsHtml = state.history.map(record => {
+        let itemsHtml = [...state.history].sort((a, b) => {
+            const ta = a.solar || a.timestamp || '';
+            const tb = b.solar || b.timestamp || '';
+            return tb.localeCompare(ta);
+        }).map(record => {
             const isLiuren = record.type === "liuren";
 
             let title, pillars, timeStr, noteText;

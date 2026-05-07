@@ -83,6 +83,7 @@ function updateLiurenQuestion(val) {
         const rec = state.history.find(r => r.id === hid);
         if (rec) {
             rec.question = val;
+            if (rec.liuren_input) rec.liuren_input.question = val;
             rec.liuren_result = state.liuren.result;
             localStorage.setItem("pblossom_history", JSON.stringify(state.history));
         }
@@ -341,21 +342,22 @@ async function handleLiurenSubmit() {
     }
 
     try {
+        const liurenInput = {
+            question: questionEl ? questionEl.value.trim() : "",
+            datetime_local: buildLiurenDateValue(parseLiurenDate(datetimeEl.value)),
+            timezone_offset_minutes: new Date().getTimezoneOffset(),
+            longitude: state.liuren.longitude ?? null,
+            location_attempted: state.liuren.locationStatus != null,
+            overrides: {
+                month_general: monthGeneralEl && monthGeneralEl.value ? monthGeneralEl.value : null,
+                hour_branch: hourBranchEl && hourBranchEl.value ? hourBranchEl.value : null,
+                noble_mode: nobleModeEl && nobleModeEl.value ? nobleModeEl.value : null,
+            },
+        };
         const res = await fetch("/api/liuren", {
             method: "POST",
             headers: {"Content-Type": "application/json"},
-            body: JSON.stringify({
-                question: questionEl ? questionEl.value.trim() : "",
-                datetime_local: buildLiurenDateValue(parseLiurenDate(datetimeEl.value)),
-                timezone_offset_minutes: new Date().getTimezoneOffset(),
-                longitude: state.liuren.longitude ?? null,
-                location_attempted: state.liuren.locationStatus != null,
-                overrides: {
-                    month_general: monthGeneralEl && monthGeneralEl.value ? monthGeneralEl.value : null,
-                    hour_branch: hourBranchEl && hourBranchEl.value ? hourBranchEl.value : null,
-                    noble_mode: nobleModeEl && nobleModeEl.value ? nobleModeEl.value : null,
-                },
-            }),
+            body: JSON.stringify(liurenInput),
         });
         const json = await res.json();
         if (json.status === "success") {
@@ -367,6 +369,7 @@ async function handleLiurenSubmit() {
                 question: data.question || "",
                 solar: data.calendar.solar,
                 ganzhi: data.calendar.ganzhi,
+                liuren_input: liurenInput,
                 liuren_result: data,
             };
             state.liuren.result = data;
@@ -541,9 +544,7 @@ function renderLiurenResult(result) {
                                 <div>${escapeHtml(cal.solar)}${cal.true_solar_time ? ` <span class="text-inkLight/40">北京时间</span>` : ""}</div>
                                 ${cal.true_solar_time
                                     ? `<div>${escapeHtml(cal.true_solar_time)} <span class="text-inkLight/40">真太阳时 东经${cal.longitude}°</span></div>`
-                                    : cal.location_failed
-                                    ? `<div class="text-inkLight/35">无法获取真太阳时</div>`
-                                    : ""}
+                                    : `<div class="text-inkLight/35">无法获取真太阳时</div>`}
                                 <div>${escapeHtml(cal.lunar)}</div>
                             </div>
                         </div>

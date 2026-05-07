@@ -59,6 +59,9 @@ def api_calendar():
             solar = Solar.fromYmdHms(dt.year, dt.month, dt.day, 12, 0, 0)
             lunar = solar.getLunar()
 
+        prev_qi = lunar.getPrevJieQi(True)
+        next_qi = lunar.getNextJieQi(True)
+        def _short(s): return f"{s.getMonth()}月{s.getDay()}日 {s.getHour():02d}:{s.getMinute():02d}:{s.getSecond():02d}"
         res_data = {
             "solar_date": date_str,
             "lunar_str": f"{lunar.getMonthInChinese()}月{lunar.getDayInChinese()}",
@@ -68,7 +71,11 @@ def api_calendar():
             "week": f"星期{solar.getWeekInChinese()}",
             "gz_hour": gz_hour,
             "true_solar_time": true_solar_time,
-            "longitude": round(float(longitude), 1) if longitude is not None else None,
+            "longitude": round(float(longitude), 2) if longitude is not None else None,
+            "jieqi_prev": prev_qi.getName(),
+            "jieqi_prev_date": _short(prev_qi.getSolar()),
+            "jieqi_next": next_qi.getName(),
+            "jieqi_next_date": _short(next_qi.getSolar()),
         }
         return jsonify({"status": "success", "data": res_data})
     except Exception as e:

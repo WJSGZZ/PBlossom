@@ -295,7 +295,7 @@ function renderRightPanelHtml(info) {
     const ls = state.calendar.locationStatus;
     const pin = `<svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2C8.69 2 6 4.69 6 8c0 5.25 6 13 6 13s6-7.75 6-13c0-3.31-2.69-6-6-6z"/><circle cx="12" cy="8" r="2"/></svg>`;
     const locationBadge = (ls === "granted" && state.calendar.longitude !== null)
-        ? `<span id="cal-location-indicator" class="flex items-center gap-0.5 text-[9px] text-inkLight/35">${pin}${state.calendar.longitude.toFixed(1)}\u00b0</span>`
+        ? `<span id="cal-location-indicator" class="flex items-center gap-0.5 text-[9px] text-inkLight/35">${pin}${state.calendar.longitude.toFixed(2)}\u00b0</span>`
         : ls === "loading"
         ? `<span id="cal-location-indicator" class="text-[9px] text-inkLight/25">\u2026</span>`
         : `<span id="cal-location-indicator"></span>`;
@@ -338,13 +338,22 @@ function renderRightPanelHtml(info) {
             <div class="inline-flex items-center px-3 py-1.5 rounded-full text-xs text-inkLight" style="background:rgba(255,252,247,0.55);border:1px solid rgba(208,198,185,0.28)">\u519c\u5386 ${info.lunar_str}</div>
         </div>
         <div class="border-t border-border/30"></div>
-        <div class="flex items-center">
+        <div class="pt-10">
             <div class="grid grid-cols-4 gap-5 w-full">
                 ${renderCalendarPillar("\u5e74\u67f1", info.gz_year, "\u5e74")}
                 ${renderCalendarPillar("\u6708\u67f1", info.gz_month, "\u6708")}
                 ${renderCalendarPillar("\u65e5\u67f1", info.gz_day, "\u65e5")}
                 ${renderCalendarPillar("\u65f6\u67f1", hourVal, hourCap)}
             </div>
+            ${info.jieqi_prev ? `
+            <div class="flex items-center justify-end gap-2 text-[11px] text-inkLight/55 mt-5">
+                <span class="tracking-widest text-inkLight/40 mr-1">\u8282\u6c14</span>
+                <span class="font-medium">${escapeHtml(info.jieqi_prev)}</span>
+                <span class="text-inkLight/40">${escapeHtml(info.jieqi_prev_date)}</span>
+                <span class="text-inkLight/30 mx-0.5">\u00b7</span>
+                <span class="font-medium">${escapeHtml(info.jieqi_next)}</span>
+                <span class="text-inkLight/40">${escapeHtml(info.jieqi_next_date)}</span>
+            </div>` : ''}
         </div>
     </div>`;
 }
