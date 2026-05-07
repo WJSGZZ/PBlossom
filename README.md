@@ -21,6 +21,21 @@ PBlossom 是一款将传统易理逻辑与现代数字化技术相结合的探�
 我们致力于通过代码重构复杂的计算模型，让普通用户也能通过 AI 解读玄学结果，零门槛接触千年智慧。
 </p>
 
+<!-- 目录 -->
+<p align="center">
+  <strong>目录 Contents</strong>
+</p>
+
+<p align="center">
+  <a href="#开始使用">开始使用</a> &nbsp;|&nbsp;
+  <a href="#新特性">新特性</a> &nbsp;|&nbsp;
+  <a href="#功能简介">功能简介</a> &nbsp;|&nbsp;
+  <a href="#界面展示">界面展示</a> &nbsp;|&nbsp;
+  <a href="#名称来源">名称来源</a> &nbsp;|&nbsp;
+  <a href="#logo设计">Logo设计</a> &nbsp;|&nbsp;
+  <a href="#温馨提示">温馨提示</a>
+</p>
+
 ## 开始使用
 - **网页**：https://pblossom.onrender.com/
 - **小程序**：微信搜索 **PBlossom**
