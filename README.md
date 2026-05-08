@@ -42,7 +42,7 @@ PBlossom 是一款将传统易理逻辑与现代数字化技术相结合的探�
 - **本地使用**：https://github.com/WJSGZZ/PBlossom/releases
 
 ## 新特性
-- v2.6：新增**六壬**排盘功能 (Beta)
+- v2.6：新增**六壬**排盘功能 [Beta]
 
 ## 功能简介
 - **新占** (Xinzhan/Divination)：实现了梅花易数起卦与逻辑分析功能，支持自动推演本、互、变三卦及其与年月日时干支的生克关系。
