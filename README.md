@@ -11,6 +11,10 @@
   <img src="https://img.shields.io/badge/Version-2.6-8A2BE2?style=flat-square&logo=appveyor&logoColor=white" alt="Version"/>
   <!-- 许可证 -->
   <img src="https://img.shields.io/badge/License-MIT-228B22?style=flat-square&logo=github&logoColor=white" alt="License"/>
+  <!-- 在线体验 -->
+  <a href="https://pblossom.onrender.com/">
+    <img src="https://img.shields.io/badge/Web-在线体验-DA7756?style=flat-square&logo=googlechrome&logoColor=white" alt="Web 在线体验"/>
+  </a>
 </p>
 
 ---
