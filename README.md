@@ -13,7 +13,7 @@
   <img src="https://img.shields.io/badge/License-MIT-228B22?style=flat-square&logo=github&logoColor=white" alt="License"/>
   <!-- 在线体验 -->
   <a href="https://pblossom.onrender.com/">
-    <img src="https://img.shields.io/badge/Web-在线体验-DA7756?style=flat-square&logo=googlechrome&logoColor=white" alt="Web 在线体验"/>
+    <img src="https://img.shields.io/badge/Web-Demo-DA7756?style=flat-square&logo=googlechrome&logoColor=white" alt="Web Demo"/>
   </a>
 </p>
 
@@ -101,10 +101,13 @@ PBlossom 是一款将传统易理逻辑与现代数字化技术相结合的探�
 
 <table>
   <tr>
-    <td align="center"><img src="pictures/miniprogram/深色新占.png" width="160"/><br/>新占</td>
-    <td align="center"><img src="pictures/miniprogram/深色mh结果页.png" width="160"/><br/>梅花结果页</td>
-    <td align="center"><img src="pictures/miniprogram/深色六壬.png" width="160"/><br/>六壬</td>
-    <td align="center"><img src="pictures/miniprogram/深色lr结果页.png" width="160"/><br/>六壬结果页</td>
+    <td align="center"><img src="pictures/miniprogram/深色新占.png" width="160"/></td>
+    <td align="center"><img src="pictures/miniprogram/深色mh结果页.png" width="160"/></td>
+    <td align="center"><img src="pictures/miniprogram/深色六壬.png" width="160"/></td>
+    <td align="center"><img src="pictures/miniprogram/深色lr结果页.png" width="160"/></td>
+  </tr>
+  <tr>
+    <td colspan="4" align="center">深色模式</td>
   </tr>
 </table>
 
