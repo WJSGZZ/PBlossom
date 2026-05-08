@@ -82,7 +82,9 @@ PBlossom 是一款将传统易理逻辑与现代数字化技术相结合的探�
 <table>
   <tr>
     <td align="center"><img src="pictures/miniprogram/新占.png" width="160"/><br/>新占</td>
-    <td align="center"><img src="pictures/miniprogram/mh结果页.png" width="160"/><br/>结果页</td>
+    <td align="center"><img src="pictures/miniprogram/mh结果页.png" width="160"/><br/>梅花结果页</td>
+    <td align="center"><img src="pictures/miniprogram/六壬.png" width="160"/><br/>六壬</td>
+    <td align="center"><img src="pictures/miniprogram/lr结果页.png" width="160"/><br/>六壬结果页</td>
   </tr>
 </table>
 
@@ -95,10 +97,10 @@ PBlossom 是一款将传统易理逻辑与现代数字化技术相结合的探�
 
 <table>
   <tr>
-    <td align="center"><img src="pictures/miniprogram/深色模式1.png" width="160"/></td>
-  </tr>
-  <tr>
-    <td colspan="5" align="center">深色模式</td>
+    <td align="center"><img src="pictures/miniprogram/深色新占.png" width="160"/><br/>新占</td>
+    <td align="center"><img src="pictures/miniprogram/深色mh结果页.png" width="160"/><br/>梅花结果页</td>
+    <td align="center"><img src="pictures/miniprogram/深色六壬.png" width="160"/><br/>六壬</td>
+    <td align="center"><img src="pictures/miniprogram/深色lr结果页.png" width="160"/><br/>六壬结果页</td>
   </tr>
 </table>
 

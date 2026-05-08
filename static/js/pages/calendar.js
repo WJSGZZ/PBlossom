@@ -102,6 +102,18 @@ function onCalPreciseTimeChange(val) {
     state.calendar.calibratedTst = null;
 }
 
+function clearCalendarHour() {
+    state.calendar.preciseTime = null;
+    state.calendar.calibratedTst = null;
+    state.calendar.selectedHour = null;
+    const hourCard = document.getElementById("calendar-hour-pillar");
+    if (hourCard && state.calendar.selectedData) {
+        hourCard.outerHTML = renderCalendarPillar("\u65f6\u67f1", "\u672a\u9009", "\u65f6", "", {clearable: true, id: "calendar-hour-pillar"});
+        return;
+    }
+    renderMain();
+}
+
 async function onCalPreciseTimeBlur(val) {
     if (!val) { await clearPreciseTime(); return; }
     state.calendar.preciseTime = val;
@@ -273,11 +285,20 @@ function renderMonthOptionsHtml(month) {
     return html;
 }
 
-function renderCalendarPillar(label, value, caption = "", extra = "") {
+function renderCalendarPillar(label, value, caption = "", extra = "", options = {}) {
+    const isEmpty = value === "\u672a\u9009";
+    const idAttr = options.id ? `id="${options.id}"` : "";
+    const emptyValue = value.split("").map((char) => `<span class="font-bold text-inkLight/35">${char}</span>`).join("");
+    const clearButton = options.clearable
+        ? `<button type="button" onclick="event.stopPropagation(); clearCalendarHour();" class="w-5 h-5 flex items-center justify-center rounded-full text-inkLight/35 hover:text-accent hover:bg-white/55 transition-colors text-sm leading-none ${isEmpty ? "invisible pointer-events-none" : ""}" aria-label="清空时柱">×</button>`
+        : "";
     return `
-        <div ${extra} class="relative min-w-0 calendar-pillar-card px-5 py-5 flex flex-col justify-between min-h-[160px] h-full ${extra ? "cursor-pointer calendar-pillar-card-interactive group" : ""}">
-            <div class="text-[11px] text-inkLight tracking-[0.22em]">${label}</div>
-            <div class="text-3xl font-serif tracking-widest leading-none ${value === "\u672a\u9009" ? "text-inkLight/35" : ""}">${value === "\u672a\u9009" ? value : highlightText(value)}</div>
+        <div ${idAttr} ${extra} class="relative min-w-0 calendar-pillar-card px-5 py-5 flex flex-col justify-between min-h-[160px] h-full ${extra ? "cursor-pointer calendar-pillar-card-interactive group" : ""}">
+            <div class="flex items-center justify-between gap-2">
+                <div class="text-[11px] text-inkLight tracking-[0.22em]">${label}</div>
+                ${clearButton}
+            </div>
+            <div class="h-9 flex items-center justify-center text-3xl font-serif tracking-widest leading-none">${isEmpty ? emptyValue : highlightText(value)}</div>
             <div class="text-xs text-inkLight">${caption}</div>
             ${extra ? `<div class="absolute top-3 right-3 text-inkLight/35 group-hover:text-accent transition-colors"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></div>` : ""}
         </div>`;
@@ -303,7 +324,7 @@ function renderRightPanelHtml(info) {
     // Hour pillar \u2014 static, same as the other three
     const calibratedTst = state.calendar.calibratedTst;
     const hourVal = ((preciseTime || calibratedTst) && info.gz_hour) ? info.gz_hour : "\u672a\u9009";
-    const hourCap = ((preciseTime || calibratedTst) && info.gz_hour) ? `时 ${calibratedTst || info.true_solar_time || preciseTime}` : "";
+    const hourCap = ((preciseTime || calibratedTst) && info.gz_hour) ? `时 ${calibratedTst || info.true_solar_time || preciseTime}` : "\u65f6";
 
     return `
     <div class="h-full calendar-main-card p-9 grid grid-rows-[auto_1px_1fr] gap-0">
@@ -343,7 +364,7 @@ function renderRightPanelHtml(info) {
                 ${renderCalendarPillar("\u5e74\u67f1", info.gz_year, "\u5e74")}
                 ${renderCalendarPillar("\u6708\u67f1", info.gz_month, "\u6708")}
                 ${renderCalendarPillar("\u65e5\u67f1", info.gz_day, "\u65e5")}
-                ${renderCalendarPillar("\u65f6\u67f1", hourVal, hourCap)}
+                ${renderCalendarPillar("\u65f6\u67f1", hourVal, hourCap, "", {clearable: true, id: "calendar-hour-pillar"})}
             </div>
             ${info.jieqi_prev ? `
             <div class="flex items-center justify-end gap-2 text-[11px] text-inkLight/55 mt-5">
