@@ -73,21 +73,6 @@ PBlossom 是一款将传统易理逻辑与现代数字化技术相结合的探�
     <img width="1280" src="pictures/lr结果页.png" />
     <p>六壬结果页 (Liuren Result)</p>
   </figure>
-
-  <figure>
-    <img width="1280" src="pictures/往昔.png" />
-    <p>往昔 (History)</p>
-  </figure>
-
-  <figure>
-    <img width="1280" src="pictures/时令.png" />
-    <p>时令 (Calendar)</p>
-  </figure>
-
-  <figure>
-    <img width="1280" src="pictures/常见问题.png" />
-    <p>常见问题 (FAQ)</p>
-  </figure>
 </div>
 
 ### 小程序 (MiniProgram)
@@ -97,10 +82,7 @@ PBlossom 是一款将传统易理逻辑与现代数字化技术相结合的探�
 <table>
   <tr>
     <td align="center"><img src="pictures/miniprogram/新占.png" width="160"/><br/>新占</td>
-    <td align="center"><img src="pictures/miniprogram/往昔.png" width="160"/><br/>往昔</td>
     <td align="center"><img src="pictures/miniprogram/mh结果页.png" width="160"/><br/>结果页</td>
-    <td align="center"><img src="pictures/miniprogram/时令.png" width="160"/><br/>时令</td>
-    <td align="center"><img src="pictures/miniprogram/常见问题.png" width="160"/><br/>常见问题</td>
   </tr>
 </table>
 
@@ -114,10 +96,6 @@ PBlossom 是一款将传统易理逻辑与现代数字化技术相结合的探�
 <table>
   <tr>
     <td align="center"><img src="pictures/miniprogram/深色模式1.png" width="160"/></td>
-    <td align="center"><img src="pictures/miniprogram/深色模式2.png" width="160"/></td>
-    <td align="center"><img src="pictures/miniprogram/深色模式3.png" width="160"/></td>
-    <td align="center"><img src="pictures/miniprogram/深色模式4.png" width="160"/></td>
-    <td align="center"><img src="pictures/miniprogram/深色模式5.png" width="160"/></td>
   </tr>
   <tr>
     <td colspan="5" align="center">深色模式</td>
