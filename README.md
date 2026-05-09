@@ -15,6 +15,8 @@
   <a href="https://pblossom.onrender.com/">
     <img src="https://img.shields.io/badge/Web-Demo-DA7756?style=flat-square&logo=googlechrome&logoColor=white" alt="Web Demo"/>
   </a>
+  <!-- 平台 -->
+  <img src="https://img.shields.io/badge/Platform-Web%20%7C%20Mini%20Program-7C9CAE?style=flat-square" alt="Platform Web and Mini Program"/>
 </p>
 
 ---
@@ -107,7 +109,7 @@ PBlossom 是一款将传统易理逻辑与现代数字化技术相结合的探�
     <td align="center"><img src="pictures/miniprogram/深色lr结果页.png" width="160"/></td>
   </tr>
   <tr>
-    <td colspan="4" align="center">深色模式</td>
+    <td colspan="4" align="center"><strong>深色模式</strong></td>
   </tr>
 </table>
 
