@@ -123,7 +123,13 @@ PBlossom 是一款将传统易理逻辑与现代数字化技术相结合的探�
 PBlossom是Plum Blossom(梅花)的简写，来源于“梅花易数”。
 
 ## Logo设计
-Logo实际上是一个珊瑚橙(#DA7756)的“P”与灰褐色(#B1ADA1)的“B”上下重叠在一起，代表着Plum Blossom(梅花)。
+Logo 实际上是一个珊瑚橙
+<a title="珊瑚橙 #DA7756"><img src="pictures/color-coral.svg" width="18" alt="#DA7756"/></a>
+<code>#DA7756</code>
+的“P”与灰褐色
+<a title="灰褐色 #B1ADA1"><img src="pictures/color-taupe.svg" width="18" alt="#B1ADA1"/></a>
+<code>#B1ADA1</code>
+的“B”上下重叠在一起，代表着 Plum Blossom（梅花）。
 <div align="center">
   <figure>
     <img src="./logo.svg" width="500" />
