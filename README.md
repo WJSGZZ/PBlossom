@@ -9,12 +9,12 @@
 <p align="center">
   <!-- 版本号 -->
   <img src="https://img.shields.io/badge/Version-2.6-8A2BE2?style=flat-square&logo=appveyor&logoColor=white" alt="Version"/>
-  <!-- 许可证 -->
-  <img src="https://img.shields.io/badge/License-MIT-228B22?style=flat-square&logo=github&logoColor=white" alt="License"/>
-  <!-- 在线体验 -->
-  <a href="https://pblossom.onrender.com/"><img src="https://img.shields.io/badge/Web-Demo-DA7756?style=flat-square&logo=googlechrome&logoColor=white" alt="Web Demo"/></a>
   <!-- 平台 -->
   <img src="https://img.shields.io/badge/Platform-Web%20%7C%20Mini%20Program-7C9CAE?style=flat-square" alt="Platform Web and Mini Program"/>
+  <!-- 在线体验 -->
+  <a href="https://pblossom.onrender.com/"><img src="https://img.shields.io/badge/Web-Demo-DA7756?style=flat-square&logo=googlechrome&logoColor=white" alt="Web Demo"/></a>
+  <!-- 许可证 -->
+  <img src="https://img.shields.io/badge/License-MIT-228B22?style=flat-square&logo=github&logoColor=white" alt="License"/>
 </p>
 
 ---
@@ -49,10 +49,10 @@ PBlossom 是一款将传统易理逻辑与现代数字化技术相结合的探�
 - v2.6：新增**六壬**排盘功能 [Beta]
 
 ## 功能简介
-- **新占** (Xinzhan/Divination)：实现了梅花易数起卦与逻辑分析功能，支持自动推演本、互、变三卦及其与年月日时干支的生克关系。
+- **新占** (Divination)：实现了梅花易数起卦与逻辑分析功能，支持自动推演本、互、变三卦及其与年月日时干支的生克关系。
 - **六壬** (Liuren)：六壬排盘功能，支持真太阳时修正、天地盘、四课三传完整推演。
-- **往昔** (Wangxi/History)：内置本地化存储，提供带防误触逻辑的交互式历史记录管理，梅花与六壬记录统一管理。
-- **时令** (Shiling/Ganzhi)：查询日期所对应干支的万年历功能，支持真太阳时校准。
+- **往昔** (History)：内置本地化存储，提供带防误触逻辑的交互式历史记录管理，梅花与六壬记录统一管理。
+- **时令** (Ganzhi)：查询日期所对应干支的万年历功能，支持真太阳时校准。
 - **常见问题** (FAQ)：内置建议说明与使用指南，帮助小白快速了解与上手。
 
 ## 界面展示
