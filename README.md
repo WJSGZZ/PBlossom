@@ -12,9 +12,7 @@
   <!-- 许可证 -->
   <img src="https://img.shields.io/badge/License-MIT-228B22?style=flat-square&logo=github&logoColor=white" alt="License"/>
   <!-- 在线体验 -->
-  <a href="https://pblossom.onrender.com/">
-    <img src="https://img.shields.io/badge/Web-Demo-DA7756?style=flat-square&logo=googlechrome&logoColor=white" alt="Web Demo"/>
-  </a>
+  <a href="https://pblossom.onrender.com/"><img src="https://img.shields.io/badge/Web-Demo-DA7756?style=flat-square&logo=googlechrome&logoColor=white" alt="Web Demo"/></a>
   <!-- 平台 -->
   <img src="https://img.shields.io/badge/Platform-Web%20%7C%20Mini%20Program-7C9CAE?style=flat-square" alt="Platform Web and Mini Program"/>
 </p>

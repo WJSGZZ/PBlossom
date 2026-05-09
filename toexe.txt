@@ -1,0 +1,1 @@
+pyinstaller -F app.py --add-data "templates;templates" --add-data "static;static" --add-data "hexagrams.json;." --add-data "faq.json;." --name PBlossom --icon="D:\Folder\App\PBlossom\web\logo.ico"

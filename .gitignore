@@ -1,14 +1,6 @@
-logic_bazi.py
-logic_meihua.py
-logic_common.py
-logic_liuren.py
-hexagrams.json
-faq.json
-toexe.txt
-*.spec
-
 __pycache__/
 build/
 dist/
 *.pyc
 .idea/
+version.txt
