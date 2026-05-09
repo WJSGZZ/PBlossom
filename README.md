@@ -85,10 +85,16 @@ PBlossom 是一款将传统易理逻辑与现代数字化技术相结合的探�
 
 <table>
   <tr>
-    <td align="center"><img src="pictures/miniprogram/新占.png" width="160"/><br/>新占</td>
-    <td align="center"><img src="pictures/miniprogram/mh结果页.png" width="160"/><br/>梅花结果页</td>
-    <td align="center"><img src="pictures/miniprogram/六壬.png" width="160"/><br/>六壬</td>
-    <td align="center"><img src="pictures/miniprogram/lr结果页.png" width="160"/><br/>六壬结果页</td>
+    <td align="center"><img src="pictures/miniprogram/新占.png" width="160"/></td>
+    <td align="center"><img src="pictures/miniprogram/mh结果页.png" width="160"/></td>
+    <td align="center"><img src="pictures/miniprogram/六壬.png" width="160"/></td>
+    <td align="center"><img src="pictures/miniprogram/lr结果页.png" width="160"/></td>
+  </tr>
+  <tr>
+    <td align="center"><strong>新占</strong></td>
+    <td align="center"><strong>梅花结果页</strong></td>
+    <td align="center"><strong>六壬</strong></td>
+    <td align="center"><strong>六壬结果页</strong></td>
   </tr>
 </table>
 
