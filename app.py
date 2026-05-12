@@ -67,7 +67,7 @@ def api_calendar():
             "lunar_str": f"{lunar.getMonthInChinese()}月{lunar.getDayInChinese()}",
             "gz_year": logic_liuren.get_corrected_year_gz(solar, lunar),
             "gz_month": logic_liuren.get_corrected_month_gz(solar, lunar),
-            "gz_day": lunar.getDayInGanZhi(),
+            "gz_day": logic_liuren.get_day_gz_with_zi_boundary(dt_tst if time_str else dt),
             "week": f"星期{solar.getWeekInChinese()}",
             "gz_hour": gz_hour,
             "true_solar_time": true_solar_time,

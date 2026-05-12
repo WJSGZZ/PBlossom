@@ -112,6 +112,13 @@ def get_corrected_month_gz(solar, lunar):
     return month_gz
 
 
+def get_day_gz_with_zi_boundary(dt):
+    """Day ganzhi switches at 子初 (23:00) for divination/Bazi display."""
+    day_dt = dt + timedelta(days=1) if dt.hour >= 23 else dt
+    solar = Solar.fromYmdHms(day_dt.year, day_dt.month, day_dt.day, 0, 0, 0)
+    return solar.getLunar().getDayInGanZhi()
+
+
 def parse_local_datetime(value):
     if not value:
         return datetime.now().replace(second=0, microsecond=0)
@@ -446,7 +453,7 @@ def perform_liuren(req):
 
     solar = Solar.fromYmdHms(dt.year, dt.month, dt.day, dt.hour, dt.minute, dt.second)
     lunar = solar.getLunar()
-    day_gz = lunar.getDayInGanZhi()
+    day_gz = get_day_gz_with_zi_boundary(dt)
     year_gz = get_corrected_year_gz(solar, lunar)
     month_gz = get_corrected_month_gz(solar, lunar)
     hour_gz = get_hour_gz(day_gz[0], hour_branch)
