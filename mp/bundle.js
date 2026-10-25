@@ -15734,7 +15734,7 @@ module.exports = { SOLAR_TERM_DATA }
 
 }
 defs["utils/divination.js"] = function (module, exports, require) {
-const { formatDate, getCalendarInfo, getHourGanZhi } = require('./calendar.js')
+const { getCalendarInfo, getHourGanZhi, toWall, wallParts, pad } = require('./calendar.js')
 const { HEXAGRAMS_DATA } = require('../data/hexagrams.js')
 const { ZHI_ELEMENTS, elementLineClass, makeGanzhiParts } = require('./elements.js')
 
@@ -16001,19 +16001,20 @@ function decorateResult(result) {
 }
 
 function performDivination(inputNumbers, at) {
-  // 同一份时间用于干支、四令关系和报告；不传时仍按提交当刻起卦。
-  const now = at === undefined ? new Date() : new Date(at.getTime())
-  if (!Number.isFinite(now.getTime())) throw new Error('起卦时间无效')
+  // Date 沿用设备钟面；数字沿用 calendar 的 wall 约定，供无界面的计算入口跨时区使用。
+  const wall = typeof at === 'number' ? at : toWall(at === undefined ? new Date() : new Date(at.getTime()))
+  if (!Number.isFinite(wall)) throw new Error('起卦时间无效')
+  const parts = wallParts(wall)
   const n1 = normalizeNumber(inputNumbers[0], 8)
   const n2 = normalizeNumber(inputNumbers[1], 8)
   const n3 = normalizeNumber(inputNumbers[2], 6)
 
-  const currentHour = now.getHours()
+  const currentHour = parts.h
   // 晚子时（23 点）的日柱由 getCalendarInfo 自己按次日计，这里不能再加一天
-  const calendarInfo = getCalendarInfo(now)
+  const calendarInfo = getCalendarInfo(wall)
   const hourIndex = currentHour === 23 ? 0 : Math.floor((currentHour + 1) / 2) % 12
   const hourGz = getHourGanZhi(calendarInfo.gzDay.charAt(0), hourIndex)
-  const timestamp = `${formatDate(now)} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`
+  const timestamp = `${parts.y}-${pad(parts.m)}-${pad(parts.d)} ${pad(parts.h)}:${pad(parts.mi)}:${pad(parts.s)}`
   const ganzhiText = `${calendarInfo.gzYear} ${calendarInfo.gzMonth} ${calendarInfo.gzDay} ${hourGz}`
 
   const benUpper = n1

@@ -34,6 +34,7 @@ PBlossom 是一款将传统易理逻辑与现代数字化技术相结合的探�
 ## 开始使用
 - **网页**：https://wjsgzz.github.io/PBlossom/ （电脑、手机浏览器都能用）
 - **小程序**：微信搜索 **PBlossom**
+- **一次性计算 / Agent**：[参数说明](compute.md)。打开带参数的 `compute.html` 即可取得梅花、六壬或万年历的 JSON 结果，不写入历史；需支持 JavaScript 的浏览器。
 
 网页版与小程序是同一套代码：排盘算法、界面和导出图片都与小程序一致。记录只保存在你自己的浏览器里，不会上传。
 
@@ -44,6 +45,22 @@ PBlossom 是一款将传统易理逻辑与现代数字化技术相结合的探�
 - **时令** (Seasons)：任选日期时间，查看四柱干支、藏干、节气与月历，支持真太阳时。
 - **常见问题** (FAQ)：使用说明、AI 解读提示词，以及主题色、五行标记等外观设置；网页版还能选择深色模式（跟随系统 / 浅色 / 深色）。
 - **导出与分享**：结果和时令都能导出为图片；网页版还可以复制一条链接，对方打开就能看到同一卦。
+
+## AI / Agent 一次性计算
+
+用**能执行 JavaScript 的浏览器工具**打开以下链接，即可获得精简 JSON 排盘结果；每次独立计算，不写入历史或本地存储：
+
+```text
+梅花：https://wjsgzz.github.io/PBlossom/compute.html?type=meihua&numbers=1,2,3&date=2026-10-25&time=14:30&timezone=Asia/Shanghai
+万年历：https://wjsgzz.github.io/PBlossom/compute.html?type=calendar&date=2026-10-25&time=14:30&timezone=Asia/Shanghai
+六壬：https://wjsgzz.github.io/PBlossom/compute.html?type=liuren&date=2026-10-25&time=14:30&timezone=Asia/Shanghai&longitude=120.86
+```
+
+`numbers` 是三个正整数；六壬的 `longitude` 可省略。不传日期时间时取浏览器当下时刻与时区。指定时间可用 `date=YYYY-MM-DD&time=HH:mm[:ss]&timezone=America/Los_Angeles`，AI 更推荐传 `datetime=2026-10-25T14:30:00%2B08:00`（与 date/time 二选一），避免 Agent 的运行时区影响用户时间。算法统一换算成北京时间 UTC+8，返回输入时间和计算时间。
+
+页面只显示 JSON。Agent 等待 `html[data-state="ready"]` 或 `html[data-state="error"]`，再读取 `#result` 文本或 `window.pblossomResult`；以 `ok` 判断成功与否。`data` 直接给出四柱与卦名或六壬排盘，不返回界面样式、拆字和重复报告。
+
+只有普通 HTTP fetch／网页文本抓取能力的聊天 AI **不能直接使用这个动态入口**，因为此类工具不执行页面脚本。具备浏览器执行能力的聊天 AI 和 Agent 可以按上述方式调用。其他参数和连续调用方法见[完整说明](compute.md)。
 
 ## 界面展示
 ### 网页版
