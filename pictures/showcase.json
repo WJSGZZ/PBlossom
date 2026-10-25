@@ -16,7 +16,7 @@
       "height": 746
     },
     "files": [
-      "calc",
+      "calc-advanced",
       "meihua",
       "liuren-form",
       "liuren",
@@ -30,6 +30,10 @@
       "y": 0,
       "width": 1450,
       "height": 746
+    },
+    "homeState": {
+      "method": "meihua",
+      "advanced": "expanded"
     }
   },
   "miniprogram": {
@@ -40,14 +44,17 @@
       "height": 1418
     },
     "files": [
-      "calc",
-      "meihua",
-      "liuren",
+      "calc-advanced",
       "history",
       "calendar",
       "faq"
     ],
-    "frameCrop": "Rounded simulator frame masked outside radius 48px; application pixels unchanged"
+    "frameCrop": "Rounded simulator frame masked outside radius 48px; application pixels unchanged",
+    "homeState": {
+      "method": "meihua",
+      "advanced": "expanded",
+      "digits": "empty"
+    }
   },
   "exports": {
     "source": "Mini program native canvas export",
@@ -56,5 +63,11 @@
       "liuren",
       "calendar"
     ]
+  },
+  "verification": {
+    "capturedOn": "2026-10-25",
+    "webMatchesMiniprogramSource": true,
+    "homeAdvancedVisible": true,
+    "miniprogramShowcaseCount": 4
   }
 }
