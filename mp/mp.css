@@ -1373,15 +1373,12 @@
 
 /* 节气名像走马灯：往后走时新名字从右侧滑入，往前走则从左侧滑入。
    a / b 两个同样的动画轮流使用，连续换节气时动画才会重新播放 */
-/* 翻月份：日期按方向滑入，往后翻从右边进来、往前翻从左边进来（与节气名的方向一致）；a/b 两份交替，连续翻也能重播 */
-.month-fwd-a { animation: month-from-right 0.36s var(--ease) both; }
-.month-fwd-b { animation: month-from-right-b 0.36s var(--ease) both; }
-.month-back-a { animation: month-from-left 0.36s var(--ease) both; }
-.month-back-b { animation: month-from-left-b 0.36s var(--ease) both; }
-@keyframes month-from-right { from { opacity: 0; transform: translateX(calc(56 * var(--rpx))); } to { opacity: 1; transform: none; } }
-@keyframes month-from-right-b { from { opacity: 0; transform: translateX(calc(56 * var(--rpx))); } to { opacity: 1; transform: none; } }
-@keyframes month-from-left { from { opacity: 0; transform: translateX(calc(-56 * var(--rpx))); } to { opacity: 1; transform: none; } }
-@keyframes month-from-left-b { from { opacity: 0; transform: translateX(calc(-56 * var(--rpx))); } to { opacity: 1; transform: none; } }
+/* 翻月份：日期按方向滑入，往后翻从右边进来、往前翻从左边进来（与节气名的方向一致）。
+   起点（位置 --mx、透明度 --mo）由页面算好：平常是一侧的 calc(56 * var(--rpx))、全透明，中途反向时是日期此刻的样子；a/b 两份交替才能重播 */
+.month-in-a { animation: month-in 0.36s var(--ease) both; }
+.month-in-b { animation: month-in-b 0.36s var(--ease) both; }
+@keyframes month-in { from { opacity: var(--mo, 0); transform: translateX(var(--mx, 0)); } to { opacity: 1; transform: none; } }
+@keyframes month-in-b { from { opacity: var(--mo, 0); transform: translateX(var(--mx, 0)); } to { opacity: 1; transform: none; } }
 
 .term-in-fwd-a .term, .term-in-fwd-b .term { animation: term-from-right 0.45s var(--ease) both; }
 .term-in-fwd-b .term { animation-name: term-from-right-b; }

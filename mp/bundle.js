@@ -115,6 +115,18 @@ function makeCalcCaptions(digits, seeds, trigrams) {
     return { text: `${t.symbol} ${t.name} · ${t.nature}`, seeded: !digits[i] }
   })
 }
+// 样式表里的 --ease（cubic-bezier(0.32, 0.72, 0, 1)，iOS 式缓出）在时间 t 处的进度
+const MONTH_SLIDE_MS = 360 // 与样式表 .month-in 的时长相同
+function easeOut(t) {
+  let lo = 0, hi = 1
+  for (let i = 0; i < 30; i++) {
+    const u = (lo + hi) / 2
+    const x = 3 * (1 - u) * (1 - u) * u * 0.32 + u * u * u
+    if (x < t) lo = u; else hi = u
+  }
+  const u = (lo + hi) / 2
+  return 3 * (1 - u) * (1 - u) * u * 0.72 + 3 * (1 - u) * u * u + u * u * u
+}
 // 缓入缓出曲线（与 CSS 的 cubic-bezier(0.42, 0, 0.58, 1) 相同）在时间 t 处的进度
 function easeInOut(t) {
   let lo = 0, hi = 1
@@ -477,6 +489,8 @@ Page({
     homeDisplayMethod: 'meihua',
     homeModePhase: '',
     pageEnter: false,
+    calendarMonthAnim: '',
+    calendarMonthStyle: '',
     calcInput: '',
     calcDigits: ['', '', ''],
     calcSeedDigits: ['', '', ''],
@@ -2368,15 +2382,32 @@ Page({
       const dateStr = formatDateLite(new Date(year, month - 1, day))
       cells.push({ key: dateStr, day: String(day), date: dateStr, isCurrentMonth: true, isToday: dateStr === todayStr, isSelected: dateStr === this.data.selectedDate })
     }
-    // 翻月份的方向：往后翻日期从右边滑入，往前翻从左边；a/b 交替让连续翻也能重播
+    // 翻月份：往后翻日期从右边滑入，往前翻从左边（起点写在 --mx、--mo 里，见样式表 .month-in）。
+    // 同方向连着翻时，上一次滑入还没走完就不重播，只换日期，运动接着走完；
+    // 中途反方向翻，新的一段从日期此刻所在的位置和透明度起步，不跳回起点
     const prev = this.data.calendarYear ? this.data.calendarYear * 12 + this.data.calendarMonth : 0
     const next = year * 12 + month
     let calendarMonthAnim = this.data.calendarMonthAnim || ''
+    let calendarMonthStyle = this.data.calendarMonthStyle || ''
     if (prev && next !== prev) {
-      this._monthFlip = !this._monthFlip
-      calendarMonthAnim = `${next > prev ? 'month-fwd' : 'month-back'}-${this._monthFlip ? 'a' : 'b'}`
+      const dir = next > prev ? 1 : -1
+      const elapsed = Date.now() - (this._monthAnimAt || 0)
+      const playing = elapsed < MONTH_SLIDE_MS && this._monthFrom
+      if (!(playing && this._monthDir === dir)) {
+        let from = { x: 56 * dir, o: 0 }
+        if (playing) {
+          const e = easeOut(elapsed / MONTH_SLIDE_MS)
+          from = { x: this._monthFrom.x * (1 - e), o: this._monthFrom.o + (1 - this._monthFrom.o) * e }
+        }
+        this._monthFrom = from
+        this._monthDir = dir
+        this._monthAnimAt = Date.now()
+        this._monthFlip = !this._monthFlip
+        calendarMonthAnim = this._monthFlip ? 'month-in-a' : 'month-in-b'
+        calendarMonthStyle = `--mx:${from.x.toFixed(1)}rpx;--mo:${from.o.toFixed(2)};`
+      }
     }
-    this.setData({ calendarYear: year, calendarMonth: month, calendarPickerValue: `${year}-${pad(month)}`, calendarCells: cells, calendarMonthAnim })
+    this.setData({ calendarYear: year, calendarMonth: month, calendarPickerValue: `${year}-${pad(month)}`, calendarCells: cells, calendarMonthAnim, calendarMonthStyle })
   },
 
   selectDate(e) {

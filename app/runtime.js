@@ -23,7 +23,7 @@
     if (!el || el._closing) return
     el._closing = true
     el.classList.remove('on')
-    setTimeout(() => el.remove(), 260)
+    el._removeTimer = setTimeout(() => { if (el._closing) el.remove() }, 260)
   }
   const escapeHtml = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c])
 
@@ -31,8 +31,16 @@
   let toastTimer = null
   function toast(title, duration, loading) {
     clearTimeout(toastTimer)
-    if (toastEl) toastEl.remove()
-    toastEl = layer('web-toast', `<div class="web-toast-box lg">${loading ? '<span class="web-spinner"></span>' : ''}<span>${escapeHtml(title)}</span></div>`)
+    const html = `${loading ? '<span class="web-spinner"></span>' : ''}<span>${escapeHtml(title)}</span>`
+    // 上一条还在（或正在淡出）：就地换字、停在显示状态，不删掉重来
+    if (toastEl && document.contains(toastEl)) {
+      toastEl._closing = false
+      clearTimeout(toastEl._removeTimer)
+      toastEl.querySelector('.web-toast-box').innerHTML = html
+      toastEl.classList.add('on')
+    } else {
+      toastEl = layer('web-toast', `<div class="web-toast-box lg">${html}</div>`)
+    }
     if (!loading) {
       const el = toastEl
       toastTimer = setTimeout(() => closeLayer(el), duration || 1500)

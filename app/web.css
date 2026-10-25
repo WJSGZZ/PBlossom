@@ -369,7 +369,7 @@ input, textarea { -webkit-user-select: text; user-select: text; }
 /* 切换页面时各块依次升起淡入，写在小程序里（.page-enter）；结果页的返回栏在网页上单独淡入 */
 .result-bar { animation: web-fade-in 0.3s ease both; }
 @keyframes web-fade-in { from { opacity: 0; } to { opacity: 1; } }
-/* 翻月份的滑入写在小程序里（.month-fwd / .month-back） */
+/* 翻月份的滑入写在小程序里（.month-in） */
 /* 按下、松开、悬停都缓一下，而不是一下子跳过去 */
 .circle-btn, .nav-btn, .card.about, .prompt-copy, .web-image-btn, .web-dialog-btn {
   transition: transform 0.22s var(--ease), opacity 0.22s ease, background-color 0.25s ease;
