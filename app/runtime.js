@@ -122,16 +122,20 @@
     const el = layer('web-mask web-mask-image', `
       <div class="web-image">
         <img src="${url}" alt="分享图片">
-        <div class="web-image-actions">
-          <button class="web-image-btn lg" data-a="save">下载图片</button>
-          ${navigator.clipboard && window.ClipboardItem ? '<button class="web-image-btn lg" data-a="copy">复制图片</button>' : ''}
-          <button class="web-image-btn lg" data-a="close">关闭</button>
+        <div class="web-image-actions lg">
+          <button class="web-image-btn" data-a="save">下载图片</button>
+          ${navigator.clipboard && window.ClipboardItem ? '<button class="web-image-btn" data-a="copy">复制图片</button>' : ''}
         </div>
       </div>`)
+    // 不设“关闭”按钮：点图片和按钮以外的任何地方、或按 Esc 就关掉
+    const onKey = (e) => { if (e.key === 'Escape') { closeLayer(el); document.removeEventListener('keydown', onKey) } }
+    document.addEventListener('keydown', onKey)
     el.addEventListener('click', async (e) => {
       const b = e.target.closest('[data-a]')
-      if (!b) { if (e.target === el) closeLayer(el); return }
-      if (b.dataset.a === 'close') closeLayer(el)
+      if (!b) {
+        if (!e.target.closest('img, .web-image-actions')) { closeLayer(el); document.removeEventListener('keydown', onKey) }
+        return
+      }
       if (b.dataset.a === 'save') {
         const a = document.createElement('a')
         a.href = url

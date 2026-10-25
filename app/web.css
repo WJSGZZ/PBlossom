@@ -114,7 +114,7 @@ input, textarea { -webkit-user-select: text; user-select: text; }
     0 1px 3px rgba(0, 0, 0, 0.04);
 }
 /* 浮在内容上的玻璃（侧边栏、页签栏、圆按钮、弹出菜单）投影更深，像悬起来 */
-.tabbar, .web-sidebar, .circle-btn, .web-popover, .web-dialog, .web-toast-box, .web-image-btn, .web-drop-box {
+.tabbar, .web-sidebar, .circle-btn, .web-popover, .web-dialog, .web-toast-box, .web-image-actions, .web-drop-box {
   box-shadow: 0 14px 36px var(--lg-lift), 0 3px 10px var(--lg-drop);
 }
 /* 小程序底栏自带的反光层不再需要 */
@@ -218,7 +218,7 @@ input, textarea { -webkit-user-select: text; user-select: text; }
    与卡片同样的白色渐变着色、高光边、边缘折射（lg.js），只是着色更实、背后更模糊，压在内容上字也看得清 */
 :root { --float-a: rgba(255, 255, 255, 0.55); --float-b: rgba(255, 255, 255, 0.28); }
 @media (prefers-color-scheme: dark) { :root { --float-a: rgba(72, 72, 68, 0.55); --float-b: rgba(40, 40, 38, 0.42); } }
-.web-popover, .web-dialog, .web-toast-box, .web-image-btn, .web-drop-box {
+.web-popover, .web-dialog, .web-toast-box, .web-image-actions, .web-drop-box {
   background: linear-gradient(135deg, var(--float-a), var(--float-b));
   -webkit-backdrop-filter: blur(14px) saturate(140%); backdrop-filter: blur(14px) saturate(140%);
 }
@@ -239,8 +239,14 @@ input, textarea { -webkit-user-select: text; user-select: text; }
 .web-mask-image { background: rgba(0, 0, 0, 0.5); }
 .web-image { display: flex; flex-direction: column; align-items: center; gap: 16px; max-width: calc(100vw - 32px); max-height: calc(100vh - 32px); }
 .web-image img { max-width: min(480px, calc(100vw - 32px)); max-height: calc(100vh - 120px); border-radius: 18px; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35); }
-.web-image-actions { display: flex; gap: 10px; }
-.web-image-btn { height: 44px; padding: 0 20px; border: 0; border-radius: 999px; font: inherit; font-size: 15px; color: var(--ink); cursor: pointer; }
+/* 看图下面的操作：一条玻璃胶囊，两个按钮中间一道细线；压在暗色遮罩上，着色比其他浮层更实 */
+.web-image-actions { display: flex; align-items: center; padding: 4px; border-radius: 999px; }
+.web-image-actions { --float-a: rgba(255, 255, 255, 0.86); --float-b: rgba(255, 255, 255, 0.74); }
+@media (prefers-color-scheme: dark) { .web-image-actions { --float-a: rgba(58, 58, 55, 0.86); --float-b: rgba(40, 40, 38, 0.8); } }
+.web-image-btn { height: 40px; padding: 0 22px; border: 0; border-radius: 999px; background: none; font: inherit; font-size: 15px; color: var(--ink); cursor: pointer; }
+.web-image-btn:hover { background: rgba(var(--accent-rgb, 118, 118, 128), 0.1); }
+.web-image-btn + .web-image-btn { position: relative; }
+.web-image-btn + .web-image-btn::before { content: ''; position: absolute; left: 0; top: 12px; bottom: 12px; width: 1px; background: rgba(118, 118, 128, 0.25); }
 
 /* ── 电脑宽屏（宽于 1100px）：两栏。结果页、时令、常见问题是瀑布流（卡片占几行由 app/layout.js 按高度算） ── */
 @media (min-width: 1100px) {

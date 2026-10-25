@@ -17,7 +17,7 @@
     ['.tile', { bezel: 24, k: 0.6, max: 100 }],
     // 浮层（弹出菜单、对话框、提示、看图的按钮、拖入提示）压在内容上，背后多模糊一些
     ['.web-popover, .web-dialog, .web-drop-box', { bezel: 20, k: 0.5, max: 70, blur: 14 }],
-    ['.web-toast-box, .web-image-btn', { bezel: 14, k: 0.8, max: 40, blur: 14 }],
+    ['.web-toast-box, .web-image-actions', { bezel: 14, k: 0.8, max: 40, blur: 14 }],
   ]
   // 磨砂：输出的明暗压到 [lo, hi] 之间（0～1 原样输出是 0 和 1）
   const FROST = [0.05, 0.99]
