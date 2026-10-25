@@ -73,8 +73,8 @@ PBlossom 是一款将传统易理逻辑与现代数字化技术相结合的探�
 电脑上使用侧边导航与双栏排版，手机浏览器中使用底部导航。下面展示当前版本的页面与高级设置。
 
 <div align="center">
-  <img width="1280" src="pictures/web/calc-advanced.jpg" alt="新占与梅花高级时间设置"/>
-  <p><strong>新占与梅花高级设置</strong></p>
+  <img width="1280" src="pictures/web/calc.jpg" alt="新占"/>
+  <p><strong>新占</strong></p>
 <table>
   <tr>
     <td align="center"><img src="pictures/web/meihua.jpg" width="420" alt="梅花结果"/></td>
@@ -124,18 +124,18 @@ PBlossom 是一款将传统易理逻辑与现代数字化技术相结合的探�
 </div>
 
 ### 小程序
-以下截自当前微信开发者工具模拟器，首页展示已展开的高级时间设置。
+以下截自当前微信开发者工具模拟器，首页展示默认状态。
 
 <div align="center">
 <table>
   <tr>
-    <td align="center" valign="top"><img src="pictures/miniprogram/calc-advanced.png" width="180" alt="小程序新占 · 高级设置"/></td>
+    <td align="center" valign="top"><img src="pictures/miniprogram/calc.png" width="180" alt="小程序新占"/></td>
     <td align="center" valign="top"><img src="pictures/miniprogram/history.png" width="180" alt="小程序往昔"/></td>
     <td align="center" valign="top"><img src="pictures/miniprogram/calendar.png" width="180" alt="小程序时令"/></td>
     <td align="center" valign="top"><img src="pictures/miniprogram/faq.png" width="180" alt="小程序常见问题"/></td>
   </tr>
   <tr>
-    <td align="center"><strong>新占 · 高级设置</strong></td>
+    <td align="center"><strong>新占</strong></td>
     <td align="center"><strong>往昔</strong></td>
     <td align="center"><strong>时令</strong></td>
     <td align="center"><strong>常见问题</strong></td>

@@ -16,7 +16,7 @@
       "height": 746
     },
     "files": [
-      "calc-advanced",
+      "calc",
       "meihua",
       "liuren-form",
       "liuren",
@@ -33,7 +33,8 @@
     },
     "homeState": {
       "method": "meihua",
-      "advanced": "expanded"
+      "advanced": "collapsed",
+      "time": "live"
     }
   },
   "miniprogram": {
@@ -44,7 +45,7 @@
       "height": 1418
     },
     "files": [
-      "calc-advanced",
+      "calc",
       "history",
       "calendar",
       "faq"
@@ -52,8 +53,9 @@
     "frameCrop": "Rounded simulator frame masked outside radius 48px; application pixels unchanged",
     "homeState": {
       "method": "meihua",
-      "advanced": "expanded",
-      "digits": "empty"
+      "advanced": "collapsed",
+      "digits": "empty",
+      "time": "live"
     }
   },
   "exports": {
@@ -67,7 +69,7 @@
   "verification": {
     "capturedOn": "2026-10-25",
     "webMatchesMiniprogramSource": true,
-    "homeAdvancedVisible": true,
+    "homeAdvancedVisible": false,
     "miniprogramShowcaseCount": 4
   }
 }
