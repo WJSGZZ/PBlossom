@@ -1834,29 +1834,30 @@
 
 .tab-on .tab-icon { background: var(--accent); }
 
-/* 提示气泡：屏幕最上方、与胶囊按钮同一行，从上面轻轻落下（与网页的提示一样）；位置和高度由页面按胶囊算好 */
+/* 提示气泡：屏幕最上方、与胶囊按钮同一行，从上面轻轻落下；字号和留白与网页的提示一样，中线位置由页面按胶囊算好 */
 .mp-toast {
   position: fixed;
   z-index: 60;
   left: 50%;
   display: flex;
   align-items: center;
-  padding: 0 calc(36 * var(--rpx));
+  padding: calc(22 * var(--rpx)) calc(44 * var(--rpx));
   border-radius: calc(999 * var(--rpx));
   white-space: nowrap;
-  font-size: calc(28 * var(--rpx));
+  font-size: calc(30 * var(--rpx));
+  line-height: 1.5;
   color: var(--ink);
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.5));
   -webkit-backdrop-filter: blur(14px) saturate(140%);
   backdrop-filter: blur(14px) saturate(140%);
   box-shadow: 0 calc(16 * var(--rpx)) calc(40 * var(--rpx)) var(--lg-lift), 0 calc(4 * var(--rpx)) calc(12 * var(--rpx)) var(--lg-drop);
   opacity: 0;
-  transform: translate(-50%, calc(-24 * var(--rpx)));
+  transform: translate(-50%, calc(-50% - calc(24 * var(--rpx))));
   transition: opacity 0.22s ease, transform 0.32s var(--ease);
   pointer-events: none;
 }
 .app.dark .mp-toast { background: linear-gradient(135deg, rgba(72, 72, 68, 0.72), rgba(40, 40, 38, 0.6)); }
-.mp-toast-on { opacity: 1; transform: translate(-50%, 0); }
+.mp-toast-on { opacity: 1; transform: translate(-50%, -50%); }
 
 /* 未读红点：用消息提醒那种鲜红（与删除按钮同色），比原来大一圈；圆心位置不变 */
 .tab-badge {

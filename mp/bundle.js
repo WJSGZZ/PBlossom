@@ -655,8 +655,8 @@ Page({
     this.setData({
       // 页头放在胶囊按钮下方；结果页的返回按钮与胶囊同一行，像系统导航栏
       pageTopStyle: `padding-top:${capsule.bottom + 18}px;`,
-      // 提示气泡与胶囊按钮同一行、同样高
-      toastStyle: `top:${capsule.top}px;height:${capsule.height}px;`,
+      // 提示气泡的中线对齐胶囊按钮的中线
+      toastStyle: `top:${capsule.top + capsule.height / 2}px;`,
       // 与其他页面页头右侧的“⋯”同一高度：页面顶部留白 + 按钮自身的 8rpx 上边距
       resultBarStyle: `top:calc(${capsule.bottom + 18}px + 8rpx);`,
       // 按钮下沿到第一个模块的距离，与模块之间的间距（.stack 的 36rpx）一样：8rpx 上边距 + 64rpx 按钮 + 36rpx
@@ -1849,11 +1849,6 @@ Page({
     this._toastTimer = setTimeout(() => this.setData({ toastOn: false }), duration)
   },
 
-  hideCustomToast() {
-    clearTimeout(this._toastTimer)
-    this.setData({ toastOn: false })
-  },
-
   // 复制成功：微信自己会弹“内容已复制”（关不掉），小程序里不再另弹；网页没有这个系统提示，由网页补上
   showCopiedToast() {},
 
@@ -2342,13 +2337,11 @@ Page({
   // 直接进入这一卦或这一天的时令，卦也会存进对方的往昔（见 restoreSharedState）
   _shareCanvasImage(width, measure, draw) {
     const entrancePath = buildSharePath(this.getShareParams())
-    // 生成期间顶部气泡一直显示；正在生成时再点不重复开始
+    // 生成很快，生成好微信自己的图片菜单就弹出来，不另加提示；正在生成时再点不重复开始
     if (this._renderingImage) return
     this._renderingImage = true
-    this.showCustomToast('正在生成图片', 60000)
     this._renderCanvasFile(width, measure, draw).then((path) => {
       this._renderingImage = false
-      this.hideCustomToast()
       if (wx.showShareImageMenu) wx.showShareImageMenu({ path, needShowEntrance: true, entrancePath, fail() {} })
       else wx.previewImage({ urls: [path] })
     }, () => {

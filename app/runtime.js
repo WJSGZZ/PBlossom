@@ -452,7 +452,6 @@
 
     // 提示：网页用自己的提示条（样子与小程序画的气泡相同）；复制成功网页没有微信那个系统提示，也在这里弹
     page.showCustomToast = (text, duration) => toast(text, duration)
-    page.hideCustomToast = () => { if (toastEl) closeLayer(toastEl) }
     page.showCopiedToast = (text) => toast(text)
 
     // 外观里的“深色模式”：网页先把自己样式里的深色条件改好（小程序判断深浅时要问它），
@@ -644,6 +643,8 @@
       if (document.visibilityState === 'visible' && page.onShow) page.onShow()
       if (document.visibilityState === 'hidden' && page.onHide) page.onHide()
     })
+    // 手机上不缩放（与小程序一样）：iOS Safari 不理 viewport 里的 user-scalable=no，双指缩放要在这里拦下
+    document.addEventListener('gesturestart', (e) => e.preventDefault())
   }
 
   // 电脑上的侧边栏：只有 logo 和图标，帮助放在最下面；手机上用小程序那条底部页签栏
