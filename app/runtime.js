@@ -422,7 +422,7 @@
     }
     // 网页上还能把这一卦存成 .txt（内容与“复制文字”相同，可以再从文件导入）
     page.openResultMenu = () => actionSheet({
-      itemList: ['复制文字', '下载文字', '导出图片', '复制链接'],
+      itemList: ['复制文字', '下载记录', '导出图片', '复制链接'],
       success: ({ tapIndex }) => {
         if (tapIndex === 0) page.copyResult()
         if (tapIndex === 1) downloadCurrentResult()
