@@ -5,7 +5,48 @@ function solarToTimestamp(solar) {
     if (!solar) return "";
     const [datePart, timePart = "00:00"] = solar.split(" ");
     const [y, m, d] = datePart.split("-");
-    return `${m}/${d}/${y} ${timePart}:00`;
+    const normalizedTime = timePart.length === 5 ? `${timePart}:00` : timePart;
+    return `${m}/${d}/${y} ${normalizedTime}`;
+}
+
+function parseHistoryTimeValue(value) {
+    if (!value) return 0;
+    const text = String(value).trim();
+    const solarMatch = text.match(/^(\d{4})[-\/](\d{1,2})[-\/](\d{1,2})(?:[ T](\d{1,2}):(\d{1,2})(?::(\d{1,2}))?)?/);
+    if (solarMatch) {
+        const [, y, m, d, hh = "0", mm = "0", ss = "0"] = solarMatch;
+        return new Date(Number(y), Number(m) - 1, Number(d), Number(hh), Number(mm), Number(ss)).getTime();
+    }
+    const parsed = Date.parse(text);
+    return Number.isNaN(parsed) ? 0 : parsed;
+}
+
+function getHistoryTimeValue(record) {
+    if (!record) return 0;
+    return parseHistoryTimeValue(record.solar)
+        || parseHistoryTimeValue(record.timestamp)
+        || Number(record.id)
+        || 0;
+}
+
+function sortHistoryRecords(records) {
+    return [...(records || [])].sort((a, b) => getHistoryTimeValue(b) - getHistoryTimeValue(a));
+}
+
+function saveSortedHistory() {
+    const sorted = sortHistoryRecords(state.history);
+    const changed = sorted.length !== state.history.length
+        || sorted.some((record, index) => record !== state.history[index]);
+    state.history = sorted;
+    if (changed) {
+        localStorage.setItem('pblossom_history', JSON.stringify(state.history));
+    }
+    return state.history;
+}
+
+function addHistoryRecord(record) {
+    state.history = sortHistoryRecords([record, ...state.history]);
+    localStorage.setItem('pblossom_history', JSON.stringify(state.history));
 }
 
 // 导入 txt 文件
@@ -81,8 +122,7 @@ function handleImportFile(input) {
                         liuren_input: liurenInput,
                         liuren_result: data,
                     };
-                    state.history.unshift(record);
-                    localStorage.setItem('pblossom_history', JSON.stringify(state.history));
+                    addHistoryRecord(record);
                     renderMain();
                     showToast('导入成功');
                 } else {
@@ -117,8 +157,7 @@ function handleImportFile(input) {
         .then(res => {
             if (res.status === 'success') {
                 const record = { ...res.data, id: Date.now(), input_nums: [Number(n1), Number(n2), Number(n3)], note };
-                state.history.unshift(record);
-                localStorage.setItem('pblossom_history', JSON.stringify(state.history));
+                addHistoryRecord(record);
                 renderMain();
                 showToast('导入成功');
             } else {
@@ -272,18 +311,15 @@ function resetDeleteBtnUI(id) {
 }
 
 function getHistoryPageHtml() {
+    const historyRecords = saveSortedHistory();
     let historyContent = '';
-    if (state.history.length === 0) {
+    if (historyRecords.length === 0) {
         historyContent = `
             <div class="flex-1 flex flex-col items-center justify-center text-inkLight opacity-30 min-h-[400px]">
                 <p class="font-light tracking-widest">暂无记录</p>
             </div>`;
     } else {
-        let itemsHtml = [...state.history].sort((a, b) => {
-            const ta = a.solar || a.timestamp || '';
-            const tb = b.solar || b.timestamp || '';
-            return tb.localeCompare(ta);
-        }).map(record => {
+        let itemsHtml = historyRecords.map(record => {
             const isLiuren = record.type === "liuren";
 
             let title, pillars, timeStr, noteText;

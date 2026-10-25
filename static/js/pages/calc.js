@@ -12,7 +12,7 @@ function updateBottomInputBar() {
         !state.resultContextTab &&
         !(state.liuren && (state.liuren.result || state.liuren.advancedOpen || state.liuren.form))
     );
-    const shouldShow = isPlumNewHome;
+    const shouldShow = false;
 
     if (shouldShow) {
         if (bottomBar) bottomBar.classList.remove('translate-y-full', 'pointer-events-none', 'opacity-0', 'invisible');
@@ -25,12 +25,92 @@ function updateBottomInputBar() {
 
 function openLiurenPage() {
     state.resultContextTab = null;
+    if (state.ui) state.ui.homeMethodMenuOpen = false;
     if (state.liuren) {
         state.liuren.result = null;
         state.liuren.form = null;
         state.liuren.advancedOpen = false;
     }
     switchTab("liuren");
+}
+
+function toggleHomeMethodMenu(event) {
+    if (event) event.stopPropagation();
+    state.ui = state.ui || {};
+    state.ui.homeMethodMenuOpen = !state.ui.homeMethodMenuOpen;
+    syncHomeMethodMenuDom();
+}
+
+function closeHomeMethodMenu(shouldRender = true) {
+    if (!state.ui || !state.ui.homeMethodMenuOpen) return;
+    state.ui.homeMethodMenuOpen = false;
+    syncHomeMethodMenuDom();
+}
+
+function selectHomeMethod(method, event) {
+    if (event) event.stopPropagation();
+    state.ui = state.ui || {};
+    state.ui.homeMethodMenuOpen = false;
+    syncHomeMethodMenuDom();
+    if (method === "liuren") {
+        if (state.activeTab !== "liuren") {
+            openLiurenPage();
+        }
+        return;
+    }
+    if (method === "meihua" && state.activeTab !== "calc") {
+        resetToHome();
+        return;
+    }
+}
+
+function syncHomeMethodMenuDom() {
+    const isOpen = !!(state.ui && state.ui.homeMethodMenuOpen);
+    document.querySelectorAll(".home-method-pill").forEach((pill) => {
+        pill.classList.toggle("home-method-pill-open", isOpen);
+    });
+    document.querySelectorAll(".home-method-menu").forEach((menu) => {
+        menu.classList.toggle("home-method-menu-open", isOpen);
+    });
+}
+
+function renderHomeMethodAction(currentMethod = "meihua") {
+    const methodMenuOpen = !!(state.ui && state.ui.homeMethodMenuOpen);
+    const activeCheck = `
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M5 12.5l4 4L19 7"></path>
+        </svg>`;
+    return `
+        <div class="home-method-action" onclick="event.stopPropagation()">
+            <button type="button" class="home-method-pill ${methodMenuOpen ? "home-method-pill-open" : ""}" onclick="toggleHomeMethodMenu(event)">
+                <span class="home-method-pill-text">${currentMethod === "liuren" ? "六壬" : "梅花"}</span>
+                <span class="home-method-caret" aria-hidden="true">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="6 9 12 15 18 9"></polyline>
+                    </svg>
+                </span>
+            </button>
+            <div class="home-method-menu ${methodMenuOpen ? "home-method-menu-open" : ""}">
+                <button type="button" class="home-method-option ${currentMethod === "meihua" ? "home-method-option-active" : ""}" onclick="selectHomeMethod('meihua', event)">
+                    <span class="home-method-check">${currentMethod === "meihua" ? activeCheck : ""}</span>
+                    <span class="home-method-copy">
+                        <span class="home-method-title">梅花</span>
+                        <span class="home-method-desc">支持绝大部分问事</span>
+                    </span>
+                </button>
+                <button type="button" class="home-method-option ${currentMethod === "liuren" ? "home-method-option-active" : ""}" onclick="selectHomeMethod('liuren', event)">
+                    <span class="home-method-check">${currentMethod === "liuren" ? activeCheck : ""}</span>
+                    <span class="home-method-copy">
+                        <span class="home-method-title home-method-title-beta">
+                            <span>六壬</span>
+                            <span class="home-method-beta">Beta</span>
+                        </span>
+                        <span class="home-method-desc">更加强大与深度</span>
+                    </span>
+                </button>
+            </div>
+        </div>
+    `;
 }
 
 // 过滤非整数字符（只保留数字、逗号、空格、负号）
@@ -44,9 +124,10 @@ function filterIntInput(el) {
     }
 }
 
-// 检查输入有效性
+// 检查旧底部输入栏有效性；首页三个数字框不需要被这里禁用。
 function checkInput(el) {
     const btn = document.getElementById('btn-submit');
+    if (!btn || !el) return;
     const hasVal = el.value.trim().length > 0;
 
     if (hasVal) {
@@ -60,23 +141,65 @@ function checkInput(el) {
     }
 }
 
+function getHomeInputNumbers() {
+    const fields = [1, 2, 3].map((index) => document.getElementById(`home-num-${index}`));
+    if (fields.every(Boolean)) {
+        return fields.map((field, index) => {
+            const raw = String(field.value || "").trim();
+            const fallback = state.ui?.homeNums?.[index] || 1;
+            return parseInt(raw || fallback, 10);
+        }).filter((num) => !Number.isNaN(num));
+    }
+
+    const inputEl = document.getElementById('input-nums');
+    const val = inputEl ? inputEl.value : "";
+    return val
+        .replace(/\uFF0C/g, ',')
+        .replace(/\s+/g, ',')
+        .split(',')
+        .map((s) => parseInt(s.trim(), 10))
+        .filter((num) => !Number.isNaN(num));
+}
+
+function focusNextHomeNum(event, index) {
+    if (event.key === "Backspace" && index > 1 && !event.currentTarget.value) {
+        event.preventDefault();
+        document.getElementById(`home-num-${index - 1}`)?.focus();
+        return;
+    }
+
+    if (event.key === " " || event.key === "," || event.key === "\uFF0C") {
+        event.preventDefault();
+        document.getElementById(`home-num-${Math.min(index + 1, 3)}`)?.focus();
+        return;
+    }
+
+    if (event.key !== "Enter") return;
+    event.preventDefault();
+    if (index < 3) {
+        document.getElementById(`home-num-${index + 1}`)?.focus();
+    } else {
+        handleCalculate();
+    }
+}
+
 // 起卦计算
 async function handleCalculate() {
     const inputEl = document.getElementById('input-nums');
-    const btn = document.getElementById('btn-submit');
-    if (!inputEl) return;
+    const btn = document.getElementById('home-btn-submit') || document.getElementById('btn-submit');
 
-    const val = inputEl.value;
-    const nums = val.replace(/,/g, ',').replace(/\s+/g, ',').split(',').map(s => parseInt(s.trim())).filter(n => !isNaN(n));
+    const nums = getHomeInputNumbers();
 
     if (nums.length !== 3) {
         alert("请确保输入三个整数");
         return;
     }
 
-    const originalBtnHtml = btn.innerHTML;
-    btn.innerHTML = `<div class="animate-spin h-6 w-6 border-2 border-accent border-t-transparent rounded-full"></div>`;
-    btn.disabled = true;
+    const originalBtnHtml = btn ? btn.innerHTML : "";
+    if (btn) {
+        btn.innerHTML = `<div class="animate-spin h-6 w-6 border-2 border-white border-t-transparent rounded-full"></div>`;
+        btn.disabled = true;
+    }
 
     try {
         const response = await fetch('/api/divine', {
@@ -90,8 +213,12 @@ async function handleCalculate() {
             const newRecord = { ...res.data, id: Date.now(), input_nums: nums };
             state.result = newRecord;
             state.resultContextTab = null;
-            state.history.unshift(newRecord);
-            localStorage.setItem('pblossom_history', JSON.stringify(state.history));
+            if (typeof addHistoryRecord === "function") {
+                addHistoryRecord(newRecord);
+            } else {
+                state.history.unshift(newRecord);
+                localStorage.setItem('pblossom_history', JSON.stringify(state.history));
+            }
             renderMain();
         } else {
             alert("错误:" + res.message);
@@ -100,8 +227,11 @@ async function handleCalculate() {
         console.error(error);
         alert("网络请求失败");
     } finally {
-        btn.innerHTML = originalBtnHtml;
-        checkInput(inputEl);
+        if (btn) {
+            btn.innerHTML = originalBtnHtml;
+            btn.disabled = false;
+        }
+        if (inputEl) checkInput(inputEl);
     }
 }
 
@@ -126,7 +256,7 @@ async function handleExport() {
                 n1: nums[0],
                 n2: nums[1],
                 n3: nums[2],
-                timestamp: data.timestamp // 关键：传入原始时间，让后端"回到过去"计算
+                timestamp: data.timestamp // 关键：传入原始时间，让后端“回到过去”计算
             })
         });
 
@@ -182,13 +312,40 @@ function updateNote(val) {
 // 生成 HTML
 function getCalcPageHtml() {
     if (!state.result) {
+        const homeNums = state.ui?.homeNums || [1, 2, 3];
+        const numberInputs = homeNums.map((num, index) => `
+            <div class="home-num-slot">
+                    <input id="home-num-${index + 1}"
+                        type="text"
+                        inputmode="numeric"
+                        placeholder="${num}"
+                        oninput="filterIntInput(this)"
+                        onkeydown="focusNextHomeNum(event, ${index + 1})"
+                    class="home-num-box">
+            </div>
+        `).join("");
         return `
             <div class="relative h-full flex flex-col items-center justify-center p-8 animate-fade-slow min-h-[500px]">
-                <div class="absolute top-8 right-8 lg:top-16 lg:right-16">
-                    ${renderHeaderActionButton({icon: ICONS.sparkles, label: "六壬", onClick: "openLiurenPage()"})}
+                ${renderHomeMethodAction("meihua")}
+                <div class="home-brand">
+                    <div class="text-5xl text-ink font-serif tracking-[0.1em] mb-4 opacity-90 font-light text-center">Plum Blossom</div>
+                    <div class="text-xs text-inkLight tracking-[0.3em] uppercase opacity-50 text-center mb-12">Ancient Wisdom, Modern Elegance</div>
                 </div>
-                <div class="text-5xl text-ink font-serif tracking-[0.1em] mb-4 opacity-90 font-light text-center">Plum Blossom</div>
-                <div class="text-xs text-inkLight tracking-[0.3em] uppercase opacity-50 text-center mb-12">Ancient Wisdom, Modern Elegance</div>
+                <div class="home-input-dock">
+                    <div class="home-num-capsule">
+                        <div class="home-num-fields">
+                        ${numberInputs}
+                        </div>
+                        <button id="home-btn-submit" type="button" onclick="handleCalculate()" class="home-start-btn" aria-label="Start">
+                            <span class="home-start-icon">
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.15" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M5 12h13"></path>
+                                    <path d="m12 6 6 6-6 6"></path>
+                                </svg>
+                            </span>
+                        </button>
+                    </div>
+                </div>
             </div>`;
     } else {
         const data = state.result;

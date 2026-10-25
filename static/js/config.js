@@ -117,6 +117,9 @@ const WUXING_MAP_ALL = {
 const GAN_WUXING = GANZHI_MAP;
 
 const savedHistory = localStorage.getItem("pblossom_history");
+const FAQ_SEEN_KEY = "pblossom_faq_seen";
+const APP_VERSION = "2.6.5";
+const randomHomeNums = () => Array.from({length: 3}, () => Math.floor(Math.random() * 64) + 1);
 
 window.state = {
     activeTab: "calc",
@@ -131,11 +134,16 @@ window.state = {
         selectedHour: null,
         preciseTime: null,
         calibratedTst: null,
+        calibratedTstDate: null,
+        hourHidden: false,
         longitude: null,
         locationStatus: null,
     },
     ui: {
         selectOpen: null,
+        showFaqDot: localStorage.getItem(FAQ_SEEN_KEY) !== APP_VERSION,
+        homeNums: randomHomeNums(),
+        homeMethodMenuOpen: false,
     },
     liuren: {
         result: null,

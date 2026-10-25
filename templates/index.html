@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB2aWV3Qm94PSIwIDAgMjAwIDIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICAgIDxwYXRoIGQ9Ik0gMTQ1LDE5MCBMIDU1LDE5MCBBIDQ1LDQ1IDAgMCAxIDEwLDE0NSBBIDQ1LDQ1IDAgMCAwIDEwMCwxNDUgTCAxMDAsMTAwIEwgMTQ1LDEwMCBBIDQ1LDQ1IDAgMCAxIDE0NSwxOTAgWiIgZmlsbD0iI0IxQURBMSIgLz4KICAgIDxwYXRoIGQ9Ik0gNTUsMTAgTCAxNDUsMTAgQSA0NSw0NSAwIDAgMSAxNDUsMTAwIEwgMTAwLDEwMCBMIDEwMCwxNDUgQSA0NSw0NSAwIDAgMSAxMCwxNDUgTCAxMCw1NSBBIDQ1LDQ1IDAgMCAxIDU1LDEwIFoiIGZpbGw9IiNEQTc3NTYiIC8+Cjwvc3ZnPg==">
+    <link rel="icon" type="image/svg+xml" href="{{ url_for('logo_svg') }}">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PBlossom</title>
@@ -13,11 +13,8 @@
 <body class="bg-bg text-ink font-serif overflow-hidden h-screen w-full flex selection:bg-accent selection:text-white">
 
 <aside class="w-[80px] flex flex-col items-center py-8 border-r border-border bg-sidebar flex-shrink-0 z-20 h-full">
-    <div class="w-12 h-12 mb-12 text-accent transition-transform duration-500 cursor-default" onclick="resetToHome()">
-        <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-            <path d="M 145,190 L 55,190 A 45,45 0 0 1 10,145 A 45,45 0 0 0 100,145 L 100,100 L 145,100 A 45,45 0 0 1 145,190 Z" fill="#B1ADA1"/>
-            <path d="M 55,10 L 145,10 A 45,45 0 0 1 145,100 L 100,100 L 100,145 A 45,45 0 0 1 10,145 L 10,55 A 45,45 0 0 1 55,10 Z" fill="#DA7756"/>
-        </svg>
+    <div class="w-12 h-12 mt-[1.625rem] mb-12 text-accent transition-transform duration-500 cursor-default" onclick="resetToHome()">
+        <img src="{{ url_for('logo_svg') }}" alt="PBlossom" class="w-full h-full block">
     </div>
 
     <div class="flex flex-col w-full px-4 items-center gap-4">
@@ -55,6 +52,7 @@
         <div class="relative group w-full">
             <button id="nav-help" onclick="switchTab('help')" class="w-full aspect-square rounded-2xl flex items-center justify-center transition-all duration-300 text-inkLight hover:bg-white/50">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                <span id="nav-help-dot" class="nav-notice-dot"></span>
             </button>
             <div class="absolute left-full ml-3 top-1/2 -translate-y-1/2 px-3 py-1.5 bg-ink text-white text-sm rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 whitespace-nowrap pointer-events-none shadow-lg z-50">
                 常见问题<div class="absolute right-full top-1/2 -translate-y-1/2 border-4 border-transparent border-r-ink"></div>

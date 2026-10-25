@@ -41,6 +41,21 @@ CHONG = {
     "子": "午", "丑": "未", "寅": "申", "卯": "酉", "辰": "戌", "巳": "亥",
     "午": "子", "未": "丑", "申": "寅", "酉": "卯", "戌": "辰", "亥": "巳",
 }
+GAN_HE = {"甲": "己", "己": "甲", "乙": "庚", "庚": "乙", "丙": "辛", "辛": "丙", "丁": "壬", "壬": "丁", "戊": "癸", "癸": "戊"}
+SANHE_NEXT = {
+    "申": "子", "子": "辰", "辰": "申",
+    "亥": "卯", "卯": "未", "未": "亥",
+    "寅": "午", "午": "戌", "戌": "寅",
+    "巳": "酉", "酉": "丑", "丑": "巳",
+}
+YIMA = {
+    "申": "寅", "子": "寅", "辰": "寅",
+    "寅": "申", "午": "申", "戌": "申",
+    "亥": "巳", "卯": "巳", "未": "巳",
+    "巳": "亥", "酉": "亥", "丑": "亥",
+}
+MENG = set("寅申巳亥")
+ZHONG = set("子午卯酉")
 RELATIVE = {
     "same": "兄弟",
     "resource": "父母",
@@ -229,9 +244,9 @@ def build_four_lessons(day_gz, sky_by_earth):
             "subject": subject,
             "lower": lower,
             "upper": upper,
-            "lower_element": WUXING[lower],
+            "lower_element": WUXING[subject],
             "upper_element": WUXING[upper],
-            "relation": relation(upper, lower),
+            "relation": relation(upper, subject),
         }
         for name, subject, lower, upper in raw
     ]
@@ -253,21 +268,54 @@ def relative_to_day(day_gan, branch):
     return ""
 
 
-def _select_initial(candidates, day_is_yang):
-    # 叁/肆课（日支侧）优先于壹/貳课（日干侧）
-    zhi_side = [c for c in candidates if c["name"] in ("叁", "肆")]
-    pool = zhi_side if zhi_side else candidates
-    # 同侧按阴阳取：阳日取阳支，阴日取阴支
-    matched = [c for c in pool if (c["upper"] in YANG) == day_is_yang]
-    final_pool = matched if matched else pool
-    bij = len(final_pool) > 1
-    return final_pool[0]["upper"], bij
+def _harm_depth(course, relation_name):
+    start = ZHI.index(course["lower"])
+    end = ZHI.index(course["upper"])
+    steps = (end - start) % 12
+    total = 0
+    upper_el = WUXING[course["upper"]]
+    for i in range(steps + 1):
+        earth = zhi_at(start + i)
+        earth_el = WUXING[earth]
+        if relation_name == "上克下" and KE[upper_el] == earth_el:
+            total += 1
+        elif relation_name == "下贼上" and KE[earth_el] == upper_el:
+            total += 1
+    return total
+
+
+def _select_by_shehai(candidates, relation_name, day_is_yang):
+    max_depth = max(_harm_depth(c, relation_name) for c in candidates)
+    pool = [c for c in candidates if _harm_depth(c, relation_name) == max_depth]
+    if len(pool) == 1:
+        return pool[0]["upper"]
+    meng = [c for c in pool if c["lower"] in MENG]
+    if meng:
+        pool = meng
+    else:
+        zhong = [c for c in pool if c["lower"] in ZHONG]
+        if zhong:
+            pool = zhong
+    preferred_names = ("壹", "貳") if day_is_yang else ("叁", "肆")
+    preferred = [c for c in pool if c["name"] in preferred_names]
+    return (preferred[0] if preferred else pool[0])["upper"]
+
+
+def _select_initial(candidates, day_is_yang, relation_name):
+    if len(candidates) == 1:
+        return candidates[0]["upper"], None
+    matched = [c for c in candidates if (c["upper"] in YANG) == day_is_yang]
+    if len(matched) == 1:
+        return matched[0]["upper"], "比用"
+    pool = matched if matched else candidates
+    return _select_by_shehai(pool, relation_name, day_is_yang), "涉害"
 
 
 def build_three_transmissions(day_gz, lessons, sky_by_earth, hidden_stems):
     day_gan, day_branch = day_gz[0], day_gz[1]
     day_is_yang = day_gan in YANG
     course_types = []
+    earth_by_sky = {sky: earth for earth, sky in sky_by_earth.items()}
 
     # 伏吟/返吟必须先判断，否则天地盘异常时贼克/元首会误判
     fuyin = all(sky_by_earth.get(z) == z for z in ZHI)
@@ -275,30 +323,60 @@ def build_three_transmissions(day_gz, lessons, sky_by_earth, hidden_stems):
 
     if fuyin:
         course_types.append("伏吟课")
-        initial = GAN_HOME[day_gan] if day_is_yang else day_branch
+        beike = [c for c in lessons if c["relation"] == "下贼上"]
+        yuanshou = [c for c in lessons if c["relation"] == "上克下"]
+        if beike:
+            initial, extra = _select_initial(beike, day_is_yang, "下贼上")
+            if extra:
+                course_types.append(extra)
+        elif yuanshou:
+            initial, extra = _select_initial(yuanshou, day_is_yang, "上克下")
+            if extra:
+                course_types.append(extra)
+        else:
+            initial = GAN_HOME[day_gan] if day_is_yang else day_branch
         middle = XING.get(initial, initial)
+        if middle == initial:
+            middle = lessons[2]["upper"]
         final = XING.get(middle, middle)
+        if final == middle:
+            final = CHONG[middle]
         if middle == initial:
             course_types.append("自任")
     elif fanyin:
         course_types.append("返吟课")
-        # 初传取干上神，中传末传取冲
-        initial = sky_by_earth[GAN_HOME[day_gan]]
-        middle = CHONG[initial]
-        final = CHONG[middle]
+        beike = [c for c in lessons if c["relation"] == "下贼上"]
+        yuanshou = [c for c in lessons if c["relation"] == "上克下"]
+        if beike:
+            initial, extra = _select_initial(beike, day_is_yang, "下贼上")
+            if extra:
+                course_types.append(extra)
+            middle = CHONG[initial]
+            final = CHONG[middle]
+        elif yuanshou:
+            initial, extra = _select_initial(yuanshou, day_is_yang, "上克下")
+            if extra:
+                course_types.append(extra)
+            middle = CHONG[initial]
+            final = CHONG[middle]
+        else:
+            initial = YIMA[day_branch]
+            middle = lessons[2]["upper"]
+            final = lessons[0]["upper"]
+            course_types.append("井栏射")
     else:
         beike = [c for c in lessons if c["relation"] == "下贼上"]
         yuanshou = [c for c in lessons if c["relation"] == "上克下"]
         if beike:
             course_types.append("重审课")
-            initial, bij = _select_initial(beike, day_is_yang)
-            if bij:
-                course_types.append("比用")
+            initial, extra = _select_initial(beike, day_is_yang, "下贼上")
+            if extra:
+                course_types.append(extra)
         elif yuanshou:
             course_types.append("元首课")
-            initial, bij = _select_initial(yuanshou, day_is_yang)
-            if bij:
-                course_types.append("比用")
+            initial, extra = _select_initial(yuanshou, day_is_yang, "上克下")
+            if extra:
+                course_types.append(extra)
         else:
             # 遥克：日干与四课上神的隔空克制
             day_el = WUXING[day_gan]
@@ -306,21 +384,41 @@ def build_three_transmissions(day_gz, lessons, sky_by_earth, hidden_stems):
             hushi  = [c for c in lessons if KE[WUXING[c["upper"]]] == day_el]   # 虎视：上神克日干
             if haoshi or hushi:
                 course_types.append("遥克课")
-                if haoshi:
+                if hushi:
                     course_types.append("蒿矢")
-                    candidates = haoshi
-                else:
-                    course_types.append("虎视")
                     candidates = hushi
-                initial, bij = _select_initial(candidates, day_is_yang)
-                if bij:
-                    course_types.append("比用")
+                else:
+                    course_types.append("弹射")
+                    candidates = haoshi
+                initial, extra = _select_initial(candidates, day_is_yang, candidates[0]["relation"] if candidates else "上克下")
+                if extra:
+                    course_types.append(extra)
             else:
-                # 昴星/别责/八专等（暂简化）
-                initial = lessons[2]["upper"]
-                course_types.append("无克取上神")
-        middle = sky_by_earth[initial]
-        final = sky_by_earth[middle]
+                distinct = {(c["lower"], c["upper"]) for c in lessons}
+                if len(distinct) == 4:
+                    course_types.append("昴星课")
+                    initial = sky_by_earth["酉"] if day_is_yang else earth_by_sky["酉"]
+                    middle = lessons[2]["upper"] if day_is_yang else lessons[0]["upper"]
+                    final = lessons[0]["upper"] if day_is_yang else lessons[2]["upper"]
+                elif len(distinct) == 3:
+                    course_types.append("别责课")
+                    if day_is_yang:
+                        initial = sky_by_earth[GAN_HOME[GAN_HE[day_gan]]]
+                    else:
+                        initial = SANHE_NEXT[day_branch]
+                    middle = lessons[0]["upper"]
+                    final = lessons[0]["upper"]
+                else:
+                    course_types.append("八专课")
+                    if day_is_yang:
+                        initial = zhi_at(ZHI.index(lessons[0]["upper"]) + 2)
+                    else:
+                        initial = zhi_at(ZHI.index(lessons[2]["upper"]) - 2)
+                    middle = lessons[0]["upper"]
+                    final = lessons[0]["upper"]
+        if "昴星课" not in course_types and "别责课" not in course_types and "八专课" not in course_types:
+            middle = sky_by_earth[initial]
+            final = sky_by_earth[middle]
     labels = ["初传", "中传", "末传"]
     branches = [initial, middle, final]
     transmissions = []
@@ -473,8 +571,8 @@ def perform_liuren(req):
     data = {
         "question": question,
         "calendar": {
-            "solar": dt_input.strftime("%Y-%m-%d %H:%M"),
-            "true_solar_time": dt.strftime("%Y-%m-%d %H:%M") if longitude is not None else None,
+            "solar": dt_input.strftime("%Y-%m-%d %H:%M:%S"),
+            "true_solar_time": dt.strftime("%Y-%m-%d %H:%M:%S") if longitude is not None else None,
             "longitude": round(float(longitude), 2) if longitude is not None else None,
             "location_failed": location_attempted and longitude is None,
             "lunar": f"{lunar.getMonthInChinese()}月{lunar.getDayInChinese()} {hour_branch}时",

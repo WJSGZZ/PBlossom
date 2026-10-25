@@ -18,6 +18,7 @@ function resetToHome() {
     state.resultContextTab = null;
     switchTab("calc");
     setTimeout(() => {
+        if (document.getElementById("home-btn-submit")) return;
         const inputEl = document.getElementById("input-nums");
         if (inputEl) {
             inputEl.value = "";
@@ -27,17 +28,42 @@ function resetToHome() {
 }
 
 function switchTab(tab) {
+    const isSameTab = state.activeTab === tab;
     state.activeTab = tab;
+    state.ui = state.ui || {};
+    state.ui.suppressPageAnimation = isSameTab;
+
+    if (tab === "help") {
+        state.ui.showFaqDot = false;
+        localStorage.setItem(FAQ_SEEN_KEY, APP_VERSION);
+    }
     if (state.resultContextTab === tab) {
         state.result = null;
         state.resultContextTab = null;
     } else if (tab === "calc") {
         state.resultContextTab = null;
+        if (state.ui && typeof randomHomeNums === "function") {
+            state.ui.homeNums = randomHomeNums();
+        }
         if (state.liuren) {
             state.liuren.result = null;
             state.liuren.form = null;
             state.liuren.advancedOpen = false;
         }
+    }
+
+    let calendarDateToFetch = null;
+    if (tab === "calendar") {
+        const now = new Date();
+        calendarDateToFetch = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}-${String(now.getDate()).padStart(2,"0")}`;
+        state.calendar.selectedDate = calendarDateToFetch;
+        state.calendar.viewDate = new Date(now.getFullYear(), now.getMonth(), 1);
+        state.calendar.selectedData = null;
+        state.calendar.selectedHour = null;
+        state.calendar.calibratedTst = null;
+        state.calendar.calibratedTstDate = null;
+        state.calendar.hourHidden = false;
+        state.calendar.preciseTime = `${String(now.getHours()).padStart(2,"0")}:${String(now.getMinutes()).padStart(2,"0")}`;
     }
 
     const btnCalc = document.getElementById("nav-calc");
@@ -59,14 +85,20 @@ function switchTab(tab) {
     setBtnStyle(btnHelp, tab === "help");
     setBtnStyle(btnCalendar, tab === "calendar");
 
+    const faqDot = document.getElementById("nav-help-dot");
+    if (faqDot) faqDot.classList.toggle("hidden", !(state.ui && state.ui.showFaqDot));
+
+    if (isSameTab && tab === "calendar" && calendarDateToFetch) {
+        if (typeof updateCalendarView === "function") updateCalendarView();
+        if (typeof _fetchCalendarData === "function") _fetchCalendarData(calendarDateToFetch);
+        state.ui.suppressPageAnimation = false;
+        return;
+    }
+
     renderMain();
 
-    if (tab === "calendar") {
-        state.calendar.selectedHour = null;
-        state.calendar.calibratedTst = null;
-        const now = new Date();
-        state.calendar.preciseTime = `${String(now.getHours()).padStart(2,"0")}:${String(now.getMinutes()).padStart(2,"0")}`;
-        if (typeof selectDate === "function") selectDate(now);
+    if (calendarDateToFetch && typeof _fetchCalendarData === "function") {
+        _fetchCalendarData(calendarDateToFetch);
     }
 
     if (tab === "liuren") {
@@ -80,6 +112,8 @@ function switchTab(tab) {
 
 function renderMain() {
     const contentEl = document.getElementById("content-scroll");
+    const faqDot = document.getElementById("nav-help-dot");
+    if (faqDot) faqDot.classList.toggle("hidden", !(state.ui && state.ui.showFaqDot));
 
     if (typeof updateBottomInputBar === "function") {
         updateBottomInputBar();
@@ -97,6 +131,13 @@ function renderMain() {
         contentEl.innerHTML = getCalendarPageHtml();
     } else if (state.activeTab === "liuren") {
         contentEl.innerHTML = getLiurenPageHtml();
+    }
+
+    if (state.ui && state.ui.suppressPageAnimation) {
+        contentEl.querySelectorAll(".animate-fade-slow").forEach((el) => {
+            el.classList.remove("animate-fade-slow");
+        });
+        state.ui.suppressPageAnimation = false;
     }
 }
 
@@ -118,5 +159,9 @@ function migrateTimestamps() {
 document.addEventListener("DOMContentLoaded", () => {
     migrateTimestamps();
     renderMain();
-    setTimeout(() => document.getElementById("input-nums")?.focus(), 200);
+    setTimeout(() => {
+        if (!document.getElementById("home-btn-submit")) {
+            document.getElementById("input-nums")?.focus();
+        }
+    }, 200);
 });

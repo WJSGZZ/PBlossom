@@ -247,7 +247,7 @@ function renderHexagramColumn(guaData) {
             const elColor = ELEMENT_COLORS[d.element] || 'text-ink';
 
             return `
-                <div class="flex justify-between items-center bg-white/40 px-3 py-2 rounded-sm text-xs border border-transparent hover:border-border/30 transition-colors">
+                <div class="flex justify-between items-center bg-white/40 px-3 py-2 rounded-xl text-xs border border-transparent hover:border-border/30 transition-colors">
                     <span class="text-inkLight opacity-80 flex items-center">
                         ${d.label}令
                         <span class="font-medium ${zhiColor} ml-1">${d.zhi}</span>

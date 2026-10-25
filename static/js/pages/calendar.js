@@ -17,6 +17,7 @@ const CALENDAR_START_MAP = {
 const CALENDAR_TIME_RANGES = ["23-01", "01-03", "03-05", "05-07", "07-09", "09-11", "11-13", "13-15", "15-17", "17-19", "19-21", "21-23"];
 
 function getSelectedHourGanZhi() {
+    if (state.calendar.hourHidden) return "\u672a\u9009";
     if (state.calendar.selectedData?.gz_hour) return state.calendar.selectedData.gz_hour;
     return "\u672a\u9009";
 }
@@ -31,6 +32,10 @@ function _equationOfTimeJS(date) {
 function _toTrueSolarTimeJS(date, longitude) {
     const correction = (longitude - 120.0) * 4.0 + _equationOfTimeJS(date);
     return new Date(date.getTime() + correction * 60000);
+}
+
+function _calendarDateValue(date) {
+    return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,"0")}-${String(date.getDate()).padStart(2,"0")}`;
 }
 
 function requestCalendarLocation(callback) {
@@ -80,7 +85,9 @@ function setCalendarNow() {
             state.calendar.preciseTime = `${String(now.getHours()).padStart(2,"0")}:${String(now.getMinutes()).padStart(2,"0")}`;
         }
         const tst = (longitude !== null) ? _toTrueSolarTimeJS(baseDate, longitude) : baseDate;
+        state.calendar.calibratedTstDate = _calendarDateValue(tst);
         state.calendar.calibratedTst = `${String(tst.getHours()).padStart(2,"0")}:${String(tst.getMinutes()).padStart(2,"0")}`;
+        state.calendar.hourHidden = false;
         _fetchCalendarData(sel);
     };
     if (state.calendar.locationStatus === "granted") {
@@ -93,22 +100,34 @@ function setCalendarNow() {
 async function clearPreciseTime() {
     state.calendar.preciseTime = null;
     state.calendar.calibratedTst = null;
+    state.calendar.calibratedTstDate = null;
     state.calendar.selectedHour = null;
+    state.calendar.hourHidden = true;
     if (state.calendar.selectedDate) await _fetchCalendarData(state.calendar.selectedDate);
 }
 
 function onCalPreciseTimeChange(val) {
     state.calendar.preciseTime = val || null;
     state.calendar.calibratedTst = null;
+    state.calendar.calibratedTstDate = null;
+    state.calendar.hourHidden = !val;
 }
 
 function clearCalendarHour() {
-    state.calendar.preciseTime = null;
-    state.calendar.calibratedTst = null;
-    state.calendar.selectedHour = null;
+    state.calendar.hourHidden = !state.calendar.hourHidden;
     const hourCard = document.getElementById("calendar-hour-pillar");
     if (hourCard && state.calendar.selectedData) {
-        hourCard.outerHTML = renderCalendarPillar("\u65f6\u67f1", "\u672a\u9009", "\u65f6", "", {clearable: true, id: "calendar-hour-pillar"});
+        const info = state.calendar.selectedData;
+        const preciseTime = state.calendar.preciseTime;
+        const calibratedTst = state.calendar.calibratedTst;
+        const hasHourTime = Boolean(preciseTime || calibratedTst);
+        const showHour = !state.calendar.hourHidden && hasHourTime && info.gz_hour;
+        const hourVal = showHour ? info.gz_hour : "\u672a\u9009";
+        const tstDate = state.calendar.calibratedTstDate;
+        const hourTimeLabel = calibratedTst && tstDate && tstDate !== state.calendar.selectedDate ? `${tstDate} ${calibratedTst}` : (calibratedTst || preciseTime);
+        const effectiveHourCap = showHour ? `时 ${hourTimeLabel}` : "\u65f6";
+        const hourCap = showHour ? `时 ${calibratedTst || preciseTime}` : "\u65f6";
+        hourCard.outerHTML = renderCalendarPillar("\u65f6\u67f1", hourVal, effectiveHourCap, "", {clearable: true, id: "calendar-hour-pillar"});
         return;
     }
     renderMain();
@@ -118,6 +137,8 @@ async function onCalPreciseTimeBlur(val) {
     if (!val) { await clearPreciseTime(); return; }
     state.calendar.preciseTime = val;
     state.calendar.calibratedTst = null;
+    state.calendar.calibratedTstDate = null;
+    state.calendar.hourHidden = false;
     if (state.calendar.selectedDate) await _fetchCalendarData(state.calendar.selectedDate);
 }
 
@@ -147,6 +168,7 @@ async function handleCopyCalendarInfo() {
 
 function closeAllMenus(shouldRender = true) {
     if (typeof closeDesignSelect === "function") closeDesignSelect(shouldRender);
+    if (typeof closeHomeMethodMenu === "function") closeHomeMethodMenu(shouldRender);
     if (typeof closeLiurenDatePicker === "function") closeLiurenDatePicker(shouldRender);
     if (typeof closeLiurenDropdown === "function") closeLiurenDropdown(shouldRender);
     if (typeof closeLiurenTimePart === "function") closeLiurenTimePart(shouldRender);
@@ -214,9 +236,11 @@ function updateCalendarView() {
 }
 
 async function _fetchCalendarData(dateStr) {
-    const body = { date: dateStr };
+    const body = { date: state.calendar.calibratedTstDate || dateStr };
     if (state.calendar.calibratedTst) {
         body.time = state.calendar.calibratedTst;
+        body.input_date = dateStr;
+        body.true_solar_date = state.calendar.calibratedTstDate || dateStr;
     } else if (state.calendar.preciseTime) {
         body.time = state.calendar.preciseTime;
     }
@@ -245,7 +269,10 @@ async function selectDate(dateObj) {
 
     state.calendar.selectedDate = dateStr;
     state.calendar.viewDate = new Date(dateObj);
-    if (!state.calendar.preciseTime) state.calendar.selectedHour = null;
+    state.calendar.calibratedTst = null;
+    state.calendar.calibratedTstDate = null;
+    state.calendar.hourHidden = false;
+    if (!state.calendar.preciseTime && !state.calendar.calibratedTst) state.calendar.selectedHour = null;
     updateCalendarView();
     await _fetchCalendarData(dateStr);
 }
@@ -289,6 +316,7 @@ function renderCalendarPillar(label, value, caption = "", extra = "", options = 
     const isEmpty = value === "\u672a\u9009";
     const idAttr = options.id ? `id="${options.id}"` : "";
     const emptyValue = value.split("").map((char) => `<span class="font-bold text-inkLight/35">${char}</span>`).join("");
+    const hourToggleButton = `<button type="button" onclick="event.stopPropagation(); clearCalendarHour();" class="calendar-hour-toggle-dot ${isEmpty ? "calendar-hour-toggle-dot-empty" : ""}" aria-label="切换时柱"></button>`;
     const clearButton = options.clearable
         ? `<button type="button" onclick="event.stopPropagation(); clearCalendarHour();" class="w-5 h-5 flex items-center justify-center rounded-full text-inkLight/35 hover:text-accent hover:bg-white/55 transition-colors text-sm leading-none ${isEmpty ? "invisible pointer-events-none" : ""}" aria-label="清空时柱">×</button>`
         : "";
@@ -296,7 +324,7 @@ function renderCalendarPillar(label, value, caption = "", extra = "", options = 
         <div ${idAttr} ${extra} class="relative min-w-0 calendar-pillar-card px-5 py-5 flex flex-col justify-between min-h-[160px] h-full ${extra ? "cursor-pointer calendar-pillar-card-interactive group" : ""}">
             <div class="flex items-center justify-between gap-2">
                 <div class="text-[11px] text-inkLight tracking-[0.22em]">${label}</div>
-                ${clearButton}
+                ${options.clearable ? hourToggleButton : clearButton}
             </div>
             <div class="h-9 flex items-center justify-center text-3xl font-serif tracking-widest leading-none">${isEmpty ? emptyValue : highlightText(value)}</div>
             <div class="text-xs text-inkLight">${caption}</div>
@@ -323,8 +351,13 @@ function renderRightPanelHtml(info) {
 
     // Hour pillar \u2014 static, same as the other three
     const calibratedTst = state.calendar.calibratedTst;
-    const hourVal = ((preciseTime || calibratedTst) && info.gz_hour) ? info.gz_hour : "\u672a\u9009";
-    const hourCap = ((preciseTime || calibratedTst) && info.gz_hour) ? `时 ${calibratedTst || info.true_solar_time || preciseTime}` : "\u65f6";
+    const hasHourTime = Boolean(preciseTime || calibratedTst);
+    const showHour = !state.calendar.hourHidden && hasHourTime && info.gz_hour;
+    const hourVal = showHour ? info.gz_hour : "\u672a\u9009";
+    const tstDate = state.calendar.calibratedTstDate;
+    const hourTimeLabel = calibratedTst && tstDate && tstDate !== state.calendar.selectedDate ? `${tstDate} ${calibratedTst}` : (calibratedTst || preciseTime);
+    const effectiveHourCap = showHour ? `时 ${hourTimeLabel}` : "\u65f6";
+    const hourCap = showHour ? `时 ${calibratedTst || preciseTime}` : "\u65f6";
 
     return `
     <div class="h-full calendar-main-card p-9 grid grid-rows-[auto_1px_1fr] gap-0">
@@ -364,7 +397,7 @@ function renderRightPanelHtml(info) {
                 ${renderCalendarPillar("\u5e74\u67f1", info.gz_year, "\u5e74")}
                 ${renderCalendarPillar("\u6708\u67f1", info.gz_month, "\u6708")}
                 ${renderCalendarPillar("\u65e5\u67f1", info.gz_day, "\u65e5")}
-                ${renderCalendarPillar("\u65f6\u67f1", hourVal, hourCap, "", {clearable: true, id: "calendar-hour-pillar"})}
+                ${renderCalendarPillar("\u65f6\u67f1", hourVal, effectiveHourCap, "", {clearable: true, id: "calendar-hour-pillar"})}
             </div>
             ${info.jieqi_prev ? `
             <div class="flex items-center justify-end gap-2 text-[11px] text-inkLight/55 mt-5">

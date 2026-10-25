@@ -4,7 +4,7 @@ const LIUREN_WEEKDAYS = ["日", "一", "二", "三", "四", "五", "六"];
 
 function toDatetimeLocalValue(date = new Date()) {
     const pad = (n) => String(n).padStart(2, "0");
-    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
 }
 
 function escapeHtml(text) {
@@ -45,7 +45,13 @@ function openLiurenAdvanced() {
     state.liuren.form = collectLiurenForm();
     state.liuren.advancedOpen = !state.liuren.advancedOpen;
     state.liuren.dropdownOpen = null;
-    renderMain();
+    if (typeof closeDesignSelect === "function") closeDesignSelect(false);
+    syncLiurenAdvancedDom();
+}
+
+function syncLiurenAdvancedDom() {
+    const isOpen = !!(state.liuren && state.liuren.advancedOpen);
+    document.querySelector(".liuren-home-advanced-panel")?.classList.toggle("liuren-home-advanced-panel-open", isOpen);
 }
 
 function collectLiurenForm() {
@@ -105,22 +111,22 @@ function liurenPad(num) {
 
 function parseLiurenDate(value) {
     const text = String(value || "").trim();
-    const match = text.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/) || text.match(/^(\d{4})[/-](\d{1,2})[/-](\d{1,2})\s+(\d{1,2}):(\d{1,2})/);
+    const match = text.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2}))?/) || text.match(/^(\d{4})[/-](\d{1,2})[/-](\d{1,2})\s+(\d{1,2}):(\d{1,2})(?::(\d{1,2}))?/);
     const now = new Date();
     return match
-        ? {year: Number(match[1]), month: Number(match[2]), day: Number(match[3]), hour: Number(match[4]), minute: Number(match[5])}
-        : {year: now.getFullYear(), month: now.getMonth() + 1, day: now.getDate(), hour: now.getHours(), minute: now.getMinutes()};
+        ? {year: Number(match[1]), month: Number(match[2]), day: Number(match[3]), hour: Number(match[4]), minute: Number(match[5]), second: Number(match[6] || 0)}
+        : {year: now.getFullYear(), month: now.getMonth() + 1, day: now.getDate(), hour: now.getHours(), minute: now.getMinutes(), second: now.getSeconds()};
 }
 
 function buildLiurenDateValue(parts) {
     const maxDay = new Date(parts.year, parts.month, 0).getDate();
     const day = Math.min(parts.day, maxDay);
-    return `${parts.year}-${liurenPad(parts.month)}-${liurenPad(day)}T${liurenPad(parts.hour)}:${liurenPad(parts.minute)}`;
+    return `${parts.year}-${liurenPad(parts.month)}-${liurenPad(day)}T${liurenPad(parts.hour)}:${liurenPad(parts.minute)}:${liurenPad(parts.second || 0)}`;
 }
 
 function formatLiurenDateDisplay(value) {
     const p = parseLiurenDate(value);
-    return `${p.year}/${liurenPad(p.month)}/${liurenPad(p.day)} ${liurenPad(p.hour)}:${liurenPad(p.minute)}`;
+    return `${p.year}/${liurenPad(p.month)}/${liurenPad(p.day)} ${liurenPad(p.hour)}:${liurenPad(p.minute)}:${liurenPad(p.second || 0)}`;
 }
 
 function selectLiurenDateTextSegment(input, event) {
@@ -223,7 +229,7 @@ function setLiurenDateField(field, value) {
 function selectLiurenDay(year, month, day) {
     const form = collectLiurenForm();
     const parts = parseLiurenDate(form.datetime_local);
-    form.datetime_local = buildLiurenDateValue({year, month, day, hour: parts.hour, minute: parts.minute});
+    form.datetime_local = buildLiurenDateValue({year, month, day, hour: parts.hour, minute: parts.minute, second: parts.second || 0});
     state.liuren.form = form;
     state.liuren.pickerView = {year, month};
     state.liuren.datePickerOpen = true;
@@ -304,7 +310,7 @@ function renderLiurenDateControl(current) {
     const value = buildLiurenDateValue(parseLiurenDate(current));
     return `
         <div class="relative flex gap-2 items-center">
-            <input id="liuren-datetime" type="datetime-local" value="${value}" onchange="state.liuren.form = collectLiurenForm();" class="liuren-datetime-input flex-1">
+            <input id="liuren-datetime" type="datetime-local" step="1" value="${value}" onchange="state.liuren.form = collectLiurenForm();" class="liuren-datetime-input flex-1">
             <button type="button" onclick="setLiurenNow()" class="h-12 px-5 rounded-xl bg-white/50 text-xs text-inkLight hover:text-ink hover:bg-white/70 transition-colors whitespace-nowrap">现在</button>
         </div>
     `;
@@ -375,8 +381,12 @@ async function handleLiurenSubmit() {
             state.liuren.result = data;
             state.liuren.result._historyId = record.id;
             state.liuren.form = collectLiurenForm();
-            state.history.unshift(record);
-            localStorage.setItem("pblossom_history", JSON.stringify(state.history));
+            if (typeof addHistoryRecord === "function") {
+                addHistoryRecord(record);
+            } else {
+                state.history.unshift(record);
+                localStorage.setItem("pblossom_history", JSON.stringify(state.history));
+            }
             renderMain();
         } else {
             showToast(json.message || "排盘失败");
@@ -597,71 +607,68 @@ function getLiurenPageHtml() {
     const advanced = state.liuren.advancedOpen;
 
     if (!result) {
+        const locText = (() => {
+            const ls = state.liuren.locationStatus;
+            const pin = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a7 7 0 0 1 7 7c0 5-7 13-7 13S5 14 5 9a7 7 0 0 1 7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>`;
+            if (ls === "granted") return `${pin}<span>${state.liuren.longitude.toFixed(2)}°E</span>`;
+            if (ls === "loading") return `${pin}<span>定位中</span>`;
+            if (ls === "denied") return `${pin}<span>无法获取</span>`;
+            return `${pin}<span>太阳时</span>`;
+        })();
+        const arrowIcon = `
+            <svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M5 12h13"></path>
+                <path d="m12 6 6 6-6 6"></path>
+            </svg>`;
         return `
-            <div class="h-full overflow-hidden p-8 lg:p-16">
-                <div class="h-full flex flex-col overflow-hidden">
-                    <div class="flex items-center gap-3 border-b border-border/30 pb-4 shrink-0">
-                        ${renderPageTitle("六壬", {beta: true})}
-                    </div>
-                    <div class="flex-1 min-h-0 flex items-center justify-center">
-                        <section class="bg-white/40 border border-border/50 rounded-xl p-7 h-[340px] max-w-full transition-[width] duration-200 ${advanced ? "w-[720px]" : "w-[520px]"}">
-                            <div class="h-full ${advanced ? "md:grid md:grid-cols-[1fr_220px] md:gap-6" : ""}">
-                                <div class="h-full flex flex-col justify-between">
-                                    <label class="block">
-                                        <span class="text-xs text-inkLight tracking-[0.2em]">问事</span>
-                                        <input id="liuren-question" value="${escapeHtml(question)}" placeholder="输入你想知道的事情" class="mt-2 w-full bg-transparent border-b border-border/60 focus:border-accent outline-none py-2 text-ink">
-                                    </label>
-                                    <label class="block">
-                                        <div class="flex items-center justify-between mb-2">
-                                            <span class="text-xs text-inkLight tracking-[0.2em]">时间</span>
-                                            ${(() => {
-                                                const ls = state.liuren.locationStatus;
-                                                const pin = `<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a7 7 0 0 1 7 7c0 5-7 13-7 13S5 14 5 9a7 7 0 0 1 7-7z"/><circle cx="12" cy="9" r="2.5"/></svg>`;
-                                                if (ls === "granted") return `<span class="flex items-center gap-1 text-xs text-inkLight/70">${pin}东经 ${state.liuren.longitude.toFixed(1)}° 真太阳时</span>`;
-                                                if (ls === "loading")  return `<span class="flex items-center gap-1 text-xs text-inkLight/40">${pin}定位中…</span>`;
-                                                if (ls === "denied")   return `<span class="flex items-center gap-1 text-xs text-inkLight/35">${pin}无法定位</span>`;
-                                                return "";
-                                            })()}
-                                        </div>
-                                        <div>
-                                            ${renderLiurenDateControl(current)}
-                                        </div>
-                                    </label>
-                                    <div class="flex gap-3">
-                                        <button onclick="openLiurenAdvanced()" class="h-11 px-5 rounded-xl bg-white/50 border border-border/40 text-sm text-inkLight hover:text-ink hover:bg-white/70 transition-colors whitespace-nowrap">${advanced ? "收起" : "高级"}</button>
-                                        <button id="liuren-submit" onclick="handleLiurenSubmit()" class="flex-1 h-11 rounded-xl bg-accent text-white flex items-center justify-center hover:opacity-90 transition-opacity">
-                                            排盘
-                                        </button>
-                                    </div>
-                                </div>
-                                <div class="${advanced ? "mt-5 md:mt-0 h-full flex flex-col justify-between md:border-l md:border-border/30 md:pl-6" : "hidden"}">
-                                    <label class="block">
-                                        <span class="text-xs text-inkLight">月将</span>
-                                        <div class="mt-2">
-                                            ${renderLiurenDropdown("month_general", form.month_general || "", "系统选将", [{value: "", label: "系统"}].concat(LIUREN_MONTH_GENERALS.map((item) => ({value: item, label: item}))))}
-                                        </div>
-                                    </label>
-                                    <label class="block">
-                                        <span class="text-xs text-inkLight">占时</span>
-                                        <div class="mt-2">
-                                            ${renderLiurenDropdown("hour_branch", form.hour_branch || "", "系统取时", [{value: "", label: "系统"}].concat(LIUREN_BRANCHES.map((item) => ({value: item, label: item}))))}
-                                        </div>
-                                    </label>
-                                    <label class="block">
-                                        <span class="text-xs text-inkLight">贵人</span>
-                                        <div class="mt-2">
-                                            ${renderLiurenDropdown("noble_mode", form.noble_mode || "", "系统判断昼夜", [
-                                                {value: "", label: "系统判断"},
-                                            {value: "day", label: "昼贵"},
-                                            {value: "night", label: "夜贵"},
-                                            ], "list")}
-                                        </div>
-                                    </label>
-                                </div>
-                            </div>
-                        </section>
-                    </div>
+            <div class="liuren-home-shell animate-fade-slow">
+                ${renderHomeMethodAction("liuren")}
+                <div class="liuren-home-brand">
+                    <div class="liuren-home-brand-title">Plum Blossom</div>
+                    <div class="liuren-home-brand-subtitle">Ancient Wisdom, Modern Elegance</div>
                 </div>
+                <section class="liuren-home-entry">
+                    <div class="liuren-home-main-module">
+                        <div class="liuren-home-time-row">
+                            <input id="liuren-datetime" type="datetime-local" step="1" value="${buildLiurenDateValue(parseLiurenDate(current))}" onchange="state.liuren.form = collectLiurenForm();" class="liuren-home-datetime">
+                            <span class="liuren-home-sep"></span>
+                            <button type="button" onclick="requestLiurenLocation()" class="liuren-home-loc">${locText}</button>
+                            <span class="liuren-home-sep"></span>
+                            <button type="button" onclick="setLiurenNow()" class="liuren-home-now">现在</button>
+                        </div>
+                        <div class="liuren-home-question-row">
+                            <input id="liuren-question" value="${escapeHtml(question)}" placeholder="输入你想知道的事情" class="liuren-home-question-input">
+                            <button id="liuren-submit" type="button" onclick="handleLiurenSubmit()" class="liuren-home-submit" aria-label="排盘">${arrowIcon}</button>
+                        </div>
+                    </div>
+                    <button type="button" onclick="openLiurenAdvanced()" class="liuren-home-advanced-toggle" aria-label="高级">
+                        <svg width="42" height="18" viewBox="0 0 42 18" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M8 5.5L21 13L34 5.5"></path>
+                        </svg>
+                    </button>
+                    <div class="liuren-home-advanced-panel ${advanced ? "liuren-home-advanced-panel-open" : ""}">
+                        <div class="liuren-home-advanced-inner">
+                            <label class="liuren-home-adv-group">
+                                <span class="liuren-home-adv-label">月将</span>
+                                ${renderLiurenDropdown("month_general", form.month_general || "", "系统", [{value: "", label: "系统"}].concat(LIUREN_MONTH_GENERALS.map((item) => ({value: item, label: item}))))}
+                            </label>
+                            <span class="liuren-home-adv-sep"></span>
+                            <label class="liuren-home-adv-group">
+                                <span class="liuren-home-adv-label">占时</span>
+                                ${renderLiurenDropdown("hour_branch", form.hour_branch || "", "系统", [{value: "", label: "系统"}].concat(LIUREN_BRANCHES.map((item) => ({value: item, label: item}))))}
+                            </label>
+                            <span class="liuren-home-adv-sep"></span>
+                            <label class="liuren-home-adv-group">
+                                <span class="liuren-home-adv-label">贵人</span>
+                                ${renderLiurenDropdown("noble_mode", form.noble_mode || "", "系统", [
+                                    {value: "", label: "系统"},
+                                    {value: "day", label: "昼贵"},
+                                    {value: "night", label: "夜贵"},
+                                ], "list")}
+                            </label>
+                        </div>
+                    </div>
+                </section>
             </div>
         `;
     }
