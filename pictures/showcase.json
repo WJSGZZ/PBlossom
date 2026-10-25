@@ -1,0 +1,60 @@
+{
+  "version": "3.0.0",
+  "sample": {
+    "date": "2026-10-25",
+    "time": "14:30",
+    "numbers": [
+      1,
+      2,
+      3
+    ]
+  },
+  "web": {
+    "source": "Chrome browser screenshots",
+    "viewport": {
+      "width": 1470,
+      "height": 746
+    },
+    "files": [
+      "calc",
+      "meihua",
+      "liuren-form",
+      "liuren",
+      "history",
+      "calendar",
+      "faq",
+      "dark"
+    ],
+    "captureClip": {
+      "x": 0,
+      "y": 0,
+      "width": 1450,
+      "height": 746
+    }
+  },
+  "miniprogram": {
+    "source": "WeChat DevTools simulator via miniprogram-automator",
+    "device": "iPhone 15 Pro Max",
+    "imageSize": {
+      "width": 654,
+      "height": 1418
+    },
+    "files": [
+      "calc",
+      "meihua",
+      "liuren",
+      "history",
+      "calendar",
+      "faq"
+    ],
+    "frameCrop": "Rounded simulator frame masked outside radius 48px; application pixels unchanged"
+  },
+  "exports": {
+    "source": "Mini program native canvas export",
+    "files": [
+      "meihua",
+      "liuren",
+      "calendar"
+    ]
+  }
+}

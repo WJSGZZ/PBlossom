@@ -70,11 +70,11 @@ PBlossom 是一款将传统易理逻辑与现代数字化技术相结合的探�
 
 ## 界面展示
 ### 网页版
-电脑上是左侧图标栏加两栏排版，卡片用液态玻璃质感；手机浏览器里与小程序一样用底部导航。
+电脑上使用侧边导航与双栏排版，手机浏览器中使用底部导航。下面展示当前版本的页面与高级设置。
 
 <div align="center">
-  <img width="1280" src="pictures/web/calc.jpg" alt="新占"/>
-  <p><strong>新占</strong></p>
+  <img width="1280" src="pictures/web/calc.jpg" alt="新占与梅花高级时间设置"/>
+  <p><strong>新占与梅花高级设置</strong></p>
 <table>
   <tr>
     <td align="center"><img src="pictures/web/meihua.jpg" width="420" alt="梅花结果"/></td>
@@ -85,14 +85,24 @@ PBlossom 是一款将传统易理逻辑与现代数字化技术相结合的探�
     <td align="center"><strong>六壬结果</strong></td>
   </tr>
   <tr>
+    <td align="center"><img src="pictures/web/liuren-form.jpg" width="420" alt="六壬高级设置"/></td>
+    <td align="center"><img src="pictures/web/history.jpg" width="420" alt="往昔"/></td>
+  </tr>
+  <tr>
+    <td align="center"><strong>六壬高级设置</strong></td>
+    <td align="center"><strong>往昔</strong></td>
+  </tr>
+  <tr>
     <td align="center"><img src="pictures/web/calendar.jpg" width="420" alt="时令"/></td>
-    <td align="center"><img src="pictures/web/dark.jpg" width="420" alt="深色模式"/></td>
+    <td align="center"><img src="pictures/web/faq.jpg" width="420" alt="常见问题"/></td>
   </tr>
   <tr>
     <td align="center"><strong>时令</strong></td>
-    <td align="center"><strong>深色模式</strong></td>
+    <td align="center"><strong>常见问题</strong></td>
   </tr>
 </table>
+  <img width="1280" src="pictures/web/dark.jpg" alt="深色模式下的六壬新占与高级设置"/>
+  <p><strong>深色模式</strong></p>
 </div>
 
 ### 导出图片
@@ -114,20 +124,29 @@ PBlossom 是一款将传统易理逻辑与现代数字化技术相结合的探�
 </div>
 
 ### 小程序
+以下截图来自微信开发者工具的 iPhone 模拟器；示例卦与导出图使用相同的数字和起卦时间。
 
 <div align="center">
 <table>
   <tr>
-    <td align="center"><img src="pictures/miniprogram/calc.png" width="180"/></td>
-    <td align="center"><img src="pictures/miniprogram/meihua.png" width="180"/></td>
-    <td align="center"><img src="pictures/miniprogram/liuren.png" width="180"/></td>
-    <td align="center"><img src="pictures/miniprogram/calendar.png" width="180"/></td>
+    <td align="center" valign="top"><img src="pictures/miniprogram/calc.png" width="230" alt="小程序新占"/></td>
+    <td align="center" valign="top"><img src="pictures/miniprogram/meihua.png" width="230" alt="小程序梅花结果"/></td>
+    <td align="center" valign="top"><img src="pictures/miniprogram/liuren.png" width="230" alt="小程序六壬结果"/></td>
   </tr>
   <tr>
     <td align="center"><strong>新占</strong></td>
     <td align="center"><strong>梅花结果</strong></td>
     <td align="center"><strong>六壬结果</strong></td>
+  </tr>
+  <tr>
+    <td align="center" valign="top"><img src="pictures/miniprogram/history.png" width="230" alt="小程序往昔"/></td>
+    <td align="center" valign="top"><img src="pictures/miniprogram/calendar.png" width="230" alt="小程序时令"/></td>
+    <td align="center" valign="top"><img src="pictures/miniprogram/faq.png" width="230" alt="小程序常见问题"/></td>
+  </tr>
+  <tr>
+    <td align="center"><strong>往昔</strong></td>
     <td align="center"><strong>时令</strong></td>
+    <td align="center"><strong>常见问题</strong></td>
   </tr>
 </table>
 </div>
