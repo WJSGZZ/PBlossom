@@ -79,42 +79,27 @@ input, textarea { -webkit-user-select: text; user-select: text; }
 
 /* ── 液态玻璃（仿 iOS 26 的 .glassEffect(.regular)） ──
    几乎不着色，背后的画面轻微模糊、在边缘被折射（Chromium 由 lg.js 生成折射滤镜，其他浏览器只有模糊）；
-   一圈镜面高光边，左上和右下最亮，像光从斜上方照下来。
+   不画高光边：只有白色渐变着色、背后的模糊和边缘折射，像一块干净的玻璃。
    变量放在 :root 上，挂在 body 下的弹出菜单也用同一套 */
 :root {
   --lg-tint-a: rgba(255, 255, 255, 0.34);
   --lg-tint-b: rgba(255, 255, 255, 0.1);
-  --lg-shine-top: rgba(255, 255, 255, 0.85);
-  --lg-shine-side: rgba(255, 255, 255, 0.5);
-  --lg-shine-low: rgba(255, 255, 255, 0.28);
   --lg-lift: rgba(10, 15, 40, 0.12);
   --lg-fill: rgba(255, 255, 255, 0.18);
   --lg-fill-strong: rgba(255, 255, 255, 0.42);
-  --lg-hi: rgba(255, 255, 255, 0.95);
-  --lg-hi-low: rgba(255, 255, 255, 0.6);
-  --lg-hairline: rgba(255, 255, 255, 0.55);
-  --lg-glow: rgba(255, 255, 255, 0.2);
   --lg-drop: rgba(0, 0, 0, 0.07);
 }
 @media (prefers-color-scheme: dark) {
   :root {
     --lg-tint-a: rgba(255, 255, 255, 0.1);
     --lg-tint-b: rgba(255, 255, 255, 0.02);
-    --lg-shine-top: rgba(255, 255, 255, 0.3);
-    --lg-shine-side: rgba(255, 255, 255, 0.14);
-    --lg-shine-low: rgba(255, 255, 255, 0.08);
     --lg-lift: rgba(0, 0, 0, 0.4);
     --lg-fill: rgba(255, 255, 255, 0.06);
     --lg-fill-strong: rgba(255, 255, 255, 0.12);
-    --lg-hi: rgba(255, 255, 255, 0.32);
-    --lg-hi-low: rgba(255, 255, 255, 0.14);
-    --lg-hairline: rgba(255, 255, 255, 0.1);
-    --lg-glow: rgba(255, 255, 255, 0.04);
     --lg-drop: rgba(0, 0, 0, 0.35);
   }
 }
 
-/* 高光边是绝对定位的 ::after，需要定位的父元素；页签栏、侧边栏本身是 fixed，不能改 */
 .circle-btn, .lg { position: relative; }
 .card, .panel, .tile, .circle-btn, .segmented, .tabbar, .web-sidebar, .lg {
   /* 着色：从左上到右下由亮到淡的一层白（参考 liqui.design 的 tint） */
@@ -123,35 +108,14 @@ input, textarea { -webkit-user-select: text; user-select: text; }
   /* 不支持折射的浏览器：轻模糊；Chromium 由 lg.js 换成“模糊 + 折射 + 磨砂” */
   -webkit-backdrop-filter: blur(10px) saturate(140%);
   backdrop-filter: blur(10px) saturate(140%);
-  /* 光泽：上沿一道亮线、左沿次之、右下一道暗一些的反光；外面一层很淡的投影 */
+  /* 不画高光边，只有一层很淡的投影，让玻璃从背景上浮起来 */
   box-shadow:
-    inset 0 1px 1px var(--lg-shine-top),
-    inset 1px 0 1px 0.5px var(--lg-shine-side),
-    inset -1px -1px 1px var(--lg-shine-low),
     0 4px 14px var(--lg-drop),
     0 1px 3px rgba(0, 0, 0, 0.04);
 }
 /* 浮在内容上的玻璃（侧边栏、页签栏、圆按钮、弹出菜单）投影更深，像悬起来 */
 .tabbar, .web-sidebar, .circle-btn, .web-popover, .web-dialog, .web-toast-box, .web-image-btn, .web-drop-box {
-  box-shadow:
-    inset 0 1px 1px var(--lg-shine-top),
-    inset 1px 0 1px 0.5px var(--lg-shine-side),
-    inset -1px -1px 1px var(--lg-shine-low),
-    0 14px 36px var(--lg-lift), 0 3px 10px var(--lg-drop);
-}
-/* 镜面高光：沿边缘一圈细亮线，左上和右下最亮 */
-.card::after, .panel::after, .tile::after, .circle-btn::after, .segmented::after, .tabbar::after, .web-sidebar::after, .lg::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  pointer-events: none;
-  padding: 1px;
-  opacity: 0.7;
-  background: linear-gradient(135deg, var(--lg-hi), rgba(255, 255, 255, 0.1) 30%, rgba(255, 255, 255, 0) 60%, var(--lg-hi-low));
-  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+  box-shadow: 0 14px 36px var(--lg-lift), 0 3px 10px var(--lg-drop);
 }
 /* 小程序底栏自带的反光层不再需要 */
 .tabbar::before { display: none; }
@@ -319,8 +283,6 @@ input, textarea { -webkit-user-select: text; user-select: text; }
 
   /* 六壬的高级设置：不占左栏一整行，变成右栏里与切换框同一行的轻按钮；点开后月将、占时、贵人在右栏下方展开，与此刻同宽 */
   .form-swap > .panel:has(.reveal-block) { display: contents; }
-  /* 不占盒子的面板，玻璃高光边（::after）也不能画，否则会按整页大小画出一圈框 */
-  .form-swap > .panel:has(.reveal-block)::after { display: none; }
   .form-swap > .panel:has(.reveal-block) > .row {
     grid-column: 2; grid-row: 2; justify-self: start; align-self: center; min-height: 0;
     gap: calc(14 * var(--rpx)); padding: calc(14 * var(--rpx)) calc(26 * var(--rpx)); border-radius: 999px;
@@ -340,7 +302,7 @@ input, textarea { -webkit-user-select: text; user-select: text; }
     height: auto !important; padding: 0 calc(40 * var(--rpx)); border-radius: calc(52 * var(--rpx));
     background: linear-gradient(135deg, var(--lg-tint-a), var(--lg-tint-b));
     -webkit-backdrop-filter: blur(10px) saturate(140%); backdrop-filter: blur(10px) saturate(140%);
-    box-shadow: inset 0 1px 1px var(--lg-shine-top), inset 1px 0 1px 0.5px var(--lg-shine-side), inset -1px -1px 1px var(--lg-shine-low), 0 4px 14px var(--lg-drop);
+    box-shadow: 0 4px 14px var(--lg-drop);
     opacity: 0; transform: translateX(-16px); pointer-events: none;
     transition: opacity 0.25s ease, transform 0.35s var(--ease);
   }
