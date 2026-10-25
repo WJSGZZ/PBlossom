@@ -72,6 +72,24 @@ PBlossom 是一款将传统易理逻辑与现代数字化技术相结合的探�
 </table>
 </div>
 
+### 导出图片
+结果和时令都能一键导出成图片，直接发给朋友或交给 AI 解读；备注、问事也会一起排进图里。
+
+<div align="center">
+<table>
+  <tr>
+    <td align="center" valign="top"><img src="pictures/export/meihua.jpg" width="260" alt="梅花导出图"/></td>
+    <td align="center" valign="top"><img src="pictures/export/liuren.jpg" width="260" alt="六壬导出图"/></td>
+    <td align="center" valign="top"><img src="pictures/export/calendar.jpg" width="260" alt="时令导出图"/></td>
+  </tr>
+  <tr>
+    <td align="center"><strong>梅花</strong></td>
+    <td align="center"><strong>六壬</strong></td>
+    <td align="center"><strong>时令</strong></td>
+  </tr>
+</table>
+</div>
+
 ### 小程序
 
 <div align="center">

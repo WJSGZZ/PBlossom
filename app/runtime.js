@@ -192,6 +192,16 @@
     }
   }
 
+  // ── 画布字体 ──
+  // 导出图片的文字由小程序的 canvas-text.js 画：宋体字按预先导出的轮廓画，轮廓里没有的字和备注、问事
+  // 用画布的 font 交给系统字体（serif / sans-serif）。网页有完整的宋体，把这两个系统字体名前面加上 PBlossomSerif
+  const canvasFont = Object.getOwnPropertyDescriptor(CanvasRenderingContext2D.prototype, 'font')
+  Object.defineProperty(CanvasRenderingContext2D.prototype, 'font', {
+    configurable: true,
+    get() { return canvasFont.get.call(this) },
+    set(value) { canvasFont.set.call(this, String(value).replace(/(\dpx) (sans-serif|serif)$/, '$1 "PBlossomSerif", $2')) },
+  })
+
   // ── wx ─────────────────────────────────────────────────────────────────────
 
   const darkQuery = window.matchMedia('(prefers-color-scheme: dark)')
@@ -383,6 +393,16 @@
     window.__page = page
 
     // 网页上没有微信的转发，结果页的“⋯”菜单多一项“复制链接”：链接带上与小程序转发相同的参数，打开就进入这一卦
+    // 导出图片里的备注、问事：小程序只内嵌了界面用到的字，画布上这些用户自己写的字交给系统字体；
+    // 网页有完整字体（见 web.css），画之前先把这些字要用的字体载好，画布里也写成宋体
+    const exportResultImage = page.exportResultImage
+    page.exportResultImage = async (...args) => {
+      const model = typeof page._resultModel === 'function' ? page._resultModel() : null
+      if (model && model.note && document.fonts) {
+        try { await document.fonts.load('16px "PBlossomSerif"', model.note) } catch (e) {}
+      }
+      return exportResultImage.apply(page, args)
+    }
     page.openResultMenu = () => actionSheet({
       itemList: ['复制文字', '导出图片', '复制链接'],
       success: ({ tapIndex }) => {
