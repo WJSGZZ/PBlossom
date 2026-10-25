@@ -70,14 +70,14 @@ PBlossom 是一款将传统易理逻辑与现代数字化技术相结合的探�
 
 ## 界面展示
 ### 网页版
-电脑上使用侧边导航与双栏排版，手机浏览器中使用底部导航。下面展示当前版本的页面与高级设置。
+电脑上使用侧边导航与双栏排版，手机浏览器中使用底部导航。梅花示例统一使用 **8、1、1**：地天泰，初爻动；新占输入、排盘结果和导出图相互对应。
 
 <div align="center">
-  <img width="1280" src="pictures/web/calc.jpg" alt="新占"/>
+  <img width="1280" src="pictures/web/calc.jpg" alt="新占：输入 8、1、1，高级设置收起"/>
   <p><strong>新占</strong></p>
 <table>
   <tr>
-    <td align="center"><img src="pictures/web/meihua.jpg" width="420" alt="梅花结果"/></td>
+    <td align="center"><img src="pictures/web/meihua.jpg" width="420" alt="梅花结果：地天泰，初爻动"/></td>
     <td align="center"><img src="pictures/web/liuren.jpg" width="420" alt="六壬结果"/></td>
   </tr>
   <tr>
@@ -85,24 +85,22 @@ PBlossom 是一款将传统易理逻辑与现代数字化技术相结合的探�
     <td align="center"><strong>六壬结果</strong></td>
   </tr>
   <tr>
-    <td align="center"><img src="pictures/web/liuren-form.jpg" width="420" alt="六壬高级设置"/></td>
     <td align="center"><img src="pictures/web/history.jpg" width="420" alt="往昔"/></td>
-  </tr>
-  <tr>
-    <td align="center"><strong>六壬高级设置</strong></td>
-    <td align="center"><strong>往昔</strong></td>
-  </tr>
-  <tr>
     <td align="center"><img src="pictures/web/calendar.jpg" width="420" alt="时令"/></td>
-    <td align="center"><img src="pictures/web/faq.jpg" width="420" alt="常见问题"/></td>
   </tr>
   <tr>
+    <td align="center"><strong>往昔</strong></td>
     <td align="center"><strong>时令</strong></td>
+  </tr>
+  <tr>
+    <td align="center"><img src="pictures/web/faq.jpg" width="420" alt="常见问题"/></td>
+    <td align="center"><img src="pictures/web/dark.jpg" width="420" alt="深色模式下的时令"/></td>
+  </tr>
+  <tr>
     <td align="center"><strong>常见问题</strong></td>
+    <td align="center"><strong>深色模式</strong></td>
   </tr>
 </table>
-  <img width="1280" src="pictures/web/dark.jpg" alt="深色模式下的时令"/>
-  <p><strong>深色模式</strong></p>
 </div>
 
 ### 导出图片
@@ -124,7 +122,7 @@ PBlossom 是一款将传统易理逻辑与现代数字化技术相结合的探�
 </div>
 
 ### 小程序
-以下截自当前微信开发者工具模拟器，首页展示默认状态。
+以下截自当前微信开发者工具模拟器，首页使用同一组数字，高级设置保持收起。
 
 <div align="center">
 <table>
