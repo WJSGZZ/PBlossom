@@ -27,7 +27,8 @@ PBlossom 是一款将传统易理逻辑与现代数字化技术相结合的探�
   <a href="#本地运行与开发">本地运行与开发</a> &nbsp;|&nbsp;
   <a href="#名称来源">名称来源</a> &nbsp;|&nbsp;
   <a href="#logo设计">Logo设计</a> &nbsp;|&nbsp;
-  <a href="#温馨提示">温馨提示</a>
+  <a href="#温馨提示">温馨提示</a> &nbsp;|&nbsp;
+  <a href="#许可">许可</a>
 </p>
 
 ## 开始使用
@@ -102,7 +103,7 @@ python3 -m http.server 8000
 目录说明：
 - `mp/`：由小程序生成的页面逻辑、界面模板和样式，不要手改；小程序更新后运行 `node scripts/sync-miniprogram.mjs <小程序目录>` 重新生成。
 - `app/`：网页专有的部分，包括微信接口的浏览器实现、电脑版侧边栏与两栏排版、液态玻璃效果。
-- `assets/`、`vendor/`：字体、Logo 和 Vue 3。字体取自思源宋体（Noto Serif SC，SIL Open Font License 1.1，见 `assets/fonts/OFL.txt`）；Vue 3 为 MIT 许可。
+- `assets/`、`vendor/`：字体、Logo 和 Vue 3（各自的许可见文末）。
 
 ## 名称来源
 PBlossom 是 Plum Blossom（梅花）的简写，来源于“梅花易数”。
@@ -121,3 +122,10 @@ Logo 实际上是一个珊瑚橙
 
 ## 温馨提示
 目前市面上最强的 AI 在玄学 / 神秘学领域犯错的几率在 50% 左右。**请勿过分相信 AI 给出的结果！**
+
+## 许可
+代码以 [MIT 许可](LICENSE) 开放，可以自由使用、修改和分发，保留版权声明即可。
+
+**PBlossom 这个名字和 Logo 不在许可范围内**：`assets/logo.svg` 及其衍生的图形、配色组合，未经同意不得用于其他项目、产品或宣传，也不得用来让人以为某个版本出自本项目。基于本项目修改发布的版本，请换用自己的名字和标志。
+
+内嵌字体取自思源宋体（Noto Serif SC），按 [SIL Open Font License 1.1](assets/fonts/OFL.txt) 分发；Vue 3 为 MIT 许可。
