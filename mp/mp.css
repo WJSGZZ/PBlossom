@@ -1461,10 +1461,9 @@
   grid-template-columns: repeat(7, 1fr);
 }
 
-/* 月历总按六周的高度排：四周、五周的月份下面留空，翻月份时卡片高度不变，下面的内容不跟着跳 */
+/* 月历高度固定为六周：四周、五周的月份把行距拉开铺满，翻月份时卡片高度不变，下面的内容不跟着跳 */
 .date-grid {
-  grid-auto-rows: calc(84 * var(--rpx));
-  align-content: start;
+  grid-auto-rows: 1fr;
   height: calc(504 * var(--rpx));
 }
 
@@ -1480,7 +1479,6 @@
 }
 
 .date-cell {
-  height: calc(84 * var(--rpx));
   display: flex;
   align-items: center;
   justify-content: center;

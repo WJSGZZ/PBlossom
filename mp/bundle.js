@@ -2391,8 +2391,8 @@ Page({
       cells.push({ key: dateStr, day: String(day), date: dateStr, isCurrentMonth: true, isToday: dateStr === todayStr, isSelected: dateStr === this.data.selectedDate })
     }
     // 翻月份：往后翻日期从右边滑入，往前翻从左边（起点写在 --mx、--mo 里，见样式表 .month-in）。
-    // 上一段还没走完又翻（连按同一个键、或反方向）：新的一段从日期此刻所在的位置起步，位置不跳；
-    // 透明度压到 0.4 以下再淡回来，每按一下都看得出换了一页
+    // 上一段还没走完又翻（连按同一个键、或反方向）：从日期此刻的位置再往来的方向推一整段（最多推到起点），
+    // 连按多快每一下都有完整的滑入；透明度压到 0.4 以下再淡回来，看得出换了一页
     const prev = this.data.calendarYear ? this.data.calendarYear * 12 + this.data.calendarMonth : 0
     const next = year * 12 + month
     let calendarMonthAnim = this.data.calendarMonthAnim || ''
@@ -2404,7 +2404,8 @@ Page({
       if (elapsed < MONTH_SLIDE_MS && this._monthFrom) {
         const e = easeOut(elapsed / MONTH_SLIDE_MS)
         const o = this._monthFrom.o + (1 - this._monthFrom.o) * e
-        from = { x: this._monthFrom.x * (1 - e), o: Math.min(o, 0.4) }
+        const x = Math.max(-56, Math.min(56, this._monthFrom.x * (1 - e) + 56 * dir))
+        from = { x, o: Math.min(o, 0.4) }
       }
       this._monthFrom = from
       this._monthAnimAt = Date.now()
