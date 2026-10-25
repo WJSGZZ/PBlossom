@@ -196,13 +196,16 @@ input, textarea { -webkit-user-select: text; user-select: text; }
   --ink: #121211; --subtle: #7C7B76;
 }
 @media (prefers-color-scheme: dark) { .web-toast, .web-mask { --ink: #F2F1EE; --subtle: #8D8C87; } }
-.web-toast { pointer-events: none; }
+/* 提示条：贴在屏幕显示区域的最上方，从上面轻轻落下 */
+.web-toast { pointer-events: none; align-items: flex-start; padding-top: max(16px, calc(env(safe-area-inset-top) + 10px)); }
+.web-toast-box { transform: translateY(-16px); }
+.web-toast.on .web-toast-box { transform: none; }
 /* 淡入淡出只做在玻璃本身和遮罩的底色上，不做在整个弹层上：Chromium 里祖先半透明时，
    玻璃的模糊只能取到弹层自己，看不到后面的页面，淡入结束那一刻才突然换成真的玻璃，看起来像闪一下 */
 .web-toast-box, .web-dialog, .web-image img, .web-image-actions, .web-drop-box { opacity: 0; transition: opacity 0.25s ease, transform 0.3s var(--ease, ease); }
 .web-toast.on .web-toast-box, .web-mask.on .web-dialog, .web-mask.on .web-image img, .web-mask.on .web-image-actions, .web-drop.on .web-drop-box { opacity: 1; }
 .web-mask.on { background: rgba(0, 0, 0, 0.22); }
-.web-toast-box { display: flex; align-items: center; gap: 10px; padding: 14px 22px; border-radius: 999px; font-size: 16px; }
+.web-toast-box { display: flex; align-items: center; gap: 8px; padding: 11px 22px; border-radius: 999px; font-size: 15px; }
 .web-spinner { width: 16px; height: 16px; border-radius: 50%; border: 2px solid currentColor; border-right-color: transparent; animation: web-spin 0.8s linear infinite; }
 @keyframes web-spin { to { transform: rotate(360deg); } }
 .web-dialog { width: min(320px, calc(100vw - 48px)); border-radius: 30px; padding: 24px 18px 18px; text-align: center; transform: scale(0.96); }
