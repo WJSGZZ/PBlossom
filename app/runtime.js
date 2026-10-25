@@ -365,7 +365,7 @@
     const app = createApp({
       setup() { return state },
       // 侧边栏放进 .app 里面，才能用到主题色等变量
-      template: `<div class="mp-root">${window.__mpView.replace('GitHub 仓库，点按复制链接', 'GitHub 仓库，点按打开').replace(APPEARANCE_ANCHOR, APPEARANCE_ANCHOR + APPEARANCE_ROW).replace('长按一条记录可删除', '<span class="hint-touch">长按</span><span class="hint-mouse">右键点按</span>一条记录可删除').replace(/<\/div>$/, SIDEBAR + '</div>')}</div>`,
+      template: `<div class="mp-root">${window.__mpView.replace(APPEARANCE_ANCHOR, APPEARANCE_ANCHOR + APPEARANCE_ROW).replace('长按一条记录可删除', '<span class="hint-touch">长按</span><span class="hint-mouse">右键点按</span>一条记录可删除').replace(/<\/div>$/, SIDEBAR + '</div>')}</div>`,
     })
     app.config.globalProperties.u = u
     app.config.globalProperties.$mp = {
