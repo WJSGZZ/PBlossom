@@ -472,6 +472,7 @@ Page({
     calcCaptions: makeCalcCaptions(['', '', ''], ['', '', ''], HEXAGRAMS_DATA.trigrams),
     calcActiveIndex: -1,
     nowPillars: [],
+    nowRollStyle: '',
     nowLunar: '',
     historyFilter: 'all',
     accentOptions: ACCENTS,
@@ -937,14 +938,20 @@ Page({
 
   onUnload() {
     if (wx.offThemeChange && this._themeListener) wx.offThemeChange(this._themeListener)
+    clearInterval(this._nowTimer)
+  },
+
+  onHide() {
+    clearInterval(this._nowTimer)
   },
 
   onShow() {
     // 小程序在后台时切换了深浅色，回到前台再对一次
     this._applyDark(getIsDark(this.data.appearance))
-    if ((this.data.activeTab === 'calc' || this.data.activeTab === 'liuren') && !this.data.resultMode) {
-      this.setData(this.buildNowStrip())
-    }
+    this._tickNowStrip()
+    // “此刻”跟着时钟走：每几秒对一次，换时辰、换日、交节时变了的那一柱翻上来（与时令的四柱同一种动画）
+    clearInterval(this._nowTimer)
+    this._nowTimer = setInterval(() => this._tickNowStrip(), 5000)
     if (!this.data.currentResult) return
     const currentResult = loadDivinationUtils().decorateResult(this.data.currentResult)
     this.setData({ currentResult })
@@ -983,7 +990,16 @@ Page({
     })
   },
 
-  // 新占页顶部“此刻”的四柱（23 点起算次日，与起卦一致）
+  _tickNowStrip() {
+    if ((this.data.activeTab !== 'calc' && this.data.activeTab !== 'liuren') || this.data.resultMode) return
+    const strip = this.buildNowStrip()
+    const old = this.data.nowPillars || []
+    if (strip.nowLunar === this.data.nowLunar && strip.nowPillars.every((p, i) => old[i] && old[i].gz === p.gz)) return
+    this.setData(strip)
+  },
+
+  // 新占页顶部“此刻”的四柱（23 点起算次日，与起卦一致）。
+  // 时间用手机的系统时间和时区，与起卦一致；跟上次显示的比，变了的柱带上翻牌动画
   buildNowStrip(now = new Date()) {
     const calUtils = loadCalendarUtils()
     const hour = now.getHours()
@@ -994,10 +1010,14 @@ Page({
     const lunarInfo = calUtils.getCalendarInfo(now)
     return {
       nowLunar: lunarInfo.lunar,
-      nowPillars: [info.gzYear, info.gzMonth, info.gzDay, hourGz].map((gz, i) => ({
-        key: `now-${i}`,
-        parts: makeGanzhiParts(gz),
-      })),
+      nowPillars: [info.gzYear, info.gzMonth, info.gzDay, hourGz].map((gz, i) => {
+        const old = this.data && this.data.nowPillars && this.data.nowPillars[i]
+        if (!old || !old.gz || old.gz === gz) return { key: `now-${i}`, gz, parts: makeGanzhiParts(gz), anim: '' }
+        // 时间只会往后走，新字总是从下方升起；a / b 轮流用，下一次变化才会重新播放
+        const flip = old.anim && old.anim.slice(-1) === 'a' ? 'b' : 'a'
+        return { key: `now-${i}`, gz, parts: makeGanzhiParts(gz), anim: `pillar-roll-up-${flip}` }
+      }),
+      nowRollStyle: `animation-duration:${ROLL_STEP_MAX_MS}ms;`,
     }
   },
 
