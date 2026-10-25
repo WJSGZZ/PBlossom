@@ -454,15 +454,6 @@
     page.showCustomToast = (text, duration) => toast(text, duration)
     page.showCopiedToast = (text) => toast(text)
 
-    // 底栏图标的名字气泡：小程序靠 touchend 收起；网页上用鼠标右键（窄窗口时）没有 touchend，松开任何按键都收
-    const showTabTip = page.showTabTip
-    page.showTabTip = (e) => {
-      showTabTip.call(page, e)
-      const hide = () => { page.hideTabTip(); document.removeEventListener('pointerup', hide); document.removeEventListener('pointercancel', hide) }
-      document.addEventListener('pointerup', hide)
-      document.addEventListener('pointercancel', hide)
-    }
-
     // 外观里的“深色模式”：网页先把自己样式里的深色条件改好（小程序判断深浅时要问它），
     // 小程序再存好选择、换上 .app.dark
     const selectAppearance = page.selectAppearance
@@ -661,12 +652,10 @@
       <button v-for="(tab, i) in navTabs.slice(0, 3)" :key="tab.key" :class="['web-side-btn', u.tabIndex(activeTab) === i ? 'on' : '']"
         :aria-label="tab.label" @click="$mp.ev('switchTab', null, { tab: tab.key }, '')">
         <span :class="'icon web-side-icon icon-tab-' + tab.key"></span>
-        <span class="web-side-tip" aria-hidden="true">{{tab.label}}</span>
       </button>
       <button :class="['web-side-btn web-side-bottom', activeTab === 'help' ? 'on' : '']" aria-label="常见问题"
         @click="$mp.ev('switchTab', null, { tab: 'help' }, '')">
         <span class="icon web-side-icon icon-tab-help"></span>
-        <span class="web-side-tip" aria-hidden="true">常见问题</span>
         <span v-if="showFaqDot" class="web-side-badge"></span>
       </button>
     </nav>`

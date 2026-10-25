@@ -492,7 +492,6 @@ Page({
     toastText: '',
     toastOn: false,
     toastStyle: '',
-    tabTip: '',
     calendarMonthAnim: '',
     calendarMonthStyle: '',
     calcInput: '',
@@ -1161,10 +1160,6 @@ Page({
     if (tab === 'history') this.ensureHistoryLoaded()
     this._scrollToTop()
   },
-
-  // 底栏只有图标：长按一个图标在它上方显示名字，松手收起（长按后松手不会再切页）
-  showTabTip(e) { this.setData({ tabTip: e.currentTarget.dataset.tab }) },
-  hideTabTip() { if (this.data.tabTip) this.setData({ tabTip: '' }) },
 
   // 结果页左上角的返回：回到来的地方
   goBack() {

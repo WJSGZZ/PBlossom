@@ -1456,10 +1456,13 @@
 }
 
 .week-row,
-/* 月历总按六周的高度排：四周、五周的月份下面留空，翻月份时卡片高度不变，下面的内容不跟着跳 */
 .date-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
+}
+
+/* 月历总按六周的高度排：四周、五周的月份下面留空，翻月份时卡片高度不变，下面的内容不跟着跳 */
+.date-grid {
   grid-auto-rows: calc(84 * var(--rpx));
   align-content: start;
   height: calc(504 * var(--rpx));
@@ -1856,39 +1859,6 @@
 }
 .app.dark .mp-toast { background: linear-gradient(135deg, rgba(72, 72, 68, 0.72), rgba(40, 40, 38, 0.6)); }
 .mp-toast-on { opacity: 1; transform: translate(-50%, 0); }
-
-/* 长按图标弹出的名字：图标正上方的小气泡，下面一个小箭头指着图标。
-   底栏本身是玻璃，气泡在它外面再做模糊取不到后面的画面，所以着色实一些，字照样看得清 */
-.tab-tip {
-  position: absolute;
-  left: 50%;
-  bottom: calc(100% + calc(30 * var(--rpx)));
-  padding: calc(14 * var(--rpx)) calc(28 * var(--rpx));
-  border-radius: calc(24 * var(--rpx));
-  white-space: nowrap;
-  font-size: calc(26 * var(--rpx));
-  line-height: 1.2;
-  color: var(--ink);
-  background: rgba(255, 255, 255, 0.92);
-  box-shadow: 0 calc(12 * var(--rpx)) calc(36 * var(--rpx)) var(--lg-lift), 0 calc(2 * var(--rpx)) calc(8 * var(--rpx)) var(--lg-drop);
-  opacity: 0;
-  transform: translate(-50%, calc(10 * var(--rpx))) scale(0.94);
-  transition: opacity 0.18s ease, transform 0.28s var(--ease);
-  pointer-events: none;
-}
-.tab-tip::after {
-  content: '';
-  position: absolute;
-  left: 50%;
-  top: 100%;
-  width: calc(24 * var(--rpx));
-  height: calc(12 * var(--rpx));
-  margin-left: calc(-12 * var(--rpx));
-  background: inherit;
-  clip-path: polygon(0 0, 100% 0, 50% 100%);
-}
-.app.dark .tab-tip { background: rgba(58, 58, 55, 0.94); }
-.tab-tip-on { opacity: 1; transform: translate(-50%, 0) scale(1); }
 
 /* 未读红点：用消息提醒那种鲜红（与删除按钮同色），比原来大一圈；圆心位置不变 */
 .tab-badge {
