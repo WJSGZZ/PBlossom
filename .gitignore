@@ -3,4 +3,6 @@ build/
 dist/
 *.pyc
 .idea/
+.impeccable/
 version.txt
+.DS_Store

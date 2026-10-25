@@ -1,0 +1,433 @@
+/*
+ * 网页版专用的样式，叠在 mp/mp.css（由小程序 index.wxss 生成）之上。
+ * 版式以小程序为准；网页上改动的只有三处：
+ *   1. 尺寸：小程序的 rpx 换成 --rpx（手机上与小程序一样按屏宽，电脑上固定比例）
+ *   2. 材质：卡片、按钮、导航换成仿 iOS 26 的液态玻璃（折射由 app/lg.js 生成）
+ *   3. 电脑上（宽于 900px）底部页签栏换成左侧只有图标的侧边栏，内容居中
+ */
+
+/* 同名的两份字体：后声明的小子集（界面用到的字）优先；遇到子集里没有的字（如备注），
+   浏览器才去下载前面这份完整字体补上 */
+@font-face {
+  font-family: "PBlossomSerif";
+  src: url("../assets/fonts/PBlossomSerifFull.woff2") format("woff2");
+  /* 只管汉字和中文标点：八卦符号、⋯ 之类两份字体里都没有，交给系统字体，不必为它们下载这份 */
+  unicode-range: U+3000-303F, U+3400-4DBF, U+4E00-9FFF, U+F900-FAFF, U+FF00-FFEF;
+  font-weight: 300 700;
+  font-display: swap;
+}
+@font-face {
+  font-family: "PBlossomSerif";
+  src: url("../assets/fonts/PBlossomSerif.woff") format("woff");
+  font-weight: 300 700;
+  font-display: swap;
+}
+
+html, body { margin: 0; height: 100%; background: #F5F4F1; }
+@media (prefers-color-scheme: dark) { html, body { background: #0E0E0D; } }
+body { overflow: hidden; -webkit-text-size-adjust: 100%; -webkit-tap-highlight-color: transparent; }
+/* 小程序只内嵌了界面用到的字，备注、问事只好用系统字体；网页有完整字体，这些也用宋体 */
+.question-input, .note-input, .history-note { font-family: "PBlossomSerif", "Noto Serif SC", "Songti SC", STSong, serif; }
+/* 和小程序一样，界面上的文字不能被选中；只有输入框可以 */
+body { -webkit-user-select: none; user-select: none; }
+input, textarea { -webkit-user-select: text; user-select: text; }
+/* 往昔的删除提示：有鼠标的设备说“右键点按”，触屏说“长按” */
+.hint-mouse { display: none; }
+@media (hover: hover) and (pointer: fine) { .hint-mouse { display: inline; } .hint-touch { display: none; } }
+
+.mp-root {
+  /* 小程序的 750rpx = 屏宽；平板宽度时不再继续放大 */
+  --rpx: calc(min(100vw, 560px) / 750);
+  height: 100%;
+}
+.mp-root *, .mp-root *::before, .mp-root *::after { box-sizing: border-box; }
+.app { min-height: 100%; }
+
+/* 小程序组件的网页对应物 */
+.content-scroll, .history-scroll { overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none; }
+.content-scroll::-webkit-scrollbar, .history-scroll::-webkit-scrollbar { display: none; }
+/* 重置用 :where() 把优先级降到零，小程序样式（比如数字格里透明的输入框文字）照常生效 */
+:where(.mp-root) :where(input, button, select) { font: inherit; color: inherit; }
+:where(.mp-root) :where(input) { border: 0; background: transparent; outline: none; padding: 0; margin: 0; width: 100%; }
+:where(.mp-root) :where(button) { border: 0; background: none; padding: 0; margin: 0; cursor: pointer; }
+.mp-root [class*="-btn"], .tile, .seg-item, .tab, .date-cell, .faq-head, .history-row, .row[class] { cursor: pointer; }
+.mp-root img { display: block; }
+/* 小程序 <text> 里的换行照样显示（零优先级，各自的 white-space 设置仍然生效） */
+:where([data-t]) { white-space: pre-line; }
+.mp-picker { position: relative; display: block; cursor: pointer; }
+.mp-picker-native { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; border: 0; cursor: pointer; font-size: 16px; }
+
+/* 按下的反馈：小程序用 hover-class，网页用 :active */
+.primary-btn:active { transform: scale(0.97); opacity: 0.88; }
+.circle-btn:active { transform: scale(0.92); opacity: 0.75; }
+.nav-btn:active { opacity: 0.5; }
+.history-row:active { opacity: 0.6; }
+.card.about:active { opacity: 0.7; }
+.faq-contact:active, .prompt-copy:active { opacity: 0.6; }
+
+/* 开关：与系统开关一样的外观 */
+.mp-switch {
+  position: relative; flex-shrink: 0; width: 51px; height: 31px; border-radius: 999px;
+  background: var(--fill) !important; transition: background 0.25s ease; transform: scale(0.82); transform-origin: right center;
+}
+.mp-switch.on { background: var(--accent) !important; }
+.mp-switch .mp-switch-knob {
+  position: absolute; top: 2px; left: 2px; width: 27px; height: 27px; border-radius: 50%; background: #fff;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15), 0 1px 1px rgba(0, 0, 0, 0.16); transition: transform 0.3s var(--ease);
+}
+.mp-switch.on .mp-switch-knob { transform: translateX(20px); }
+
+/* ── 液态玻璃（仿 iOS 26 的 .glassEffect(.regular)） ──
+   几乎不着色，背后的画面轻微模糊、在边缘被折射（Chromium 由 lg.js 生成折射滤镜，其他浏览器只有模糊）；
+   一圈镜面高光边，左上和右下最亮，像光从斜上方照下来。
+   变量放在 :root 上，挂在 body 下的弹出菜单也用同一套 */
+:root {
+  --lg-tint-a: rgba(255, 255, 255, 0.34);
+  --lg-tint-b: rgba(255, 255, 255, 0.1);
+  --lg-shine-top: rgba(255, 255, 255, 0.85);
+  --lg-shine-side: rgba(255, 255, 255, 0.5);
+  --lg-shine-low: rgba(255, 255, 255, 0.28);
+  --lg-lift: rgba(10, 15, 40, 0.12);
+  --lg-fill: rgba(255, 255, 255, 0.18);
+  --lg-fill-strong: rgba(255, 255, 255, 0.42);
+  --lg-hi: rgba(255, 255, 255, 0.95);
+  --lg-hi-low: rgba(255, 255, 255, 0.6);
+  --lg-hairline: rgba(255, 255, 255, 0.55);
+  --lg-glow: rgba(255, 255, 255, 0.2);
+  --lg-drop: rgba(0, 0, 0, 0.07);
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --lg-tint-a: rgba(255, 255, 255, 0.1);
+    --lg-tint-b: rgba(255, 255, 255, 0.02);
+    --lg-shine-top: rgba(255, 255, 255, 0.3);
+    --lg-shine-side: rgba(255, 255, 255, 0.14);
+    --lg-shine-low: rgba(255, 255, 255, 0.08);
+    --lg-lift: rgba(0, 0, 0, 0.4);
+    --lg-fill: rgba(255, 255, 255, 0.06);
+    --lg-fill-strong: rgba(255, 255, 255, 0.12);
+    --lg-hi: rgba(255, 255, 255, 0.32);
+    --lg-hi-low: rgba(255, 255, 255, 0.14);
+    --lg-hairline: rgba(255, 255, 255, 0.1);
+    --lg-glow: rgba(255, 255, 255, 0.04);
+    --lg-drop: rgba(0, 0, 0, 0.35);
+  }
+}
+
+/* 高光边是绝对定位的 ::after，需要定位的父元素；页签栏、侧边栏本身是 fixed，不能改 */
+.circle-btn, .lg { position: relative; }
+.card, .panel, .tile, .circle-btn, .segmented, .tabbar, .web-sidebar, .lg {
+  /* 着色：从左上到右下由亮到淡的一层白（参考 liqui.design 的 tint） */
+  background: linear-gradient(135deg, var(--lg-tint-a), var(--lg-tint-b));
+  border: 0;
+  /* 不支持折射的浏览器：轻模糊；Chromium 由 lg.js 换成“模糊 + 折射 + 磨砂” */
+  -webkit-backdrop-filter: blur(10px) saturate(140%);
+  backdrop-filter: blur(10px) saturate(140%);
+  /* 光泽：上沿一道亮线、左沿次之、右下一道暗一些的反光；外面一层很淡的投影 */
+  box-shadow:
+    inset 0 1px 1px var(--lg-shine-top),
+    inset 1px 0 1px 0.5px var(--lg-shine-side),
+    inset -1px -1px 1px var(--lg-shine-low),
+    0 4px 14px var(--lg-drop),
+    0 1px 3px rgba(0, 0, 0, 0.04);
+}
+/* 浮在内容上的玻璃（侧边栏、页签栏、圆按钮、弹出菜单）投影更深，像悬起来 */
+.tabbar, .web-sidebar, .circle-btn, .web-popover, .web-dialog, .web-toast-box, .web-image-btn, .web-drop-box {
+  box-shadow:
+    inset 0 1px 1px var(--lg-shine-top),
+    inset 1px 0 1px 0.5px var(--lg-shine-side),
+    inset -1px -1px 1px var(--lg-shine-low),
+    0 14px 36px var(--lg-lift), 0 3px 10px var(--lg-drop);
+}
+/* 镜面高光：沿边缘一圈细亮线，左上和右下最亮 */
+.card::after, .panel::after, .tile::after, .circle-btn::after, .segmented::after, .tabbar::after, .web-sidebar::after, .lg::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  padding: 1px;
+  opacity: 0.7;
+  background: linear-gradient(135deg, var(--lg-hi), rgba(255, 255, 255, 0.1) 30%, rgba(255, 255, 255, 0) 60%, var(--lg-hi-low));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+}
+/* 小程序底栏自带的反光层不再需要 */
+.tabbar::before { display: none; }
+.tile-active { box-shadow: inset 0 0 0 1.5px var(--accent), 0 6px 20px var(--lg-drop) !important; }
+
+/* 分段控件的选中块：一层淡淡的主题色，与页签栏一致 */
+.seg-thumb { background: rgba(var(--accent-rgb), 0.12); box-shadow: none; }
+
+/* 主按钮：带主题色的玻璃（iOS 的 .glassProminent） */
+.primary-btn {
+  position: relative;
+  background: rgba(var(--accent-rgb), 0.96);
+  box-shadow:
+    inset 0 0 0 0.5px rgba(255, 255, 255, 0.22),
+    inset 1.5px 1.5px 1px -1px rgba(255, 255, 255, 0.55),
+    inset -1.5px -1.5px 1px -1px rgba(255, 255, 255, 0.3),
+    0 8px 20px rgba(var(--accent-rgb), 0.22);
+}
+.primary-btn-off { background: var(--lg-fill-strong); }
+
+/* ── 侧边栏：手机上不显示 ── */
+.web-sidebar { display: none; }
+
+@media (min-width: 900px) {
+  /* 尺寸跟着窗口高度走：矮屏略小、高屏略大，新占这类页面一屏放得下。
+     --frame 是所有页面共用的内容区宽度，--top 是页头的固定位置：每一页的标题都在同一个地方 */
+  .mp-root {
+    --rpx: clamp(0.6px, calc(100vh / 1150), 0.8px);
+    --side: 136px;
+    --frame: min(1080px, calc(100vw - var(--side) - 96px));
+    --gutter: max(48px, calc((100vw - var(--side) - var(--frame)) / 2));
+    --top: 48px;
+  }
+  .tabbar { display: none !important; }
+
+  /* 侧边栏：logo 和三个页面在上，帮助在最下；圆角都是边长的四分之一，与 logo 相同 */
+  .web-sidebar {
+    position: fixed; z-index: 30; left: 20px; top: 20px; bottom: 20px; width: 88px;
+    border-radius: 22px;
+    padding: 26px 0 22px; display: flex; flex-direction: column; align-items: center; gap: 14px;
+  }
+  .web-sidebar-logo { width: 56px; height: 56px; margin-bottom: 26px; }
+  .web-side-btn {
+    position: relative; width: 60px; height: 60px; border-radius: 15px;
+    display: flex; align-items: center; justify-content: center; transition: background 0.25s var(--ease);
+  }
+  .web-side-btn:hover { background: rgba(var(--accent-rgb), 0.06); }
+  .web-side-btn.on { background: rgba(var(--accent-rgb), 0.12); }
+  .web-side-icon { display: block; width: 26px; height: 26px; background: var(--ink); }
+  .web-side-btn.on .web-side-icon { background: var(--accent); }
+  .web-side-bottom { margin-top: auto; }
+  .web-side-badge { position: absolute; top: 13px; right: 13px; width: 9px; height: 9px; border-radius: 50%; background: #FA5151; }
+
+  /* 内容区：每一页同样的宽度和顶部位置 */
+  .content-scroll { padding-left: var(--side); }
+  .page, .history-head, .history-list {
+    width: var(--frame); max-width: none; margin-left: auto; margin-right: auto; padding-left: 0; padding-right: 0;
+  }
+  .page { padding-top: var(--top) !important; }
+  /* 页头右侧的“⋯”与大标题的文字中线对齐（标题行高 76×1.15，按钮 64） */
+  .page-header > .circle-btn { align-self: flex-end; margin: 0 0 calc((76 * 1.15 - 64) / 2 * var(--rpx)); }
+  .history-screen { left: var(--side); padding-top: var(--top) !important; }
+  /* 结果页：返回和“⋯”放在页头的位置，内容从下面开始 */
+  .result-bar { top: var(--top) !important; left: calc(var(--side) + var(--gutter)); right: var(--gutter); }
+  .page:has(> .stack > .hex-card), .page:has(> .stack > .info-card) { padding-top: calc(var(--top) + 64 * var(--rpx) + 36 * var(--rpx)) !important; }
+  /* 电脑上没有底部页签栏，页面底部只留一点余量 */
+  .tab-spacer { height: 32px !important; }
+}
+/* ── 网页弹层：提示、对话框、操作菜单、图片预览 ── */
+.web-toast, .web-mask {
+  position: fixed; inset: 0; z-index: 100; display: flex; align-items: center; justify-content: center;
+  opacity: 0; transition: opacity 0.25s ease; font-family: "PBlossomSerif", "Songti SC", serif; color: var(--ink, #121211);
+  --ink: #121211; --subtle: #7C7B76;
+}
+@media (prefers-color-scheme: dark) { .web-toast, .web-mask { --ink: #F2F1EE; --subtle: #8D8C87; } }
+.web-toast { pointer-events: none; }
+.web-toast.on, .web-mask.on { opacity: 1; }
+.web-mask { background: rgba(0, 0, 0, 0.22); }
+.web-toast-box { display: flex; align-items: center; gap: 10px; padding: 14px 22px; border-radius: 999px; font-size: 16px; }
+.web-spinner { width: 16px; height: 16px; border-radius: 50%; border: 2px solid currentColor; border-right-color: transparent; animation: web-spin 0.8s linear infinite; }
+@keyframes web-spin { to { transform: rotate(360deg); } }
+.web-dialog { width: min(320px, calc(100vw - 48px)); border-radius: 30px; padding: 24px 18px 18px; text-align: center; transform: scale(0.96); transition: transform 0.3s var(--ease, ease); }
+.web-mask.on .web-dialog { transform: none; }
+.web-dialog-title { font-size: 18px; font-weight: 700; }
+.web-dialog-text { margin-top: 10px; font-size: 15px; line-height: 1.6; color: var(--subtle); white-space: pre-wrap; text-align: left; }
+.web-dialog-actions { display: flex; gap: 10px; margin-top: 20px; }
+.web-dialog-btn { flex: 1; height: 46px; border: 0; border-radius: 999px; font: inherit; font-size: 16px; background: rgba(var(--accent-rgb, 118, 118, 128), 0.1); color: var(--ink); cursor: pointer; }
+.web-dialog-ok { font-weight: 700; }
+/* 拖入文件时的提示 */
+.web-drop { position: fixed; inset: 0; z-index: 110; display: flex; align-items: center; justify-content: center; pointer-events: none;
+  background: rgba(0, 0, 0, 0.18); opacity: 0; transition: opacity 0.2s ease; font-family: "PBlossomSerif", "Songti SC", serif; }
+.web-drop.on { opacity: 1; }
+.web-drop-box { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 32px 44px; border-radius: 24px; font-size: 20px; color: #121211;
+  outline: 2px dashed rgba(18, 18, 17, 0.25); outline-offset: -10px; }
+.web-drop-box small { font-size: 13px; color: #7C7B76; }
+@media (prefers-color-scheme: dark) { .web-drop-box { color: #F2F1EE; outline-color: rgba(255, 255, 255, 0.25); } }
+/* 浮层玻璃：弹出菜单、对话框、提示、看图的按钮、拖入提示，全部用同一种玻璃——
+   与卡片同样的白色渐变着色、高光边、边缘折射（lg.js），只是着色更实、背后更模糊，压在内容上字也看得清 */
+:root { --float-a: rgba(255, 255, 255, 0.55); --float-b: rgba(255, 255, 255, 0.28); }
+@media (prefers-color-scheme: dark) { :root { --float-a: rgba(72, 72, 68, 0.55); --float-b: rgba(40, 40, 38, 0.42); } }
+.web-popover, .web-dialog, .web-toast-box, .web-image-btn, .web-drop-box {
+  background: linear-gradient(135deg, var(--float-a), var(--float-b));
+  -webkit-backdrop-filter: blur(14px) saturate(140%); backdrop-filter: blur(14px) saturate(140%);
+}
+/* 操作菜单：贴着按钮弹出的小菜单 */
+.web-popover-layer { position: fixed; inset: 0; z-index: 100; font-family: "PBlossomSerif", "Songti SC", serif; --ink: #121211; }
+@media (prefers-color-scheme: dark) { .web-popover-layer { --ink: #F2F1EE; } }
+.web-popover {
+  /* 与卡片同一种玻璃（着色、高光边、阴影来自 .lg，折射由 lg.js 加上），着色和模糊比卡片重一些，压在文字上也看得清 */
+  position: fixed; min-width: 180px; padding: 8px; border-radius: 26px; display: flex; flex-direction: column;
+  opacity: 0; transform: scale(0.92); transition: opacity 0.18s ease, transform 0.25s var(--ease, ease);
+}
+.web-popover-layer.on .web-popover { opacity: 1; transform: none; }
+.web-popover-item {
+  height: 44px; padding: 0 16px; border: 0; border-radius: 18px; background: none; text-align: left;
+  font: inherit; font-size: 15px; color: var(--ink); cursor: pointer; outline: none;
+}
+.web-popover-item:hover, .web-popover-item:focus-visible { background: rgba(var(--accent-rgb, 118, 118, 128), 0.12); }
+.web-mask-image { background: rgba(0, 0, 0, 0.5); }
+.web-image { display: flex; flex-direction: column; align-items: center; gap: 16px; max-width: calc(100vw - 32px); max-height: calc(100vh - 32px); }
+.web-image img { max-width: min(480px, calc(100vw - 32px)); max-height: calc(100vh - 120px); border-radius: 18px; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35); }
+.web-image-actions { display: flex; gap: 10px; }
+.web-image-btn { height: 44px; padding: 0 20px; border: 0; border-radius: 999px; font: inherit; font-size: 15px; color: var(--ink); cursor: pointer; }
+
+/* ── 电脑宽屏（宽于 1100px）：两栏。结果页、时令、常见问题是瀑布流（卡片占几行由 app/layout.js 按高度算） ── */
+@media (min-width: 1100px) {
+  /* 新占右栏：此刻卡片按小程序比例缩小（--now-scale），高度不超过标题；--aside 是右栏宽度，
+     往昔的筛选框用同样的左栏宽度，两页的切换框在同一位置、同样大小 */
+  .mp-root { --now-scale: 0.63; --aside: calc(638 * var(--rpx) * var(--now-scale)); --gap-x: 40px; }
+  .history-head > .segmented { width: calc(100% - var(--aside) - var(--gap-x)); }
+  .page > .stack:has(> .hex-card),
+  .page > .stack:has(> .info-card),
+  .page > .stack:has(> .faq-panel) {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-auto-rows: 4px;
+    grid-auto-flow: row dense;
+    column-gap: 40px;
+    row-gap: 0;
+    align-items: start;
+  }
+  .page > .stack:has(> .faq-panel) { grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); }
+  .page > .stack > .page-header { grid-column: 1 / -1; }
+
+  /* 新占：左边一栏是起卦的操作区（切换框和下面的表单同宽）；右边一栏放此刻四柱和六壬的高级设置。
+     表单的外层（.form-swap）和高级设置那块面板在电脑上不占盒子（display: contents），
+     里面的卡片直接排进这张两栏网格，高级设置展开的内容才能放到右栏 */
+  .page > .stack:has(> .now-strip) {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) var(--aside);
+    column-gap: var(--gap-x);
+    row-gap: calc(36 * var(--rpx));
+    align-items: start;
+  }
+  .stack:has(> .now-strip) > .page-header { grid-column: 1; grid-row: 1; }
+  .stack:has(> .now-strip) > .segmented { grid-column: 1; grid-row: 2; }
+  .stack:has(> .now-strip) > .form-swap { display: contents; }
+  .stack:has(> .now-strip) > .form-swap > * { grid-column: 1; }
+  .stack:has(> .now-strip) .tile { height: auto; aspect-ratio: 1.15; }
+  /* 电脑上的数字格更大，数字也跟着放大一档；几位数都是同一字号 */
+  .stack:has(> .now-strip) .tile :is(.tile-value, .tile-input) { font-size: calc(108 * var(--rpx)); }
+
+  /* 此刻四柱：保持小程序里的比例整体缩小，高度与标题相当、宽度随之变窄 */
+  .stack:has(> .now-strip) > .now-strip { grid-column: 2; grid-row: 1; align-self: end; zoom: var(--now-scale); }
+
+  /* 六壬的高级设置：不占左栏一整行，变成右栏里与切换框同一行的轻按钮；点开后月将、占时、贵人在右栏下方展开，与此刻同宽 */
+  .form-swap > .panel:has(.reveal-block) { display: contents; }
+  /* 不占盒子的面板，玻璃高光边（::after）也不能画，否则会按整页大小画出一圈框 */
+  .form-swap > .panel:has(.reveal-block)::after { display: none; }
+  .form-swap > .panel:has(.reveal-block) > .row {
+    grid-column: 2; grid-row: 2; justify-self: start; align-self: center; min-height: 0;
+    gap: calc(14 * var(--rpx)); padding: calc(14 * var(--rpx)) calc(26 * var(--rpx)); border-radius: 999px;
+    transition: background 0.2s ease;
+  }
+  /* 底色跟主题色走，与切换框里选中的那一格一样 */
+  .form-swap > .panel:has(.reveal-block) > .row:hover { background: rgba(var(--accent-rgb), 0.08); }
+  .form-swap > .panel:has(.reveal-block) > .row .row-title { color: var(--subtle); font-size: calc(28 * var(--rpx)); }
+  .form-swap > .panel:has(.reveal-block):has(.reveal-block-open) > .row { background: rgba(var(--accent-rgb), 0.12); }
+  .form-swap > .panel:has(.reveal-block):has(.reveal-block-open) > .row .row-title { color: var(--ink); }
+  .form-swap > .panel:has(.reveal-block) > .row .chevron { margin-right: 0; transform: rotate(-45deg); }
+  /* 展开的内容在按钮下方，所以展开后箭头朝下 */
+  .form-swap > .panel:has(.reveal-block) > .row .chevron-up { transform: translateY(calc(-3 * var(--rpx))) rotate(45deg); }
+  .form-swap .reveal-block {
+    /* 与左边的问事、时间那块面板等高，三项均匀分布 */
+    grid-column: 2; grid-row: 3; align-self: stretch; display: flex; flex-direction: column; justify-content: center;
+    height: auto !important; padding: 0 calc(40 * var(--rpx)); border-radius: calc(52 * var(--rpx));
+    background: linear-gradient(135deg, var(--lg-tint-a), var(--lg-tint-b));
+    -webkit-backdrop-filter: blur(10px) saturate(140%); backdrop-filter: blur(10px) saturate(140%);
+    box-shadow: inset 0 1px 1px var(--lg-shine-top), inset 1px 0 1px 0.5px var(--lg-shine-side), inset -1px -1px 1px var(--lg-shine-low), 0 4px 14px var(--lg-drop);
+    opacity: 0; transform: translateX(-16px); pointer-events: none;
+    transition: opacity 0.25s ease, transform 0.35s var(--ease);
+  }
+  .form-swap .reveal-block-open { opacity: 1; transform: none; pointer-events: auto; }
+  .form-swap .reveal-block #adv-inner > .hairline:first-child { display: none; }
+  .form-swap .reveal-block #adv-inner { flex: 1; display: flex; flex-direction: column; justify-content: space-evenly; }
+
+  /* 梅花结果：四柱、备注在左，三卦在右 */
+  .stack:has(> .hex-card) > .r0, .stack:has(> .hex-card) > .r3 { grid-column: 1; }
+  .stack:has(> .hex-card) > .hex-card, .stack:has(> .hex-card) > .footnote { grid-column: 2; }
+  /* 六壬结果：四柱、课体、问事在左，天地盘、四课、三传在右 */
+  .stack:has(> .info-card) > .r0, .stack:has(> .info-card) > .r4, .stack:has(> .info-card) > .r5 { grid-column: 1; }
+  .stack:has(> .info-card) > .r1, .stack:has(> .info-card) > .r2, .stack:has(> .info-card) > .r3 { grid-column: 2; }
+  /* 时令：左栏是日期、四柱、节气；右栏上面是时间和真太阳时（与左边的大日期同一行、上下居中），下面是月历。
+     日期和时间原本包在同一个小 .stack 里，这里让它不占盒子，两块分别排进两栏 */
+  .page > .stack:has(> .month-card) {
+    display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    column-gap: var(--gap-x); row-gap: calc(52 * var(--rpx)); align-items: start;
+  }
+  .stack:has(> .month-card) > .page-header { grid-column: 1 / -1; }
+  .stack:has(> .month-card) > .stack { display: contents; }
+  .stack:has(> .month-card) > .stack > .mp-picker { grid-column: 1; grid-row: 2; align-self: center; }
+  /* 大日期在电脑上放大一档，下面的星期、农历跟着略放大 */
+  .stack:has(> .month-card) .date-big { font-size: calc(76 * var(--rpx)); }
+  .stack:has(> .month-card) .date-sub { margin-top: calc(10 * var(--rpx)); font-size: calc(32 * var(--rpx)); }
+  .stack:has(> .month-card) > .stack > .panel { grid-column: 2; grid-row: 2; }
+  .stack:has(> .month-card) > .pillars-panel { grid-column: 1; grid-row: 3; }
+  .stack:has(> .month-card) > .card:not(.month-card) { grid-column: 1; grid-row: 4; }
+  .stack:has(> .month-card) > .month-card { grid-column: 2; grid-row: 3 / span 2; }
+  /* 月历的高度跟左边的四柱加节气走（contain: size 让它不参与撑高这两行），
+     四到六周的月份都填满同样的高度，每周一行平分 */
+  .stack:has(> .month-card) > .month-card { align-self: stretch; contain: size; display: flex; flex-direction: column; }
+  .stack:has(> .month-card) > .month-card .date-grid { flex: 1; grid-auto-rows: 1fr; }
+  .stack:has(> .month-card) > .month-card .date-cell { height: auto; }
+  /* 常见问题：问题在左，外观和关于在右 */
+  .stack:has(> .faq-panel) > .faq-panel { grid-column: 1; }
+  .stack:has(> .faq-panel) > :not(.page-header):not(.faq-panel) { grid-column: 2; }
+
+  /* 往昔：记录排成两列 */
+  .history-list { display: grid; grid-template-columns: 1fr 1fr; column-gap: 48px; align-content: start; }
+  .history-list > .empty, .history-list > .list-foot { grid-column: 1 / -1; }
+}
+
+/* 背景游光与玻璃：玻璃几乎透明，原先还把背后的颜色饱和度放大 1.5 倍，主题色的光透过卡片会发亮刺眼，
+   现在只放大一成。 */
+/* 背景游光：小程序里光斑按屏宽定大小（130vw），竖屏手机上刚好；电脑横屏时屏宽远大于屏高，
+   光斑会大到盖满整屏、几团叠在一起发亮。网页改按短边定大小和位置，手机上与小程序完全相同 */
+.light { width: 130vmin; height: 130vmin; }
+.light-0 { left: -55vmin; top: -30vmin; }
+.light-1 { right: -60vmin; }
+.light-2 { left: -40vmin; bottom: -40vmin; }
+.light-3 { right: -45vmin; }
+/* 电脑上再小一些（位置按同样比例收） */
+@media (min-width: 1100px) {
+  .light { width: 100vmin; height: 100vmin; }
+  .light-0 { left: -42vmin; top: -23vmin; }
+  .light-1 { right: -46vmin; }
+  .light-2 { left: -31vmin; bottom: -31vmin; }
+  .light-3 { right: -35vmin; }
+}
+
+/* ── 动效：网页上原本硬切的地方补上柔和的过渡 ──
+   时长 0.2～0.45 秒，缓出曲线与小程序一致（--ease）；系统开启“减少动态效果”时全部省掉 */
+/* 切换页面（新占、往昔、时令、帮助，以及进出结果页）：新页面淡入、轻轻上移；离开的页面直接撤下，不与新页面叠在一起 */
+.content-scroll > .page, .history-screen { animation: web-page-in 0.42s var(--ease) both; }
+.result-bar { animation: web-fade-in 0.3s ease both; }
+@keyframes web-page-in { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+@keyframes web-fade-in { from { opacity: 0; } to { opacity: 1; } }
+/* 翻月份：日期按方向滑入，往后翻从右边进来、往前翻从左边进来（与节气名的方向一致）；方向由 runtime.js 标上 */
+.date-grid.web-month-fwd { animation: web-month-fwd 0.36s var(--ease) both; }
+.date-grid.web-month-back { animation: web-month-back 0.36s var(--ease) both; }
+@keyframes web-month-fwd { from { opacity: 0; transform: translateX(28px); } to { opacity: 1; transform: none; } }
+@keyframes web-month-back { from { opacity: 0; transform: translateX(-28px); } to { opacity: 1; transform: none; } }
+/* 按下、松开、悬停都缓一下，而不是一下子跳过去 */
+.circle-btn, .nav-btn, .card.about, .prompt-copy, .web-image-btn, .web-dialog-btn {
+  transition: transform 0.22s var(--ease), opacity 0.22s ease, background-color 0.25s ease;
+}
+.web-side-btn { transition: background-color 0.3s ease, transform 0.22s var(--ease); }
+.web-side-icon { transition: background-color 0.3s ease; }
+.web-side-btn:active, .web-image-btn:active, .web-dialog-btn:active { transform: scale(0.94); }
+.web-popover-item { transition: background-color 0.2s ease; }
+@media (hover: hover) and (pointer: fine) {
+  .circle-btn:hover { transform: translateY(-1px); }
+  .history-row:hover, .faq-head:hover { opacity: 0.75; }
+  .faq-head { transition: opacity 0.2s ease; }
+  .date-cell:hover .date-num:not(.date-selected) { background: rgba(var(--accent-rgb), 0.08); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .content-scroll > .page, .history-screen, .result-bar, .date-grid.web-month-fwd, .date-grid.web-month-back { animation: none !important; }
+}

@@ -1,0 +1,568 @@
+// 网页版运行时：让小程序的页面逻辑（mp/bundle.js）原样跑在浏览器里。
+// 这里实现小程序用到的那一部分 wx 接口和 Page()，界面用 Vue 渲染 mp/view.js 里由 WXML 转成的模板。
+// 网页专有的部分（侧边栏、弹窗、图片预览）也在这里。
+(function () {
+  const { createApp, reactive, nextTick } = Vue
+  const STORE_PREFIX = 'pblossom:'
+  const root = () => document.getElementById('app')
+
+  // ── 小弹层：提示、加载、对话框、操作菜单、图片预览 ─────────────────────────
+
+  function layer(className, html) {
+    const el = document.createElement('div')
+    el.className = className
+    // 弹出层挂在 body 下，拿不到页面上的主题色，这里抄一份
+    const app = document.querySelector('.app')
+    if (app) el.style.setProperty('--accent-rgb', getComputedStyle(app).getPropertyValue('--accent-rgb'))
+    el.innerHTML = html
+    document.body.appendChild(el)
+    requestAnimationFrame(() => el.classList.add('on'))
+    return el
+  }
+  function closeLayer(el) {
+    if (!el || el._closing) return
+    el._closing = true
+    el.classList.remove('on')
+    setTimeout(() => el.remove(), 260)
+  }
+  const escapeHtml = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c])
+
+  let toastEl = null
+  let toastTimer = null
+  function toast(title, duration, loading) {
+    clearTimeout(toastTimer)
+    if (toastEl) toastEl.remove()
+    toastEl = layer('web-toast', `<div class="web-toast-box lg">${loading ? '<span class="web-spinner"></span>' : ''}<span>${escapeHtml(title)}</span></div>`)
+    if (!loading) {
+      const el = toastEl
+      toastTimer = setTimeout(() => closeLayer(el), duration || 1500)
+    }
+  }
+
+  function modal(opts) {
+    const showCancel = opts.showCancel !== false
+    const el = layer('web-mask', `
+      <div class="web-dialog lg" role="dialog" aria-modal="true">
+        ${opts.title ? `<div class="web-dialog-title">${escapeHtml(opts.title)}</div>` : ''}
+        ${opts.content ? `<div class="web-dialog-text">${escapeHtml(opts.content)}</div>` : ''}
+        <div class="web-dialog-actions">
+          ${showCancel ? `<button class="web-dialog-btn" data-r="cancel">${escapeHtml(opts.cancelText || '取消')}</button>` : ''}
+          <button class="web-dialog-btn web-dialog-ok" data-r="confirm" style="${opts.confirmColor ? `color:${opts.confirmColor}` : ''}">${escapeHtml(opts.confirmText || '确定')}</button>
+        </div>
+      </div>`)
+    const done = (confirm) => {
+      closeLayer(el)
+      const res = { confirm, cancel: !confirm }
+      if (opts.success) opts.success(res)
+      if (opts.complete) opts.complete(res)
+    }
+    el.addEventListener('click', (e) => {
+      const r = e.target.closest('[data-r]')
+      if (r) done(r.dataset.r === 'confirm')
+      else if (e.target === el && showCancel) done(false)
+    })
+    const ok = el.querySelector('.web-dialog-ok')
+    setTimeout(() => ok && ok.focus(), 50)
+  }
+
+  // 记下最近一次点击的按钮，操作菜单就贴着它弹出
+  let lastTrigger = null
+  let lastTriggerAt = 0
+  document.addEventListener('click', (e) => {
+    const el = e.target.closest && e.target.closest('.circle-btn, button, [role="button"], .row')
+    if (el) { lastTrigger = el; lastTriggerAt = Date.now() }
+  }, true)
+
+  // 操作菜单（wx.showActionSheet）：不学手机从底部弹出，而是贴着点的按钮弹出一个小菜单，
+  // 右边与按钮对齐，下方放不下就往上弹；点菜单外面或按 Esc 关闭。电脑和手机网页上一样
+  function actionSheet(opts) {
+    const anchor = lastTrigger && Date.now() - lastTriggerAt < 800 && document.contains(lastTrigger) ? lastTrigger : null
+    const el = layer('web-popover-layer', `
+      <div class="web-popover lg" role="menu">${opts.itemList.map((t, i) => `<button class="web-popover-item" role="menuitem" data-i="${i}">${escapeHtml(t)}</button>`).join('')}</div>`)
+    const menu = el.querySelector('.web-popover')
+    const gap = 8
+    const vw = window.innerWidth
+    const vh = window.innerHeight
+    const mw = menu.offsetWidth
+    const mh = menu.offsetHeight
+    let left
+    let top
+    let origin
+    if (anchor) {
+      const r = anchor.getBoundingClientRect()
+      left = Math.min(Math.max(12, r.right - mw), vw - mw - 12)
+      const below = r.bottom + gap + mh <= vh - 12
+      top = below ? r.bottom + gap : Math.max(12, r.top - gap - mh)
+      origin = `${below ? 'top' : 'bottom'} right`
+    } else {
+      left = (vw - mw) / 2
+      top = (vh - mh) / 2
+      origin = 'center'
+    }
+    menu.style.left = `${left}px`
+    menu.style.top = `${top}px`
+    menu.style.transformOrigin = origin
+    const close = (i) => {
+      document.removeEventListener('keydown', onKey)
+      closeLayer(el)
+      if (i >= 0) { if (opts.success) opts.success({ tapIndex: i }) } else if (opts.fail) opts.fail({ errMsg: 'cancel' })
+      if (opts.complete) opts.complete()
+    }
+    const onKey = (e) => { if (e.key === 'Escape') close(-1) }
+    document.addEventListener('keydown', onKey)
+    el.addEventListener('click', (e) => {
+      const b = e.target.closest('[data-i]')
+      close(b ? Number(b.dataset.i) : -1)
+    })
+    setTimeout(() => { const first = menu.querySelector('button'); if (first) first.focus({ preventScroll: true }) }, 0)
+  }
+
+  // 小程序里这一步是微信自带的图片菜单（转发、保存）；网页上显示图片，可以下载或复制
+  function imageViewer(url) {
+    const el = layer('web-mask web-mask-image', `
+      <div class="web-image">
+        <img src="${url}" alt="分享图片">
+        <div class="web-image-actions">
+          <button class="web-image-btn lg" data-a="save">下载图片</button>
+          ${navigator.clipboard && window.ClipboardItem ? '<button class="web-image-btn lg" data-a="copy">复制图片</button>' : ''}
+          <button class="web-image-btn lg" data-a="close">关闭</button>
+        </div>
+      </div>`)
+    el.addEventListener('click', async (e) => {
+      const b = e.target.closest('[data-a]')
+      if (!b) { if (e.target === el) closeLayer(el); return }
+      if (b.dataset.a === 'close') closeLayer(el)
+      if (b.dataset.a === 'save') {
+        const a = document.createElement('a')
+        a.href = url
+        a.download = `PBlossom-${new Date().toISOString().slice(0, 10)}.png`
+        a.click()
+      }
+      if (b.dataset.a === 'copy') {
+        try {
+          const blob = await (await fetch(url)).blob()
+          await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })])
+          toast('已复制图片')
+        } catch (err) { toast('复制失败') }
+      }
+    })
+  }
+
+  // ── 选择器查询：select(...).boundingClientRect() / scrollOffset() / node() / fields() ─────
+
+  function selectorQuery() {
+    const reqs = []
+    const q = {
+      in() { return q },
+      select(sel) {
+        const pick = (fn) => (cb) => { reqs.push({ sel, fn, cb }); return q }
+        return {
+          boundingClientRect: pick((el) => el.getBoundingClientRect()),
+          scrollOffset: pick((el) => ({ scrollTop: el.scrollTop, scrollLeft: el.scrollLeft })),
+          fields: (opts, cb) => pick((el) => {
+            const r = el.getBoundingClientRect()
+            return { node: nodeOf(el), width: r.width, height: r.height }
+          })(cb),
+          node: pick((el) => ({ node: nodeOf(el) })),
+        }
+      },
+      exec(cb) {
+        requestAnimationFrame(() => {
+          const res = reqs.map(({ sel, fn, cb: one }) => {
+            const el = root().querySelector(sel)
+            const v = el ? fn(el) : null
+            if (one) one(v)
+            return v
+          })
+          if (cb) cb(res)
+        })
+      },
+    }
+    return q
+  }
+  // scroll-view 的节点有 scrollTo；画布节点就是 canvas 元素本身
+  function nodeOf(el) {
+    if (el.tagName === 'CANVAS') return el
+    return {
+      scrollTo({ top, animated }) { el.scrollTo({ top, behavior: animated ? 'smooth' : 'auto' }) },
+    }
+  }
+
+  // ── wx ─────────────────────────────────────────────────────────────────────
+
+  const darkQuery = window.matchMedia('(prefers-color-scheme: dark)')
+  const themeListeners = new Map()
+
+  // ── 深色模式：跟随系统 / 浅色 / 深色（网页专有，记在这台设备的浏览器里） ──
+  // 系统的深浅色由浏览器的 prefers-color-scheme 告诉网页：macOS、iOS、安卓，以及 Windows 10/11
+  // （设置 → 个性化 → 颜色 → 应用模式）上的 Chrome、Edge、Firefox 都支持，系统切换时网页跟着变。
+  // 手动选浅色或深色时，把样式表里所有“系统是深色”的条件改成恒真或恒假；选回跟随系统就还原
+  const APPEARANCE_KEY = STORE_PREFIX + 'appearance'
+  let appearance = 'system'
+  try { appearance = localStorage.getItem(APPEARANCE_KEY) || 'system' } catch (e) {}
+  const effectiveDark = () => appearance === 'dark' || (appearance === 'system' && darkQuery.matches)
+  const themeOf = () => (effectiveDark() ? 'dark' : 'light')
+  const DARK_COND = /\(\s*prefers-color-scheme:\s*dark\s*\)/
+  const darkRules = new WeakMap() // 规则 → 原来的条件
+  function applyAppearance() {
+    for (const sheet of document.styleSheets) {
+      let rules
+      try { rules = sheet.cssRules } catch (e) { continue }
+      for (const rule of rules) {
+        if (!(rule instanceof CSSMediaRule)) continue
+        if (!darkRules.has(rule)) {
+          if (!DARK_COND.test(rule.media.mediaText)) continue
+          darkRules.set(rule, rule.media.mediaText)
+        }
+        const original = darkRules.get(rule)
+        // (min-width: 0px) 恒真；(max-width: -1px) 不成立，整条条件为假
+        rule.media.mediaText = appearance === 'system' ? original : original.replace(DARK_COND, effectiveDark() ? '(min-width: 0px)' : '(max-width: -1px)')
+      }
+    }
+    // 浏览器自带的控件（日期选择、滚动条）也跟着深浅
+    document.documentElement.style.colorScheme = appearance === 'system' ? 'light dark' : themeOf()
+  }
+  function setAppearance(mode) {
+    appearance = mode
+    try { localStorage.setItem(APPEARANCE_KEY, mode) } catch (e) {}
+    applyAppearance()
+    themeListeners.forEach((fn) => fn(true))
+  }
+  applyAppearance()
+  const ok = (opts, res) => { if (opts && opts.success) opts.success(res); if (opts && opts.complete) opts.complete(res) }
+  const fail = (opts, err) => { if (opts && opts.fail) opts.fail(err); if (opts && opts.complete) opts.complete(err) }
+
+  window.wx = {
+    getStorageSync(key) {
+      try { const v = localStorage.getItem(STORE_PREFIX + key); return v == null ? '' : JSON.parse(v) } catch (e) { return '' }
+    },
+    setStorageSync(key, value) {
+      try { localStorage.setItem(STORE_PREFIX + key, JSON.stringify(value)) } catch (e) {}
+    },
+    removeStorageSync(key) { try { localStorage.removeItem(STORE_PREFIX + key) } catch (e) {} },
+    setClipboardData(opts) {
+      const done = () => ok(opts, {})
+      if (navigator.clipboard) navigator.clipboard.writeText(opts.data).then(done, () => fallbackCopy(opts.data) ? done() : fail(opts, {}))
+      else if (fallbackCopy(opts.data)) done()
+      else fail(opts, {})
+    },
+    getClipboardData(opts) {
+      if (!navigator.clipboard || !navigator.clipboard.readText) { fail(opts, { errMsg: 'unsupported' }); return }
+      navigator.clipboard.readText().then((data) => ok(opts, { data }), (err) => fail(opts, err))
+    },
+    showToast(opts) { toast(opts.title, opts.duration); ok(opts, {}) },
+    showLoading(opts) { toast(opts.title || '加载中', 0, true) },
+    hideLoading() { if (toastEl) closeLayer(toastEl) },
+    showModal: modal,
+    showActionSheet: actionSheet,
+    showShareMenu() {},
+    showShareImageMenu(opts) { imageViewer(opts.path); ok(opts, {}) },
+    previewImage(opts) { imageViewer(opts.urls[0]); ok(opts, {}) },
+    nextTick(cb) { nextTick(cb) },
+    createSelectorQuery: selectorQuery,
+    canvasToTempFilePath(opts) {
+      opts.canvas.toBlob((blob) => blob ? ok(opts, { tempFilePath: URL.createObjectURL(blob) }) : fail(opts, {}), 'image/png')
+    },
+    getMenuButtonBoundingClientRect() { return WEB_CAPSULE },
+    getAppBaseInfo() { return { theme: themeOf() } },
+    onThemeChange(cb) {
+      // 系统切换只在“跟随系统”时生效；手动切换（force）总是通知
+      const fn = (force) => { if (force === true || appearance === 'system') cb({ theme: themeOf() }) }
+      themeListeners.set(cb, fn)
+      darkQuery.addEventListener('change', fn)
+    },
+    offThemeChange(cb) {
+      const fn = themeListeners.get(cb)
+      if (fn) darkQuery.removeEventListener('change', fn)
+      themeListeners.delete(cb)
+    },
+    getLocation(opts) {
+      if (!navigator.geolocation) { fail(opts, { errMsg: 'unsupported' }); return }
+      navigator.geolocation.getCurrentPosition(
+        (p) => ok(opts, { latitude: p.coords.latitude, longitude: p.coords.longitude }),
+        (err) => fail(opts, { errMsg: err.message }),
+        { timeout: 10000, maximumAge: 600000 })
+    },
+    base64ToArrayBuffer(b64) {
+      const bin = atob(b64)
+      const bytes = new Uint8Array(bin.length)
+      for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i)
+      return bytes.buffer
+    },
+    loadFontFace(opts) { ok(opts, {}) },
+    vibrateShort() {},
+  }
+  function fallbackCopy(text) {
+    const t = document.createElement('textarea')
+    t.value = text
+    t.style.position = 'fixed'
+    t.style.opacity = '0'
+    document.body.appendChild(t)
+    t.select()
+    let done = false
+    try { done = document.execCommand('copy') } catch (e) {}
+    t.remove()
+    return done
+  }
+
+  // 页面顶部留白按“胶囊按钮”的位置算；网页上没有胶囊，给一个与手机上相近的位置
+  const WEB_CAPSULE = { top: 14, bottom: 40, left: 0, right: 0, width: 0, height: 26 }
+
+  // ── Page() ─────────────────────────────────────────────────────────────────
+
+  let pageDef = null
+  window.Page = (def) => { pageDef = def }
+
+  // setData 的路径写法：'a.b'、'a[0].b'
+  function setPath(target, path, value) {
+    const keys = path.replace(/\[(\d+)\]/g, '.$1').split('.')
+    let obj = target
+    for (let i = 0; i < keys.length - 1; i++) {
+      if (obj[keys[i]] == null) obj[keys[i]] = /^\d+$/.test(keys[i + 1]) ? [] : {}
+      obj = obj[keys[i]]
+    }
+    obj[keys[keys.length - 1]] = value
+  }
+
+  function boot() {
+    const mp = window.__mp
+    mp.require('pages/index/index.js')
+    const u = mp.require('pages/index/ui.wxs')
+    const def = pageDef
+    const raw = JSON.parse(JSON.stringify(def.data))
+    const state = reactive(raw)
+
+    const page = {}
+    Object.keys(def).forEach((k) => { if (k !== 'data') page[k] = typeof def[k] === 'function' ? def[k].bind(page) : def[k] })
+    page.data = raw
+    page.setData = function (patch, cb) {
+      Object.keys(patch || {}).forEach((k) => {
+        if (/[.[]/.test(k)) setPath(state, k, patch[k])
+        else state[k] = patch[k]
+      })
+      // 小程序的回调在新数据渲染完以后才执行；这里等 Vue 更新完 DOM，再强制浏览器把样式算一遍，
+      // 否则“先关掉过渡瞬移、回调里再开过渡滑走”这类两步会被浏览器合成一次变化（节气条圆点会倒着滑）
+      if (cb) nextTick(() => { void document.body.offsetWidth; cb() })
+    }
+    page.createSelectorQuery = selectorQuery
+    // 页面方法里的 setData 都走 page.setData（onLoad 里会再包一层，见 page-factory.js）
+    Object.keys(def).forEach((k) => { if (typeof def[k] === 'function') page[k] = def[k].bind(page) })
+
+    const app = createApp({
+      setup() { return state },
+      // 侧边栏放进 .app 里面，才能用到主题色等变量
+      template: `<div class="mp-root">${window.__mpView.replace('GitHub 仓库，点按复制链接', 'GitHub 仓库，点按打开').replace(APPEARANCE_ANCHOR, APPEARANCE_ANCHOR + APPEARANCE_ROW).replace('长按一条记录可删除', '<span class="hint-touch">长按</span><span class="hint-mouse">右键点按</span>一条记录可删除').replace(/<\/div>$/, SIDEBAR + '</div>')}</div>`,
+    })
+    app.config.globalProperties.u = u
+    app.config.globalProperties.$mp = {
+      st(style) { return typeof style === 'string' ? style.replace(/(-?\d*\.?\d+)rpx/g, 'calc($1 * var(--rpx))') : style },
+      ev(name, $event, dataset, id) {
+        const fn = page[name]
+        if (typeof fn !== 'function') { console.warn('missing handler', name); return }
+        let value
+        if ($event && typeof $event === 'object' && 'target' in $event && $event instanceof Event) {
+          value = $event.target && 'value' in $event.target ? $event.target.value : undefined
+        } else value = $event
+        const target = { dataset, id }
+        fn({ type: name, currentTarget: target, target, detail: { value } })
+      },
+    }
+    app.directive('mp-focus', {
+      mounted(el, b) { if (b.value) setTimeout(() => el.focus(), 0) },
+      updated(el, b) { if (b.value && !b.oldValue) el.focus() },
+    })
+    app.component('mp-picker', PICKER)
+    app.component('mp-switch', SWITCH)
+    // 长按：按住 500 毫秒，或者在电脑上点右键
+    app.directive('longpress', LONGPRESS)
+    app.mount('#app')
+    window.__page = page
+
+    // 网页上没有微信的转发，结果页的“⋯”菜单多一项“复制链接”：链接带上与小程序转发相同的参数，打开就进入这一卦
+    page.openResultMenu = () => actionSheet({
+      itemList: ['复制文字', '导出图片', '复制链接'],
+      success: ({ tapIndex }) => {
+        if (tapIndex === 0) page.copyResult()
+        if (tapIndex === 1) page.exportResultImage()
+        if (tapIndex === 2) {
+          const url = `${location.origin}${location.pathname}?${new URLSearchParams(page.getShareParams())}`
+          wx.setClipboardData({ data: url, success: () => toast('链接已复制') })
+        }
+      },
+    })
+
+    // 小程序打不开外部网页，只能复制链接；网页版点“关于”卡片直接在新标签页打开 GitHub 仓库
+    page.openGithubRepo = () => window.open('https://github.com/WJSGZZ/PBlossom', '_blank', 'noopener')
+
+    // 外观里的“深色模式”（网页专有，见上面的 setAppearance）
+    page.setData({ webAppearance: appearance })
+    page.selectAppearance = (e) => {
+      const mode = e.currentTarget.dataset.id
+      if (mode === appearance) return
+      page.setData({ webAppearance: mode })
+      setAppearance(mode)
+    }
+
+    // 翻月份时给日历网格标上方向（往后翻 / 往前翻），web.css 按方向让日期滑入
+    let shownMonth = null
+    new MutationObserver(() => {
+      const title = document.querySelector('.month-title')
+      const grid = document.querySelector('.date-grid')
+      const m = title && title.textContent.match(/(\d+)\s*年\s*(\d+)\s*月/)
+      if (!m || !grid) { shownMonth = null; return }
+      const month = +m[1] * 12 + +m[2]
+      if (shownMonth !== null && month !== shownMonth) {
+        grid.classList.remove('web-month-fwd', 'web-month-back')
+        void grid.offsetWidth // 连续翻页时让动画重新开始
+        grid.classList.add(month > shownMonth ? 'web-month-fwd' : 'web-month-back')
+      }
+      shownMonth = month
+    }).observe(document.getElementById('app'), { childList: true, subtree: true, characterData: true })
+
+    // ── 从文件导入卦例（网页专有）：文件内容与“复制文字”导出的文本相同（旧网页版导出的 .txt 也是这种格式），
+    //    解析直接复用小程序的“从剪贴板导入”。可以在往昔的“⋯”菜单里选文件，也可以把文件拖进网页 ──
+    async function importFiles(files) {
+      const list = [...files].filter((f) => /\.(txt|text|md)$/i.test(f.name) || f.type.startsWith('text/'))
+      if (!list.length) { toast('请选择 .txt 文本文件'); return }
+      const before = page.data.historyItems.length
+      let failed = 0
+      const realToast = page.showCustomToast
+      const realClip = wx.getClipboardData
+      page.showCustomToast = (text) => { if (text !== '导入成功') failed++ }
+      try {
+        for (const f of list) {
+          const text = await f.text()
+          wx.getClipboardData = (o) => o.success({ data: text })
+          page.importFromClipboard()
+        }
+      } finally {
+        wx.getClipboardData = realClip
+        page.showCustomToast = realToast
+      }
+      const added = page.data.historyItems.length - before
+      if (added > 0) page.switchTab({ currentTarget: { dataset: { tab: 'history' } } })
+      toast(added ? `已导入 ${added} 条${failed ? `，${failed} 个无法识别` : ''}` : '格式无法识别')
+    }
+    function pickFiles() {
+      const input = document.createElement('input')
+      input.type = 'file'
+      input.accept = '.txt,.text,.md,text/plain'
+      input.multiple = true
+      input.onchange = () => importFiles(input.files)
+      input.click()
+    }
+    page.openHistoryMenu = () => actionSheet({
+      itemList: ['从文件导入', '从剪贴板导入'],
+      success: ({ tapIndex }) => { if (tapIndex === 0) pickFiles(); if (tapIndex === 1) page.importFromClipboard() },
+    })
+    // 拖文件进网页
+    let dragDepth = 0
+    let dropHint = null
+    const hasFiles = (e) => e.dataTransfer && [...e.dataTransfer.types].includes('Files')
+    window.addEventListener('dragenter', (e) => {
+      if (!hasFiles(e)) return
+      e.preventDefault()
+      if (dragDepth++ === 0) dropHint = layer('web-drop', '<div class="web-drop-box lg">松开即可导入卦例<small>支持复制文字导出的 .txt 文件</small></div>')
+    })
+    window.addEventListener('dragover', (e) => { if (hasFiles(e)) e.preventDefault() })
+    window.addEventListener('dragleave', (e) => { if (hasFiles(e) && --dragDepth <= 0) { dragDepth = 0; closeLayer(dropHint) } })
+    window.addEventListener('drop', (e) => {
+      if (!hasFiles(e)) return
+      e.preventDefault()
+      dragDepth = 0
+      closeLayer(dropHint)
+      importFiles(e.dataTransfer.files)
+    })
+
+    const query = Object.fromEntries(new URLSearchParams(location.search))
+    // 分享链接只用一次：进入后把地址栏的参数去掉，刷新时不会再导入一次
+    if (query.s) history.replaceState(null, '', location.pathname)
+    page.onLoad(query)
+    if (page.onShow) page.onShow()
+    if (page.onReady) page.onReady()
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible' && page.onShow) page.onShow()
+      if (document.visibilityState === 'hidden' && page.onHide) page.onHide()
+    })
+  }
+
+  // 电脑上的侧边栏：只有 logo 和图标，帮助放在最下面；手机上用小程序那条底部页签栏
+  // 外观卡片里“五行标记”下面加一行“深色模式”（选项见 selectAppearance）
+  const APPEARANCE_ANCHOR = `'selectElementStyle', $event, { id: item.id }, '')">{{item.name}}</div></div>`
+  const APPEARANCE_ROW = `<div class="setting-label">深色模式</div><div class="segmented seg-3 seg-compact"><div :class="['seg-thumb', 'seg-thumb-of3', webAppearance === 'light' ? 'seg-thumb-2' : webAppearance === 'dark' ? 'seg-thumb-3' : '']"></div><div v-for="item in [{ id: 'system', name: '跟随系统' }, { id: 'light', name: '浅色' }, { id: 'dark', name: '深色' }]" :key="item.id" :class="['seg-item', webAppearance === item.id ? 'seg-item-on' : '']" @click="$mp.ev('selectAppearance', $event, { id: item.id }, '')">{{item.name}}</div></div>`
+  const SIDEBAR = `
+    <nav class="web-sidebar" aria-label="页面">
+      <img class="web-sidebar-logo" src="assets/logo.svg" alt="PBlossom">
+      <button v-for="(tab, i) in navTabs.slice(0, 3)" :key="tab.key" :class="['web-side-btn', u.tabIndex(activeTab) === i ? 'on' : '']"
+        :aria-label="tab.label" :title="tab.label" @click="$mp.ev('switchTab', null, { tab: tab.key }, '')">
+        <span :class="'icon web-side-icon icon-tab-' + tab.key"></span>
+      </button>
+      <button :class="['web-side-btn web-side-bottom', activeTab === 'help' ? 'on' : '']" aria-label="常见问题" title="常见问题"
+        @click="$mp.ev('switchTab', null, { tab: 'help' }, '')">
+        <span class="icon web-side-icon icon-tab-help"></span>
+        <span v-if="showFaqDot" class="web-side-badge"></span>
+      </button>
+    </nav>`
+
+  // <picker>：把透明的原生控件盖在内容上，点内容就弹出系统的日期、时间或列表选择
+  const PICKER = {
+    props: ['mode', 'range', 'value', 'start', 'end', 'fields'],
+    emits: ['change'],
+    computed: {
+      kind() { return this.mode === 'date' ? (this.fields === 'month' ? 'month' : 'date') : this.mode === 'time' ? 'time' : 'selector' },
+    },
+    methods: {
+      open(e) {
+        const input = this.$refs.input
+        if (input && input.showPicker) { try { input.showPicker(); e.preventDefault() } catch (err) {} }
+      },
+      change(e) {
+        const v = e.target.value
+        if (!v) return
+        this.$emit('change', this.kind === 'selector' ? Number(v) : v)
+      },
+    },
+    template: `
+      <div class="mp-picker" @click="kind !== 'selector' && open($event)">
+        <slot></slot>
+        <select v-if="kind === 'selector'" class="mp-picker-native" :value="value" @change="change">
+          <option v-for="(t, i) in range" :key="i" :value="i">{{ t }}</option>
+        </select>
+        <input v-else ref="input" class="mp-picker-native" :type="kind" :value="value" :min="start" :max="end" @change="change" tabindex="-1">
+      </div>`,
+  }
+
+  // <switch>：与系统开关一样的外观，颜色取主题色
+  const SWITCH = {
+    props: ['checked', 'color'],
+    emits: ['change'],
+    data() { return { on: !!this.checked } },
+    watch: { checked(v) { this.on = !!v } },
+    methods: { toggle() { this.on = !this.on; this.$emit('change', this.on) } },
+    template: `<button type="button" role="switch" :aria-checked="on" :class="['mp-switch', on ? 'on' : '']" :style="on && color ? { background: color } : null" @click="toggle"><span class="mp-switch-knob"></span></button>`,
+  }
+
+  const LONGPRESS = {
+    mounted(el, b) {
+      let timer = null
+      let fired = false
+      // 鼠标用右键（contextmenu），手指和触控笔才按住计时
+      const start = (e) => {
+        fired = false
+        if (e.pointerType === 'mouse') return
+        timer = setTimeout(() => { fired = true; el.dispatchEvent(new CustomEvent('longpress')) }, 500)
+      }
+      const cancel = () => clearTimeout(timer)
+      el.addEventListener('pointerdown', start)
+      el.addEventListener('pointerup', cancel)
+      el.addEventListener('pointerleave', cancel)
+      el.addEventListener('pointercancel', cancel)
+      el.addEventListener('contextmenu', (e) => { e.preventDefault(); cancel(); if (!fired) el.dispatchEvent(new CustomEvent('longpress')) })
+      // 长按触发后，松手时的那次点按不再打开记录
+      el.addEventListener('click', (e) => { if (fired) { e.stopImmediatePropagation(); e.preventDefault(); fired = false } }, true)
+    },
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot)
+  else boot()
+})()
