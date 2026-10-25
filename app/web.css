@@ -124,17 +124,19 @@ input, textarea { -webkit-user-select: text; user-select: text; }
 /* 分段控件的选中块：一层淡淡的主题色，与页签栏一致 */
 .seg-thumb { background: rgba(var(--accent-rgb), 0.12); box-shadow: none; }
 
-/* 主按钮：带主题色的玻璃（iOS 的 .glassProminent） */
+/* 主按钮：主题色的实心胶囊，与玻璃一样不画高光边，只有一层淡淡的投影；
+   不可点时是一块普通的玻璃，没有投影 */
 .primary-btn {
   position: relative;
   background: rgba(var(--accent-rgb), 0.96);
-  box-shadow:
-    inset 0 0 0 0.5px rgba(255, 255, 255, 0.22),
-    inset 1.5px 1.5px 1px -1px rgba(255, 255, 255, 0.55),
-    inset -1.5px -1.5px 1px -1px rgba(255, 255, 255, 0.3),
-    0 8px 20px rgba(var(--accent-rgb), 0.22);
+  box-shadow: 0 8px 20px rgba(var(--accent-rgb), 0.22);
 }
-.primary-btn-off { background: var(--lg-fill-strong); }
+@media (prefers-color-scheme: dark) { .primary-btn { box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35); } }
+.primary-btn-off {
+  background: linear-gradient(135deg, var(--lg-tint-a), var(--lg-tint-b));
+  -webkit-backdrop-filter: blur(10px) saturate(140%); backdrop-filter: blur(10px) saturate(140%);
+  box-shadow: none;
+}
 
 /* ── 侧边栏：手机上不显示 ── */
 .web-sidebar { display: none; }
