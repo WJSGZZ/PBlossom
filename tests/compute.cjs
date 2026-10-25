@@ -28,6 +28,8 @@ const base = process.env.TEST_URL || 'http://127.0.0.1:8766/'
       assert.equal(result.input.calculation.date + ' ' + result.input.calculation.time, '2026-09-21 23:30:00')
       assert.deepEqual(result.data.四柱.split(' ').slice(2), ['己亥', '甲子'])
       assert.equal(result.data.本卦, '天泽履')
+      assert.equal(result.data.互卦, '风火家人', '履卦二三四爻成离、三四五爻成巽')
+      assert.equal(result.data.变卦, '乾为天', '履卦三爻由阴变阳，六爻皆阳')
       assert.equal(result.data.动爻, 3)
       assert.equal(result.input.question, 'test')
       assert.equal(result.data.id, undefined)

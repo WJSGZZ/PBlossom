@@ -111,7 +111,9 @@
         result.note = question
         // 一次性结果不生成可保存的历史记录标识。
         delete result.id
-        const [ben, hu, bian] = result.cards
+        const ben = result.cards.find(card => card.key === 'ben')
+        const hu = result.cards.find(card => card.key === 'hu')
+        const bian = result.cards.find(card => card.key === 'bian')
         const tiUpper = ben.lines.some(line => line.roleLabel === '体' && line.sideName === ben.upperName)
         data = {
           四柱: result.ganzhiText, 本卦: ben.name, 互卦: hu.name, 变卦: bian.name,
