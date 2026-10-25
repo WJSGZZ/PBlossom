@@ -1829,6 +1829,11 @@ Page({
     this._toastTimer = setTimeout(() => this.setData({ toastOn: false }), duration)
   },
 
+  hideCustomToast() {
+    clearTimeout(this._toastTimer)
+    this.setData({ toastOn: false })
+  },
+
   // 复制成功：微信自己会弹“内容已复制”（关不掉），小程序里不再另弹；网页没有这个系统提示，由网页补上
   showCopiedToast() {},
 
@@ -2317,13 +2322,17 @@ Page({
   // 直接进入这一卦或这一天的时令，卦也会存进对方的往昔（见 restoreSharedState）
   _shareCanvasImage(width, measure, draw) {
     const entrancePath = buildSharePath(this.getShareParams())
-    wx.showLoading({ title: '生成图片', mask: true })
+    // 生成期间顶部气泡一直显示；正在生成时再点不重复开始
+    if (this._renderingImage) return
+    this._renderingImage = true
+    this.showCustomToast('正在生成图片', 60000)
     this._renderCanvasFile(width, measure, draw).then((path) => {
-      wx.hideLoading()
+      this._renderingImage = false
+      this.hideCustomToast()
       if (wx.showShareImageMenu) wx.showShareImageMenu({ path, needShowEntrance: true, entrancePath, fail() {} })
       else wx.previewImage({ urls: [path] })
     }, () => {
-      wx.hideLoading()
+      this._renderingImage = false
       this.showCustomToast('生成失败')
     })
   },
@@ -2339,20 +2348,22 @@ Page({
       wx.createSelectorQuery().in(this).select('#share-canvas').fields({ node: true, size: true }).exec((res) => {
         const canvas = res && res[0] && res[0].node
         if (!canvas) { reject(new Error('no canvas')); return }
-        const scale = 3
-        const ctx = canvas.getContext('2d')
-        const height = measure(ctx)
-        canvas.width = width * scale
-        canvas.height = height * scale
-        ctx.setTransform(1, 0, 0, 1, 0, 0)
-        ctx.scale(scale, scale)
-        draw(ctx, height)
-        wx.canvasToTempFilePath({
-          canvas,
-          fileType: 'png',
-          success: ({ tempFilePath }) => resolve(tempFilePath),
-          fail: reject,
-        })
+        try {
+          const scale = 3
+          const ctx = canvas.getContext('2d')
+          const height = measure(ctx)
+          canvas.width = width * scale
+          canvas.height = height * scale
+          ctx.setTransform(1, 0, 0, 1, 0, 0)
+          ctx.scale(scale, scale)
+          draw(ctx, height)
+          wx.canvasToTempFilePath({
+            canvas,
+            fileType: 'png',
+            success: ({ tempFilePath }) => resolve(tempFilePath),
+            fail: reject,
+          })
+        } catch (err) { reject(err) } // 画的过程中出错也要结束，否则顶部提示一直挂着
       })
     })
   },

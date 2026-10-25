@@ -452,6 +452,7 @@
 
     // 提示：网页用自己的提示条（样子与小程序画的气泡相同）；复制成功网页没有微信那个系统提示，也在这里弹
     page.showCustomToast = (text, duration) => toast(text, duration)
+    page.hideCustomToast = () => { if (toastEl) closeLayer(toastEl) }
     page.showCopiedToast = (text) => toast(text)
 
     // 外观里的“深色模式”：网页先把自己样式里的深色条件改好（小程序判断深浅时要问它），
