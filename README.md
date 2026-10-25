@@ -10,7 +10,7 @@
   <img src="https://img.shields.io/badge/Version-3.0-8A2BE2?style=flat-square" alt="Version"/>
   <img src="https://img.shields.io/badge/Platform-Web%20%7C%20Mini%20Program-7C9CAE?style=flat-square" alt="Platform Web and Mini Program"/>
   <a href="https://wjsgzz.github.io/PBlossom/"><img src="https://img.shields.io/badge/Web-打开网页版-DA7756?style=flat-square&logo=googlechrome&logoColor=white" alt="Web"/></a>
-  <img src="https://img.shields.io/badge/License-MIT-228B22?style=flat-square&logo=github&logoColor=white" alt="License"/>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-228B22?style=flat-square&logo=github&logoColor=white" alt="License"/></a>
 </p>
 
 ---
@@ -102,7 +102,7 @@ python3 -m http.server 8000
 目录说明：
 - `mp/`：由小程序生成的页面逻辑、界面模板和样式，不要手改；小程序更新后运行 `node scripts/sync-miniprogram.mjs <小程序目录>` 重新生成。
 - `app/`：网页专有的部分，包括微信接口的浏览器实现、电脑版侧边栏与两栏排版、液态玻璃效果。
-- `assets/`、`vendor/`：字体、Logo 和 Vue 3。
+- `assets/`、`vendor/`：字体、Logo 和 Vue 3。字体取自思源宋体（Noto Serif SC，SIL Open Font License 1.1，见 `assets/fonts/OFL.txt`）；Vue 3 为 MIT 许可。
 
 ## 名称来源
 PBlossom 是 Plum Blossom（梅花）的简写，来源于“梅花易数”。
