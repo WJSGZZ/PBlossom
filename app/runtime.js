@@ -369,7 +369,18 @@
     Object.keys(def).forEach((k) => { if (typeof def[k] === 'function') page[k] = def[k].bind(page) })
 
     const app = createApp({
-      setup() { return state },
+      // 小程序里模板可以用页面初始数据里没写的字段，之后 setData 再补上；Vue 第一次在 setup 里找不到某个名字，
+      // 就记成“不是页面数据”，以后补上了也不会更新。这里让模板认为页面数据里什么名字都有（还没值就是 undefined），
+      // u、$mp 这些全局的名字除外
+      setup() {
+        return new Proxy(state, {
+          getOwnPropertyDescriptor(target, key) {
+            const own = Reflect.getOwnPropertyDescriptor(target, key)
+            if (own || typeof key !== 'string' || key === 'u' || key[0] === '$' || key[0] === '_') return own
+            return { value: undefined, writable: true, enumerable: false, configurable: true }
+          },
+        })
+      },
       // 侧边栏放进 .app 里面，才能用到主题色等变量
       template: `<div class="mp-root">${window.__mpView.replace('长按一条记录可删除', '<span class="hint-touch">长按</span><span class="hint-mouse">右键点按</span>一条记录可删除').replace(/<\/div>$/, SIDEBAR + '</div>')}</div>`,
     })

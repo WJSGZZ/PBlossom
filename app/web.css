@@ -366,10 +366,8 @@ input, textarea { -webkit-user-select: text; user-select: text; }
 
 /* ── 动效：网页上原本硬切的地方补上柔和的过渡 ──
    时长 0.2～0.45 秒，缓出曲线与小程序一致（--ease）；系统开启“减少动态效果”时全部省掉 */
-/* 切换页面（新占、往昔、时令、帮助，以及进出结果页）：新页面淡入、轻轻上移；离开的页面直接撤下，不与新页面叠在一起 */
-.content-scroll > .page, .history-screen { animation: web-page-in 0.42s var(--ease) both; }
+/* 切换页面时各块依次升起淡入，写在小程序里（.page-enter）；结果页的返回栏在网页上单独淡入 */
 .result-bar { animation: web-fade-in 0.3s ease both; }
-@keyframes web-page-in { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
 @keyframes web-fade-in { from { opacity: 0; } to { opacity: 1; } }
 /* 翻月份的滑入写在小程序里（.month-fwd / .month-back） */
 /* 按下、松开、悬停都缓一下，而不是一下子跳过去 */
@@ -387,5 +385,5 @@ input, textarea { -webkit-user-select: text; user-select: text; }
   .date-cell:hover .date-num:not(.date-selected) { background: rgba(var(--accent-rgb), 0.08); }
 }
 @media (prefers-reduced-motion: reduce) {
-  .content-scroll > .page, .history-screen, .result-bar { animation: none !important; }
+  .result-bar { animation: none !important; }
 }

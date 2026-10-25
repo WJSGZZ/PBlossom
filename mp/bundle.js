@@ -476,7 +476,7 @@ Page({
     calcMethod: 'meihua',
     homeDisplayMethod: 'meihua',
     homeModePhase: '',
-    homeModeBack: false,
+    pageEnter: false,
     calcInput: '',
     calcDigits: ['', '', ''],
     calcSeedDigits: ['', '', ''],
@@ -612,6 +612,13 @@ Page({
     const setData = this.setData
     this.setData = (data, callback) => {
       if (data && ('calendarPillarParts' in data || 'calendarHourVeil' in data)) this._withPillarAnim(data)
+      // 换页（切页签、进出结果页）时给新页面标上 page-enter，样式表让各块依次升起淡入；过一会儿撤掉，
+      // 之后页面里再换内容（比如梅花、六壬切换）就不会又播一遍
+      if (data && (('activeTab' in data && data.activeTab !== this.data.activeTab) || ('resultMode' in data && data.resultMode !== this.data.resultMode))) {
+        data.pageEnter = true
+        clearTimeout(this._pageEnterTimer)
+        this._pageEnterTimer = setTimeout(() => setData.call(this, { pageEnter: false }), 700)
+      }
       setData.call(this, data, callback)
       // 四柱滚动的逐帧更新不改变页面高度，不必重新量
       const rollFrame = data && Object.keys(data).every(k => k.indexOf('calendarPillarView.') === 0)
@@ -1257,39 +1264,43 @@ Page({
     this._switchDivinationMode(mode)
   },
 
+  // 梅花、六壬切换：梅花在左、六壬在右，表单离开时滑向自己那一边，进来也从自己那一边进来。
+  // 全部用过渡（transition）而不是一次性动画：中途再点，元素从当时的位置接着往新方向走，连点也不会跳。
+  // 阶段：'' 正常显示；'hide' 收在自己那一边（离开中，或刚换上、还没出来）
   _switchDivinationMode(mode) {
     this._pauseAmbient(600)
     if (this._homeModeTimerA) clearTimeout(this._homeModeTimerA)
     if (this._homeModeTimerB) clearTimeout(this._homeModeTimerB)
-    this.setData({
-      calcMethod: mode,
-      homeModePhase: 'out',
-      // 切回梅花（左边）时反方向滑
-      homeModeBack: mode === 'meihua',
-    })
+    this._homeModeTimerA = this._homeModeTimerB = null
+    // 要切回的正是还在屏幕上的那张表单（它可能正退到一半）：直接让它回来
+    if (mode === this.data.homeDisplayMethod) {
+      this.setData({ calcMethod: mode, homeModePhase: '' })
+      return
+    }
+    this.setData({ calcMethod: mode, homeModePhase: 'hide' })
     this._homeModeTimerA = setTimeout(() => {
       this._homeModeTimerA = null
       if (mode === 'liuren') {
-        const nextData = Object.assign(this.getLiurenFormState(new Date()), {
+        this.setData(Object.assign(this.getLiurenFormState(new Date()), {
           activeTab: 'calc',
           calcMethod: 'liuren',
           homeDisplayMethod: 'liuren',
-          homeModePhase: 'in',
-        })
-        this.setData(nextData)
+          homeModePhase: 'hide',
+        }))
         this._scrollToTop()
       } else {
         this.enterCalcHome({
           calcMethod: 'meihua',
           homeDisplayMethod: 'meihua',
-          homeModePhase: 'in',
+          homeModePhase: 'hide',
         })
       }
+      // 新表单先以“收着”的样子出现，下一刻再放出来，过渡才有起点
       this._homeModeTimerB = setTimeout(() => {
         this._homeModeTimerB = null
-        if (this.data.homeModePhase === 'in') this.setData({ homeModePhase: '' })
-      }, 520) // 进场 0.4 秒加最多 0.09 秒错开，放完再撤，否则动画会被截断、一下跳到终点
-    }, 200)
+        if (this.data.homeDisplayMethod === mode) this.setData({ homeModePhase: '' })
+      }, 30)
+    }, 180)
   },
 
   enterLiurenCalcForm() {

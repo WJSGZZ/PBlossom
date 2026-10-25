@@ -776,28 +776,23 @@
 
 /* ── 梅花：输入格 ── */
 
-/* 梅花、六壬切换：跟着切换框的方向左右滑——往六壬（右边）切，旧表单往左退、新表单从右边进来，切回梅花反过来。
-   淡入淡出做在每一块上，不做在外层：外层半透明时，里面玻璃的模糊看不到后面的画面，结束时会突然跳一下 */
-.swap-out > :not(.tiles),
-.swap-out > .tiles > .tile {
-  opacity: 0;
-  transform: translateX(calc(-32 * var(--rpx)));
-  transition: opacity 0.16s ease, transform 0.2s var(--ease);
+/* 梅花、六壬切换：梅花在左、六壬在右，表单离开时滑向自己那一边、进来也从那一边进来（.swap-hide 是收着的样子）。
+   用过渡而不是一次性动画，连点时从当前位置接着走，不会跳。
+   淡入淡出做在每一块玻璃自己身上，不做在外层：外层半透明时，里面玻璃的模糊看不到后面的画面，结束时会突然跳一下；
+   数字格的外层 .tiles 只负责平移（平移不影响玻璃），淡入淡出交给每个格子 */
+.form-swap > :not(.tiles),
+.form-swap > .tiles {
+  transition: opacity 0.2s ease, transform 0.36s var(--ease);
 }
-.swap-out.swap-back > :not(.tiles),
-.swap-out.swap-back > .tiles > .tile { transform: translateX(calc(32 * var(--rpx))); }
-
-.swap-in > :not(.tiles),
-.swap-in > .tiles > .tile { animation: swap-from-right 0.4s var(--ease) both; }
-.swap-in.swap-back > :not(.tiles),
-.swap-in.swap-back > .tiles > .tile { animation-name: swap-from-left; }
+.form-swap > .tiles > .tile { transition: opacity 0.2s ease, transform 0.35s var(--pop); }
+.swap-hide > :not(.tiles),
+.swap-hide > .tiles > .tile { opacity: 0; pointer-events: none; }
+.form-meihua.swap-hide > * { transform: translateX(calc(-48 * var(--rpx))); }
+.form-liuren.swap-hide > * { transform: translateX(calc(48 * var(--rpx))); }
 /* 一块接一块，轻微错开 */
-.swap-in > :nth-child(2), .swap-in > .tiles > .tile:nth-child(2) { animation-delay: 0.03s; }
-.swap-in > :nth-child(3), .swap-in > .tiles > .tile:nth-child(3) { animation-delay: 0.06s; }
-.swap-in > :nth-child(n+4) { animation-delay: 0.09s; }
-
-@keyframes swap-from-right { from { opacity: 0; transform: translateX(calc(48 * var(--rpx))); } to { opacity: 1; transform: none; } }
-@keyframes swap-from-left { from { opacity: 0; transform: translateX(calc(-48 * var(--rpx))); } to { opacity: 1; transform: none; } }
+.form-swap > :nth-child(2), .form-swap > .tiles > .tile:nth-child(2) { transition-delay: 0.03s; }
+.form-swap > :nth-child(3), .form-swap > .tiles > .tile:nth-child(3) { transition-delay: 0.06s; }
+.form-swap > :nth-child(n+4) { transition-delay: 0.09s; }
 
 .hint {
   color: var(--subtle);
@@ -1863,11 +1858,37 @@
   to { opacity: 1; transform: none; }
 }
 
+/* ── 换页：新页面的各块依次轻轻升起、淡入（结果页的卡片有自己的 .reveal，不重复）。
+   淡入做在每一块上而不是整页：整页半透明时，里面玻璃的模糊看不到后面的画面，结束时会跳一下。
+   用 backwards：动画结束后不再占着样式，梅花、六壬切换的过渡照常生效 ── */
+.page-enter > .stack > :not(.reveal):not(.form-swap):not(.stack),
+.page-enter > .stack > .form-swap > *,
+.page-enter > .stack > .stack > *,
+.page-enter > .history-head > *,
+.page-enter .history-list > * {
+  animation-name: page-in;
+  animation-duration: 0.42s;
+  animation-timing-function: var(--ease);
+  animation-fill-mode: backwards;
+}
+.page-enter > .stack > :nth-child(2), .page-enter > .history-head > :nth-child(2), .page-enter .history-list > :nth-child(1) { animation-delay: 0.04s; }
+.page-enter > .stack > :nth-child(3), .page-enter .history-list > :nth-child(2) { animation-delay: 0.08s; }
+.page-enter > .stack > :nth-child(n+4), .page-enter .history-list > :nth-child(n+3) { animation-delay: 0.12s; }
+.page-enter > .stack > .form-swap > *, .page-enter > .stack > .stack > * { animation-delay: 0.12s; }
+
+@keyframes page-in {
+  from { opacity: 0; transform: translateY(calc(24 * var(--rpx))); }
+  to { opacity: 1; transform: none; }
+}
+
 /* 系统开启“减少动态效果”时，进场动画也省掉 */
 @media (prefers-reduced-motion: reduce) {
+  .form-swap > *,
+  .form-swap .tile {
+    transition: none !important;
+  }
   .reveal,
-  .swap-in > *,
-  .swap-in .tile,
+  .page-enter *,
   .terms .term,
   .pillar-body,
   .date-grid {
