@@ -655,8 +655,8 @@ Page({
     this.setData({
       // 页头放在胶囊按钮下方；结果页的返回按钮与胶囊同一行，像系统导航栏
       pageTopStyle: `padding-top:${capsule.bottom + 18}px;`,
-      // 提示气泡的中线对齐胶囊按钮的中线
-      toastStyle: `top:${capsule.top + capsule.height / 2}px;`,
+      // 提示气泡的上沿对齐胶囊按钮的上沿
+      toastStyle: `top:${capsule.top}px;`,
       // 与其他页面页头右侧的“⋯”同一高度：页面顶部留白 + 按钮自身的 8rpx 上边距
       resultBarStyle: `top:calc(${capsule.bottom + 18}px + 8rpx);`,
       // 按钮下沿到第一个模块的距离，与模块之间的间距（.stack 的 36rpx）一样：8rpx 上边距 + 64rpx 按钮 + 36rpx

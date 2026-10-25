@@ -1834,16 +1834,15 @@
 
 .tab-on .tab-icon { background: var(--accent); }
 
-/* 提示气泡：屏幕最上方、与胶囊按钮同一行，从上面轻轻落下；字号和留白与网页的提示一样，中线位置由页面按胶囊算好 */
+/* 提示气泡：屏幕最上方、与胶囊按钮同一行，从上面轻轻落下；字号和留白与网页的提示一样 */
 .mp-toast {
   position: fixed;
   z-index: 60;
   left: 50%;
   display: flex;
   align-items: center;
-  /* 高度写死、上移半个高度，让气泡的中线正好落在页面算好的胶囊中线上（不靠 translate 的百分比） */
+  /* 气泡的上沿与胶囊按钮的上沿对齐（位置由页面按胶囊算好） */
   height: calc(88 * var(--rpx));
-  margin-top: calc(-44 * var(--rpx));
   padding: 0 calc(44 * var(--rpx));
   border-radius: calc(999 * var(--rpx));
   white-space: nowrap;
