@@ -2688,6 +2688,18 @@ Page({
     }
   },
 
+  // 一条往昔记录的文字，与“复制文字”相同（网页导出全部记录、下载文字时用）
+  historyRecordText(record) {
+    if (!record) return ''
+    if (record.type === 'liuren') {
+      const result = this.recalculateLiurenFromStored(record)
+      return (result && result.reportText) || ''
+    }
+    const utils = loadDivinationUtils()
+    const result = utils.recalculateFromStored(record)
+    return result ? utils.decorateResult(result).reportText || '' : ''
+  },
+
   copyLiurenResult() {
     if (!this.data.liurenResult) return
     const text = this.data.liurenResult.reportText || ''
@@ -2697,15 +2709,19 @@ Page({
   // ── FAQ ───────────────────────────────────────────────────────────────────
 
   // 小程序不能打开外部浏览器，也不能直接打开别人的微信资料页：复制后用系统弹窗说明下一步
+  // 复制后已有弹窗说明，系统自动弹出的“内容已复制”提示就收掉（hideToast），不重复提示
   openGithubRepo() {
     wx.setClipboardData({
       data: 'https://github.com/WJSGZZ/PBlossom',
-      success: () => wx.showModal({
-        title: 'GitHub 链接已复制',
-        content: '小程序不能直接打开外部网页，请粘贴到浏览器中打开。',
-        showCancel: false,
-        confirmText: '好的',
-      }),
+      success: () => {
+        wx.hideToast()
+        wx.showModal({
+          title: 'GitHub 链接已复制',
+          content: '小程序不能直接打开外部网页，请粘贴到浏览器中打开。',
+          showCancel: false,
+          confirmText: '好的',
+        })
+      },
     })
   },
 
@@ -2714,12 +2730,15 @@ Page({
     if (!value) return
     wx.setClipboardData({
       data: value,
-      success: () => wx.showModal({
-        title: '微信号已复制',
-        content: `在微信「添加朋友」中粘贴搜索 ${value}，即可添加作者。`,
-        showCancel: false,
-        confirmText: '好的',
-      }),
+      success: () => {
+        wx.hideToast()
+        wx.showModal({
+          title: '微信号已复制',
+          content: `在微信「添加朋友」中粘贴搜索 ${value}，即可添加作者。`,
+          showCancel: false,
+          confirmText: '好的',
+        })
+      },
     })
   },
 

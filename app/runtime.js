@@ -273,6 +273,7 @@
     showToast(opts) { toast(opts.title, opts.duration); ok(opts, {}) },
     showLoading(opts) { toast(opts.title || '加载中', 0, true) },
     hideLoading() { if (toastEl) closeLayer(toastEl) },
+    hideToast() {},
     showModal: modal,
     showActionSheet: actionSheet,
     showShareMenu() {},
@@ -409,12 +410,14 @@
       }
       return exportResultImage.apply(page, args)
     }
+    // 网页上还能把这一卦存成 .txt（内容与“复制文字”相同，可以再从文件导入）
     page.openResultMenu = () => actionSheet({
-      itemList: ['复制文字', '导出图片', '复制链接'],
+      itemList: ['复制文字', '下载文字', '导出图片', '复制链接'],
       success: ({ tapIndex }) => {
         if (tapIndex === 0) page.copyResult()
-        if (tapIndex === 1) page.exportResultImage()
-        if (tapIndex === 2) {
+        if (tapIndex === 1) downloadCurrentResult()
+        if (tapIndex === 2) page.exportResultImage()
+        if (tapIndex === 3) {
           const url = `${location.origin}${location.pathname}?${new URLSearchParams(page.getShareParams())}`
           wx.setClipboardData({ data: url, success: () => toast('链接已复制') })
         }
@@ -465,9 +468,125 @@
       input.click()
     }
     page.openHistoryMenu = () => actionSheet({
-      itemList: ['从文件导入', '从剪贴板导入'],
-      success: ({ tapIndex }) => { if (tapIndex === 0) pickFiles(); if (tapIndex === 1) page.importFromClipboard() },
+      itemList: ['从文件导入', '从剪贴板导入', '导出全部记录'],
+      success: ({ tapIndex }) => {
+        if (tapIndex === 0) pickFiles()
+        if (tapIndex === 1) page.importFromClipboard()
+        if (tapIndex === 2) exportAllRecords()
+      },
     })
+
+    // ── 导出（网页专有）：每条记录一个 .txt，内容与“复制文字”相同，下载后还能从文件导入；
+    //    导出全部记录时打成一个 zip ──
+    function recordFileName(r) {
+      const liuren = r.type === 'liuren'
+      const input = r.liurenInput || {}
+      const when = liuren ? `${input.dateStr || ''} ${input.timeStr || ''}` : String(r.timestamp || '')
+      const name = liuren ? r.title : (r.cards && r.cards[0] && r.cards[0].name) || ''
+      const base = `${liuren ? '六壬' : '梅花'} ${name} ${when}`.replace(/:/g, '.').replace(/[\\/*?"<>|]/g, '-').replace(/\s+/g, ' ').trim()
+      return `${base}.txt`
+    }
+    function saveFile(blob, name) {
+      const a = document.createElement('a')
+      a.href = URL.createObjectURL(blob)
+      a.download = name
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+      setTimeout(() => URL.revokeObjectURL(a.href), 1000)
+    }
+    const today = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}` }
+    function downloadCurrentResult() {
+      // 文字取“复制文字”那一份：借用一下剪贴板接口把它接住
+      let text = ''
+      const realCopy = wx.setClipboardData
+      wx.setClipboardData = (o) => { text = o.data }
+      try { page.copyResult() } finally { wx.setClipboardData = realCopy }
+      if (!text) return
+      const d = page.data
+      const id = d.liurenMode ? d.liurenResult && d.liurenResult._historyId : d.currentResult && d.currentResult.id
+      const record = d.historyItems.find((r) => r.id === id)
+      saveFile(new Blob([text], { type: 'text/plain;charset=utf-8' }), record ? recordFileName(record) : `PBlossom ${today()}.txt`)
+    }
+    function exportAllRecords() {
+      const records = page.data.historyItems || []
+      if (!records.length) { toast('暂无'); return }
+      const enc = new TextEncoder()
+      const used = new Map()
+      const files = []
+      for (const r of records) {
+        const text = page.historyRecordText(r)
+        if (!text) continue
+        // 同名的记录（同一时刻的同一卦）加上序号
+        let name = recordFileName(r)
+        const n = (used.get(name) || 0) + 1
+        used.set(name, n)
+        if (n > 1) name = name.replace(/\.txt$/, ` (${n}).txt`)
+        files.push({ name, data: enc.encode(text) })
+      }
+      if (!files.length) { toast('暂无'); return }
+      saveFile(makeZip(files), `PBlossom 往昔 ${today()}.zip`)
+      toast(`已导出 ${files.length} 条`)
+    }
+    // 最简单的 zip：不压缩（存储），文件名用 UTF-8（第 11 位标记），解压软件都认得中文名
+    const CRC_TABLE = Array.from({ length: 256 }, (_, n) => {
+      let c = n
+      for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1
+      return c >>> 0
+    })
+    function crc32(bytes) {
+      let c = 0xFFFFFFFF
+      for (let i = 0; i < bytes.length; i++) c = CRC_TABLE[(c ^ bytes[i]) & 0xFF] ^ (c >>> 8)
+      return (c ^ 0xFFFFFFFF) >>> 0
+    }
+    function makeZip(files) {
+      const enc = new TextEncoder()
+      const now = new Date()
+      const time = (now.getHours() << 11) | (now.getMinutes() << 5) | (now.getSeconds() >> 1)
+      const date = ((now.getFullYear() - 1980) << 9) | ((now.getMonth() + 1) << 5) | now.getDate()
+      const parts = []
+      const central = []
+      let offset = 0
+      for (const f of files) {
+        const name = enc.encode(f.name)
+        const crc = crc32(f.data)
+        const local = new DataView(new ArrayBuffer(30))
+        local.setUint32(0, 0x04034b50, true)
+        local.setUint16(4, 20, true)
+        local.setUint16(6, 0x0800, true)
+        local.setUint16(8, 0, true)
+        local.setUint16(10, time, true)
+        local.setUint16(12, date, true)
+        local.setUint32(14, crc, true)
+        local.setUint32(18, f.data.length, true)
+        local.setUint32(22, f.data.length, true)
+        local.setUint16(26, name.length, true)
+        parts.push(local, name, f.data)
+        const cd = new DataView(new ArrayBuffer(46))
+        cd.setUint32(0, 0x02014b50, true)
+        cd.setUint16(4, 20, true)
+        cd.setUint16(6, 20, true)
+        cd.setUint16(8, 0x0800, true)
+        cd.setUint16(10, 0, true)
+        cd.setUint16(12, time, true)
+        cd.setUint16(14, date, true)
+        cd.setUint32(16, crc, true)
+        cd.setUint32(20, f.data.length, true)
+        cd.setUint32(24, f.data.length, true)
+        cd.setUint16(28, name.length, true)
+        cd.setUint32(42, offset, true)
+        central.push(cd, name)
+        offset += 30 + name.length + f.data.length
+      }
+      const size = central.reduce((n, p) => n + p.byteLength, 0)
+      const end = new DataView(new ArrayBuffer(22))
+      end.setUint32(0, 0x06054b50, true)
+      end.setUint16(8, files.length, true)
+      end.setUint16(10, files.length, true)
+      end.setUint32(12, size, true)
+      end.setUint32(16, offset, true)
+      return new Blob([...parts, ...central, end], { type: 'application/zip' })
+    }
     // 拖文件进网页
     let dragDepth = 0
     let dropHint = null
