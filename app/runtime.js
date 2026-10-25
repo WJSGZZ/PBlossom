@@ -450,6 +450,19 @@
       if (value) wx.setClipboardData({ data: value, success: () => toast('微信号已复制') })
     }
 
+    // 提示：网页用自己的提示条（样子与小程序画的气泡相同）；复制成功网页没有微信那个系统提示，也在这里弹
+    page.showCustomToast = (text, duration) => toast(text, duration)
+    page.showCopiedToast = (text) => toast(text)
+
+    // 底栏图标的名字气泡：小程序靠 touchend 收起；网页上用鼠标右键（窄窗口时）没有 touchend，松开任何按键都收
+    const showTabTip = page.showTabTip
+    page.showTabTip = (e) => {
+      showTabTip.call(page, e)
+      const hide = () => { page.hideTabTip(); document.removeEventListener('pointerup', hide); document.removeEventListener('pointercancel', hide) }
+      document.addEventListener('pointerup', hide)
+      document.addEventListener('pointercancel', hide)
+    }
+
     // 外观里的“深色模式”：网页先把自己样式里的深色条件改好（小程序判断深浅时要问它），
     // 小程序再存好选择、换上 .app.dark
     const selectAppearance = page.selectAppearance
@@ -646,12 +659,14 @@
     <nav class="web-sidebar" aria-label="页面">
       <img class="web-sidebar-logo" src="assets/logo.svg" alt="PBlossom">
       <button v-for="(tab, i) in navTabs.slice(0, 3)" :key="tab.key" :class="['web-side-btn', u.tabIndex(activeTab) === i ? 'on' : '']"
-        :aria-label="tab.label" :title="tab.label" @click="$mp.ev('switchTab', null, { tab: tab.key }, '')">
+        :aria-label="tab.label" @click="$mp.ev('switchTab', null, { tab: tab.key }, '')">
         <span :class="'icon web-side-icon icon-tab-' + tab.key"></span>
+        <span class="web-side-tip" aria-hidden="true">{{tab.label}}</span>
       </button>
-      <button :class="['web-side-btn web-side-bottom', activeTab === 'help' ? 'on' : '']" aria-label="常见问题" title="常见问题"
+      <button :class="['web-side-btn web-side-bottom', activeTab === 'help' ? 'on' : '']" aria-label="常见问题"
         @click="$mp.ev('switchTab', null, { tab: 'help' }, '')">
         <span class="icon web-side-icon icon-tab-help"></span>
+        <span class="web-side-tip" aria-hidden="true">常见问题</span>
         <span v-if="showFaqDot" class="web-side-badge"></span>
       </button>
     </nav>`

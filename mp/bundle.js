@@ -489,6 +489,10 @@ Page({
     homeDisplayMethod: 'meihua',
     homeModePhase: '',
     pageEnter: false,
+    toastText: '',
+    toastOn: false,
+    toastStyle: '',
+    tabTip: '',
     calendarMonthAnim: '',
     calendarMonthStyle: '',
     calcInput: '',
@@ -651,6 +655,8 @@ Page({
     this.setData({
       // 页头放在胶囊按钮下方；结果页的返回按钮与胶囊同一行，像系统导航栏
       pageTopStyle: `padding-top:${capsule.bottom + 18}px;`,
+      // 提示气泡与胶囊按钮同一行、同样高
+      toastStyle: `top:${capsule.top}px;height:${capsule.height}px;`,
       // 与其他页面页头右侧的“⋯”同一高度：页面顶部留白 + 按钮自身的 8rpx 上边距
       resultBarStyle: `top:calc(${capsule.bottom + 18}px + 8rpx);`,
       // 按钮下沿到第一个模块的距离，与模块之间的间距（.stack 的 36rpx）一样：8rpx 上边距 + 64rpx 按钮 + 36rpx
@@ -1156,6 +1162,10 @@ Page({
     this._scrollToTop()
   },
 
+  // 底栏只有图标：长按一个图标在它上方显示名字，松手收起（长按后松手不会再切页）
+  showTabTip(e) { this.setData({ tabTip: e.currentTarget.dataset.tab }) },
+  hideTabTip() { if (this.data.tabTip) this.setData({ tabTip: '' }) },
+
   // 结果页左上角的返回：回到来的地方
   goBack() {
     if (this.data.activeTab === 'history') {
@@ -1472,7 +1482,7 @@ Page({
     const currentResult = loadDivinationUtils().decorateResult(this.data.currentResult)
     wx.setClipboardData({
       data: currentResult.reportText,
-      success: () => wx.showToast({ title: '结果已复制', icon: 'success' }),
+      success: () => this.showCopiedToast('结果已复制'),
     })
   },
 
@@ -1816,13 +1826,16 @@ Page({
 
   // ── Delete animation ──────────────────────────────────────────────────────
 
+  // 提示：画在屏幕最上方、与胶囊按钮同一行的玻璃气泡（与网页一样），不用微信自带的提示框。
+  // 上一条还在时就地换字、重新计时，不收起再弹
   showCustomToast(text, duration = 1500) {
-    wx.showToast({
-      title: text,
-      icon: 'none',
-      duration,
-    })
+    clearTimeout(this._toastTimer)
+    this.setData({ toastText: text, toastOn: true })
+    this._toastTimer = setTimeout(() => this.setData({ toastOn: false }), duration)
   },
+
+  // 复制成功：微信自己会弹“内容已复制”（关不掉），小程序里不再另弹；网页没有这个系统提示，由网页补上
+  showCopiedToast() {},
 
   _onDeleteComplete(id) {
     this._deleteJustCompleted = true
@@ -2355,7 +2368,7 @@ Page({
     const hz = this.data.calendarHourGz
     const cap = this.data.calendarHourCaption
     const text = `时令 ${info.solarDate} ${info.week} ${info.lunar}\n${info.gzYear} ${info.gzMonth} ${info.gzDay}${hz ? ' ' + hz : ''}\n${cap || ''}`
-    wx.setClipboardData({ data: text.trim(), success: () => wx.showToast({ title: '时令已复制', icon: 'success' }) })
+    wx.setClipboardData({ data: text.trim(), success: () => this.showCopiedToast('时令已复制') })
   },
 
   changeMonth(e) {
@@ -2748,7 +2761,7 @@ Page({
   copyLiurenResult() {
     if (!this.data.liurenResult) return
     const text = this.data.liurenResult.reportText || ''
-    wx.setClipboardData({ data: text, success: () => wx.showToast({ title: '结果已复制', icon: 'success' }) })
+    wx.setClipboardData({ data: text, success: () => this.showCopiedToast('结果已复制') })
   },
 
   // ── FAQ ───────────────────────────────────────────────────────────────────

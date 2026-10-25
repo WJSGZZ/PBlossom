@@ -780,19 +780,21 @@
    用过渡而不是一次性动画，连点时从当前位置接着走，不会跳。
    淡入淡出做在每一块玻璃自己身上，不做在外层：外层半透明时，里面玻璃的模糊看不到后面的画面，结束时会突然跳一下；
    数字格的外层 .tiles 只负责平移（平移不影响玻璃），淡入淡出交给每个格子 */
-.form-swap > :not(.tiles),
-.form-swap > .tiles {
-  transition: opacity 0.2s ease, transform 0.36s var(--ease);
-}
-.form-swap > .tiles > .tile { transition: opacity 0.2s ease, transform 0.35s var(--pop); }
-.swap-hide > :not(.tiles),
-.swap-hide > .tiles > .tile { opacity: 0; pointer-events: none; }
-.form-meihua.swap-hide > * { transform: translateX(calc(-48 * var(--rpx))); }
-.form-liuren.swap-hide > * { transform: translateX(calc(48 * var(--rpx))); }
-/* 一块接一块，轻微错开 */
-.form-swap > :nth-child(2), .form-swap > .tiles > .tile:nth-child(2) { transition-delay: 0.03s; }
-.form-swap > :nth-child(3), .form-swap > .tiles > .tile:nth-child(3) { transition-delay: 0.06s; }
-.form-swap > :nth-child(n+4) { transition-delay: 0.09s; }
+.swap-item { transition: opacity 0.2s ease, transform 0.36s var(--ease); }
+.swap-slide { transition: transform 0.36s var(--ease); }
+.swap-slide > .tile { transition: opacity 0.2s ease, transform 0.35s var(--pop); }
+.swap-hide > .swap-item,
+.swap-hide > .swap-slide > .tile { opacity: 0; pointer-events: none; }
+.form-meihua.swap-hide > .swap-item,
+.form-meihua.swap-hide > .swap-slide { transform: translateX(calc(-48 * var(--rpx))); }
+.form-liuren.swap-hide > .swap-item,
+.form-liuren.swap-hide > .swap-slide { transform: translateX(calc(48 * var(--rpx))); }
+/* 一块接一块，轻微错开（微信的样式编译器不认没有类名的 :nth-child，所以写成具体的类） */
+.swap-slide { transition-delay: 0.03s; }
+.swap-slide > .tile + .tile { transition-delay: 0.05s; }
+.swap-slide > .tile + .tile + .tile { transition-delay: 0.07s; }
+.swap-item + .swap-item { transition-delay: 0.04s; }
+.form-swap > .primary-btn { transition-delay: 0.08s; }
 
 .hint {
   color: var(--subtle);
@@ -1454,9 +1456,13 @@
 }
 
 .week-row,
+/* 月历总按六周的高度排：四周、五周的月份下面留空，翻月份时卡片高度不变，下面的内容不跟着跳 */
 .date-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
+  grid-auto-rows: calc(84 * var(--rpx));
+  align-content: start;
+  height: calc(504 * var(--rpx));
 }
 
 .week-row {
@@ -1827,6 +1833,63 @@
 
 .tab-on .tab-icon { background: var(--accent); }
 
+/* 提示气泡：屏幕最上方、与胶囊按钮同一行，从上面轻轻落下（与网页的提示一样）；位置和高度由页面按胶囊算好 */
+.mp-toast {
+  position: fixed;
+  z-index: 60;
+  left: 50%;
+  display: flex;
+  align-items: center;
+  padding: 0 calc(36 * var(--rpx));
+  border-radius: calc(999 * var(--rpx));
+  white-space: nowrap;
+  font-size: calc(28 * var(--rpx));
+  color: var(--ink);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.5));
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
+  backdrop-filter: blur(14px) saturate(140%);
+  box-shadow: 0 calc(16 * var(--rpx)) calc(40 * var(--rpx)) var(--lg-lift), 0 calc(4 * var(--rpx)) calc(12 * var(--rpx)) var(--lg-drop);
+  opacity: 0;
+  transform: translate(-50%, calc(-24 * var(--rpx)));
+  transition: opacity 0.22s ease, transform 0.32s var(--ease);
+  pointer-events: none;
+}
+.app.dark .mp-toast { background: linear-gradient(135deg, rgba(72, 72, 68, 0.72), rgba(40, 40, 38, 0.6)); }
+.mp-toast-on { opacity: 1; transform: translate(-50%, 0); }
+
+/* 长按图标弹出的名字：图标正上方的小气泡，下面一个小箭头指着图标。
+   底栏本身是玻璃，气泡在它外面再做模糊取不到后面的画面，所以着色实一些，字照样看得清 */
+.tab-tip {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + calc(30 * var(--rpx)));
+  padding: calc(14 * var(--rpx)) calc(28 * var(--rpx));
+  border-radius: calc(24 * var(--rpx));
+  white-space: nowrap;
+  font-size: calc(26 * var(--rpx));
+  line-height: 1.2;
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 calc(12 * var(--rpx)) calc(36 * var(--rpx)) var(--lg-lift), 0 calc(2 * var(--rpx)) calc(8 * var(--rpx)) var(--lg-drop);
+  opacity: 0;
+  transform: translate(-50%, calc(10 * var(--rpx))) scale(0.94);
+  transition: opacity 0.18s ease, transform 0.28s var(--ease);
+  pointer-events: none;
+}
+.tab-tip::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 100%;
+  width: calc(24 * var(--rpx));
+  height: calc(12 * var(--rpx));
+  margin-left: calc(-12 * var(--rpx));
+  background: inherit;
+  clip-path: polygon(0 0, 100% 0, 50% 100%);
+}
+.app.dark .tab-tip { background: rgba(58, 58, 55, 0.94); }
+.tab-tip-on { opacity: 1; transform: translate(-50%, 0) scale(1); }
+
 /* 未读红点：用消息提醒那种鲜红（与删除按钮同色），比原来大一圈；圆心位置不变 */
 .tab-badge {
   position: absolute;
@@ -1858,20 +1921,39 @@
 /* ── 换页：新页面的各块依次轻轻升起、淡入（结果页的卡片有自己的 .reveal，不重复）。
    淡入做在每一块上而不是整页：整页半透明时，里面玻璃的模糊看不到后面的画面，结束时会跳一下。
    用 backwards：动画结束后不再占着样式，梅花、六壬切换的过渡照常生效 ── */
-.page-enter > .stack > :not(.reveal):not(.form-swap):not(.stack),
-.page-enter > .stack > .form-swap > *,
-.page-enter > .stack > .stack > *,
-.page-enter > .history-head > *,
-.page-enter .history-list > * {
+.page-enter > .stack > .page-header,
+.page-enter > .stack > .card,
+.page-enter > .stack > .panel,
+.page-enter > .stack > .segmented,
+.page-enter > .stack > .empty,
+.page-enter > .stack > .stack > .panel,
+.page-enter .date-big,
+.page-enter .date-sub,
+.page-enter .form-swap > .swap-item,
+.page-enter .swap-slide > .tile,
+.page-enter > .history-head > .page-header,
+.page-enter > .history-head > .segmented,
+.page-enter .history-list > .history-row,
+.page-enter .history-list > .empty,
+.page-enter .history-list > .list-foot {
   animation-name: page-in;
   animation-duration: 0.42s;
   animation-timing-function: var(--ease);
   animation-fill-mode: backwards;
+  animation-delay: 0.06s;
 }
-.page-enter > .stack > :nth-child(2), .page-enter > .history-head > :nth-child(2), .page-enter .history-list > :nth-child(1) { animation-delay: 0.04s; }
-.page-enter > .stack > :nth-child(3), .page-enter .history-list > :nth-child(2) { animation-delay: 0.08s; }
-.page-enter > .stack > :nth-child(n+4), .page-enter .history-list > :nth-child(n+3) { animation-delay: 0.12s; }
-.page-enter > .stack > .form-swap > *, .page-enter > .stack > .stack > * { animation-delay: 0.12s; }
+/* 标题先出来，其余稍后；结果页的卡片保留自己的 .reveal 升起 */
+.page-enter > .stack > .page-header,
+.page-enter > .history-head > .page-header { animation-delay: 0s; }
+.page-enter .form-swap > .swap-item,
+.page-enter .swap-slide > .tile { animation-delay: 0.12s; }
+.page-enter > .stack > .reveal { animation-name: rise; animation-duration: 0.5s; animation-fill-mode: both; }
+.page-enter > .stack > .r1 { animation-delay: 0.05s; }
+.page-enter > .stack > .r2 { animation-delay: 0.1s; }
+.page-enter > .stack > .r3 { animation-delay: 0.15s; }
+.page-enter > .stack > .r4 { animation-delay: 0.2s; }
+.page-enter > .stack > .r5 { animation-delay: 0.25s; }
+.page-enter > .stack > .r0 { animation-delay: 0s; }
 
 @keyframes page-in {
   from { opacity: 0; transform: translateY(calc(24 * var(--rpx))); }
@@ -1880,12 +1962,29 @@
 
 /* 系统开启“减少动态效果”时，进场动画也省掉 */
 @media (prefers-reduced-motion: reduce) {
-  .form-swap > *,
-  .form-swap .tile {
+  .swap-item,
+  .swap-slide,
+  .swap-slide > .tile {
     transition: none !important;
   }
+.page-enter > .stack > .page-header,
+.page-enter > .stack > .card,
+.page-enter > .stack > .panel,
+.page-enter > .stack > .segmented,
+.page-enter > .stack > .empty,
+.page-enter > .stack > .stack > .panel,
+.page-enter .date-big,
+.page-enter .date-sub,
+.page-enter .form-swap > .swap-item,
+.page-enter .swap-slide > .tile,
+.page-enter > .history-head > .page-header,
+.page-enter > .history-head > .segmented,
+.page-enter .history-list > .history-row,
+.page-enter .history-list > .empty,
+.page-enter .history-list > .list-foot {
+    animation: none !important;
+  }
   .reveal,
-  .page-enter *,
   .terms .term,
   .pillar-body,
   .date-grid {

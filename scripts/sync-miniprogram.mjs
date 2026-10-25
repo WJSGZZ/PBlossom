@@ -64,6 +64,24 @@ fs.copyFileSync(path.join(MP, 'logo.svg'), path.join(WEB, 'assets/logo.svg'))
 // ── WXSS → CSS ──────────────────────────────────────────────────────────────
 
 let css = fs.readFileSync(path.join(MP, 'pages/index/index.wxss'), 'utf8')
+// 微信的样式编译器比浏览器严格：选择器里不能用通配符 *，伪类前面必须有类名或标签（> :not(.a)、> :nth-child(2) 会整份编译失败）。
+// 浏览器照样认，网页上看不出问题，所以在这里拦住
+{
+  const bad = []
+  const plain = css.replace(/\/\*[\s\S]*?\*\//g, (c) => c.replace(/[^\n]/g, ' '))
+  const re = /([^{}]+)\{/g
+  let m
+  while ((m = re.exec(plain))) {
+    const prelude = m[1].trim()
+    if (!prelude || prelude.startsWith('@')) continue
+    for (const sel of prelude.split(',')) {
+      if (/(^|[\s>+~])[:*]|\*/.test(sel.trim().replace(/::?(before|after)\b/g, ''))) {
+        bad.push(`  第 ${plain.slice(0, m.index).split('\n').length + (m[1].match(/^\s*/)[0].split('\n').length - 1)} 行附近：${sel.trim()}`)
+      }
+    }
+  }
+  if (bad.length) { console.error('index.wxss 里有微信不认的选择器：\n' + bad.join('\n')); process.exit(1) }
+}
 css = css.replace(/(-?\d*\.?\d+)rpx/g, (_, n) => `calc(${n} * var(--rpx))`)
 css = css.replace(/^page\s*\{/m, '.mp-root {')
 fs.writeFileSync(path.join(OUT, 'mp.css'), `/* 由 scripts/sync-miniprogram.mjs 从小程序 index.wxss 生成，不要手改；网页专用的样式写在 app/web.css */\n${css}`)
@@ -130,7 +148,7 @@ ast.children = ast.children.filter((n) => {
 })
 
 const TAGS = { view: 'div', text: 'span', image: 'img', block: 'template', 'scroll-view': 'div', canvas: 'canvas', input: 'input', picker: 'mp-picker', switch: 'mp-switch' }
-const EVENTS = { bindtap: 'click', bindlongpress: 'longpress', bindinput: 'input', bindchange: 'change', bindconfirm: 'keydown.enter', bindfocus: 'focus', bindblur: 'blur' }
+const EVENTS = { bindtap: 'click', bindlongpress: 'longpress', bindinput: 'input', bindchange: 'change', bindconfirm: 'keydown.enter', bindfocus: 'focus', bindblur: 'blur', bindtouchend: 'touchend', bindtouchcancel: 'touchcancel' }
 const DROP = new Set(['hover-class', 'scroll-y', 'enhanced', 'bounces', 'show-scrollbar', 'always-embed', 'cursor-color', 'mode', 'wx:key', 'wx:for-item', 'wx:for-index', 'confirm-type'])
 const KEEP_ON_PICKER = new Set(['mode', 'range', 'value', 'start', 'end', 'fields'])
 
