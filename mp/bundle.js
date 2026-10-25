@@ -1842,11 +1842,15 @@ Page({
   // ── Delete animation ──────────────────────────────────────────────────────
 
   // 提示：画在屏幕最上方、与胶囊按钮同一行的玻璃气泡（与网页一样），不用微信自带的提示框。
-  // 上一条还在时就地换字、重新计时，不收起再弹
+  // 同一句话还在（或正在淡出）时再触发：不重新计时，等它消失后才会重新出现；换了一句话就就地换字、重新计时
   showCustomToast(text, duration = 1500) {
+    if (text === this.data.toastText && (this.data.toastOn || Date.now() - (this._toastHideAt || 0) < 300)) return
     clearTimeout(this._toastTimer)
     this.setData({ toastText: text, toastOn: true })
-    this._toastTimer = setTimeout(() => this.setData({ toastOn: false }), duration)
+    this._toastTimer = setTimeout(() => {
+      this._toastHideAt = Date.now()
+      this.setData({ toastOn: false })
+    }, duration)
   },
 
   // 复制成功：微信自己会弹“内容已复制”（关不掉），小程序里不再另弹；网页没有这个系统提示，由网页补上

@@ -30,10 +30,13 @@
   let toastEl = null
   let toastTimer = null
   function toast(title, duration, loading) {
+    const alive = toastEl && document.contains(toastEl)
+    // 同一句话还在（或正在淡出）：不重新计时，等它消失后再点才会重新出现
+    if (alive && !loading && toastEl._title === title) return
     clearTimeout(toastTimer)
     const html = `${loading ? '<span class="web-spinner"></span>' : ''}<span>${escapeHtml(title)}</span>`
-    // 上一条还在（或正在淡出）：就地换字、停在显示状态，不删掉重来
-    if (toastEl && document.contains(toastEl)) {
+    // 换了一句话：就地换字、停在显示状态，不删掉重来
+    if (alive) {
       toastEl._closing = false
       clearTimeout(toastEl._removeTimer)
       toastEl.querySelector('.web-toast-box').innerHTML = html
@@ -41,6 +44,7 @@
     } else {
       toastEl = layer('web-toast', `<div class="web-toast-box lg">${html}</div>`)
     }
+    toastEl._title = loading ? '' : title
     if (!loading) {
       const el = toastEl
       toastTimer = setTimeout(() => closeLayer(el), duration || 1500)
