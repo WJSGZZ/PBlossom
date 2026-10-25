@@ -273,7 +273,6 @@
     showToast(opts) { toast(opts.title, opts.duration); ok(opts, {}) },
     showLoading(opts) { toast(opts.title || '加载中', 0, true) },
     hideLoading() { if (toastEl) closeLayer(toastEl) },
-    hideToast() {},
     showModal: modal,
     showActionSheet: actionSheet,
     showShareMenu() {},
@@ -426,6 +425,11 @@
 
     // 小程序打不开外部网页，只能复制链接；网页版点“关于”卡片直接在新标签页打开 GitHub 仓库
     page.openGithubRepo = () => window.open('https://github.com/WJSGZZ/PBlossom', '_blank', 'noopener')
+    // 小程序复制微信号时由微信自己弹“内容已复制”；网页没有这个系统提示，自己弹一个
+    page.copyContact = (e) => {
+      const value = e.currentTarget.dataset.value
+      if (value) wx.setClipboardData({ data: value, success: () => toast('微信号已复制') })
+    }
 
     // 外观里的“深色模式”：网页先把自己样式里的深色条件改好（小程序判断深浅时要问它），
     // 小程序再存好选择、换上 .app.dark

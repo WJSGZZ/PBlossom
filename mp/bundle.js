@@ -476,6 +476,7 @@ Page({
     calcMethod: 'meihua',
     homeDisplayMethod: 'meihua',
     homeModePhase: '',
+    homeModeBack: false,
     calcInput: '',
     calcDigits: ['', '', ''],
     calcSeedDigits: ['', '', ''],
@@ -1263,6 +1264,8 @@ Page({
     this.setData({
       calcMethod: mode,
       homeModePhase: 'out',
+      // 切回梅花（左边）时反方向滑
+      homeModeBack: mode === 'meihua',
     })
     this._homeModeTimerA = setTimeout(() => {
       this._homeModeTimerA = null
@@ -1285,8 +1288,8 @@ Page({
       this._homeModeTimerB = setTimeout(() => {
         this._homeModeTimerB = null
         if (this.data.homeModePhase === 'in') this.setData({ homeModePhase: '' })
-      }, 260)
-    }, 150)
+      }, 520) // 进场 0.4 秒加最多 0.09 秒错开，放完再撤，否则动画会被截断、一下跳到终点
+    }, 200)
   },
 
   enterLiurenCalcForm() {
@@ -2709,37 +2712,15 @@ Page({
   // ── FAQ ───────────────────────────────────────────────────────────────────
 
   // 小程序不能打开外部浏览器，也不能直接打开别人的微信资料页：复制后用系统弹窗说明下一步
-  // 复制后已有弹窗说明，系统自动弹出的“内容已复制”提示就收掉（hideToast），不重复提示
+  // 复制成功后微信自己会弹“内容已复制”（关不掉），不再另弹说明，免得两个提示叠在一起
   openGithubRepo() {
-    wx.setClipboardData({
-      data: 'https://github.com/WJSGZZ/PBlossom',
-      success: () => {
-        wx.hideToast()
-        wx.showModal({
-          title: 'GitHub 链接已复制',
-          content: '小程序不能直接打开外部网页，请粘贴到浏览器中打开。',
-          showCancel: false,
-          confirmText: '好的',
-        })
-      },
-    })
+    wx.setClipboardData({ data: 'https://github.com/WJSGZZ/PBlossom' })
   },
 
   copyContact(e) {
     const value = e.currentTarget.dataset.value
     if (!value) return
-    wx.setClipboardData({
-      data: value,
-      success: () => {
-        wx.hideToast()
-        wx.showModal({
-          title: '微信号已复制',
-          content: `在微信「添加朋友」中粘贴搜索 ${value}，即可添加作者。`,
-          showCancel: false,
-          confirmText: '好的',
-        })
-      },
-    })
+    wx.setClipboardData({ data: value })
   },
 
   copyFaqPrompt(e) {

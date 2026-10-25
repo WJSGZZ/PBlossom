@@ -776,18 +776,28 @@
 
 /* ── 梅花：输入格 ── */
 
-.form-swap {
-  transition: opacity 0.15s ease, transform 0.15s var(--ease);
-}
-
-.swap-out {
+/* 梅花、六壬切换：跟着切换框的方向左右滑——往六壬（右边）切，旧表单往左退、新表单从右边进来，切回梅花反过来。
+   淡入淡出做在每一块上，不做在外层：外层半透明时，里面玻璃的模糊看不到后面的画面，结束时会突然跳一下 */
+.swap-out > :not(.tiles),
+.swap-out > .tiles > .tile {
   opacity: 0;
-  transform: translateY(calc(16 * var(--rpx)));
+  transform: translateX(calc(-32 * var(--rpx)));
+  transition: opacity 0.16s ease, transform 0.2s var(--ease);
 }
+.swap-out.swap-back > :not(.tiles),
+.swap-out.swap-back > .tiles > .tile { transform: translateX(calc(32 * var(--rpx))); }
 
-.swap-in {
-  animation: rise 0.4s var(--ease) both;
-}
+.swap-in > :not(.tiles),
+.swap-in > .tiles > .tile { animation: swap-from-right 0.4s var(--ease) both; }
+.swap-in.swap-back > :not(.tiles),
+.swap-in.swap-back > .tiles > .tile { animation-name: swap-from-left; }
+/* 一块接一块，轻微错开 */
+.swap-in > :nth-child(2), .swap-in > .tiles > .tile:nth-child(2) { animation-delay: 0.03s; }
+.swap-in > :nth-child(3), .swap-in > .tiles > .tile:nth-child(3) { animation-delay: 0.06s; }
+.swap-in > :nth-child(n+4) { animation-delay: 0.09s; }
+
+@keyframes swap-from-right { from { opacity: 0; transform: translateX(calc(48 * var(--rpx))); } to { opacity: 1; transform: none; } }
+@keyframes swap-from-left { from { opacity: 0; transform: translateX(calc(-48 * var(--rpx))); } to { opacity: 1; transform: none; } }
 
 .hint {
   color: var(--subtle);
@@ -1856,7 +1866,8 @@
 /* 系统开启“减少动态效果”时，进场动画也省掉 */
 @media (prefers-reduced-motion: reduce) {
   .reveal,
-  .swap-in,
+  .swap-in > *,
+  .swap-in .tile,
   .terms .term,
   .pillar-body,
   .date-grid {
