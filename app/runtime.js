@@ -196,11 +196,44 @@
     }
     return q
   }
+  // FAQ 的高度和定位同步推进，避免原生 smooth 在内容尚未展开时被截断后补滚。
+  let faqScrollFrame = 0
+  function cancelFaqScroll() { cancelAnimationFrame(faqScrollFrame); faqScrollFrame = 0 }
+  function scrollFaqTo(top) {
+    cancelFaqScroll()
+    const el = root().querySelector('.content-scroll')
+    if (!el) return
+    const from = el.scrollTop
+    const duration = matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 420
+    const start = performance.now()
+    // 与答案高度共用 cubic-bezier(.32,.72,0,1)，避免两个独立缓动互相追赶。
+    const ease = (x) => {
+      let lo = 0, hi = 1, t = x
+      for (let i = 0; i < 12; i++) {
+        const bx = 3 * (1 - t) ** 2 * t * .32 + t ** 3
+        if (bx < x) lo = t; else hi = t
+        t = (lo + hi) / 2
+      }
+      return 3 * (1 - t) ** 2 * t * .72 + 3 * (1 - t) * t * t + t ** 3
+    }
+    const frame = (now) => {
+      if (!el.isConnected) return
+      const progress = duration ? Math.min(1, (now - start) / duration) : 1
+      const target = from + (top - from) * (progress === 1 ? 1 : ease(progress))
+      el.scrollTop = Math.max(0, Math.min(target, el.scrollHeight - el.clientHeight))
+      faqScrollFrame = progress < 1 ? requestAnimationFrame(frame) : 0
+    }
+    faqScrollFrame = requestAnimationFrame(frame)
+  }
+  for (const type of ['wheel', 'touchstart', 'pointerdown', 'keydown']) {
+    document.addEventListener(type, cancelFaqScroll, { passive: true })
+  }
+
   // scroll-view 的节点有 scrollTo；画布节点就是 canvas 元素本身
   function nodeOf(el) {
     if (el.tagName === 'CANVAS') return el
     return {
-      scrollTo({ top, animated }) { el.scrollTo({ top, behavior: animated ? 'smooth' : 'auto' }) },
+      scrollTo({ top, animated }) { cancelFaqScroll(); el.scrollTo({ top, behavior: animated ? 'smooth' : 'auto' }) },
     }
   }
 
@@ -265,6 +298,8 @@
   const fail = (opts, err) => { if (opts && opts.fail) opts.fail(err); if (opts && opts.complete) opts.complete(err) }
 
   window.wx = {
+    scrollFaqTo,
+    cancelFaqScroll,
     getStorageSync(key) {
       try { const v = localStorage.getItem(STORE_PREFIX + key); return v == null ? '' : JSON.parse(v) } catch (e) { return '' }
     },

@@ -116,8 +116,18 @@
     el.style.backdropFilter = el.style.webkitBackdropFilter = `blur(${opts.blur || 6}px) saturate(140%) url(#${id})`
   }
 
+  // FAQ 展开时冻结已有折射图；连续变化的高度只在落稳后生成一次。
+  const faqResizeTimers = new WeakMap()
   const watched = new WeakSet()
-  const ro = new ResizeObserver((entries) => entries.forEach((e) => { e.target.dataset.lg = ''; scanOne(e.target) }))
+  const ro = new ResizeObserver((entries) => entries.forEach(({ target }) => {
+    if (target.matches('.faq-panel')) {
+      clearTimeout(faqResizeTimers.get(target))
+      faqResizeTimers.set(target, setTimeout(() => {
+        faqResizeTimers.delete(target)
+        if (target.isConnected) scanOne(target)
+      }, 80))
+    } else scanOne(target)
+  }))
   function scanOne(el) {
     for (const [sel, opts] of TARGETS) if (el.matches(sel)) { apply(el, opts); return }
   }

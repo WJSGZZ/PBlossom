@@ -7,7 +7,7 @@
 <p align="center"><em>Ancient Wisdom, Modern Elegance</em></p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Version-3.0-8A2BE2?style=flat-square" alt="Version"/>
+  <a href="https://github.com/WJSGZZ/PBlossom/releases/tag/v3.0.0"><img src="https://img.shields.io/badge/Version-3.0.0-8A2BE2?style=flat-square" alt="Version 3.0.0"/></a>
   <img src="https://img.shields.io/badge/Platform-Web%20%7C%20Mini%20Program-7C9CAE?style=flat-square" alt="Platform Web and Mini Program"/>
   <a href="https://wjsgzz.github.io/PBlossom/"><img src="https://img.shields.io/badge/Web-打开网页版-DA7756?style=flat-square&logo=googlechrome&logoColor=white" alt="Web"/></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-228B22?style=flat-square&logo=github&logoColor=white" alt="License"/></a>
@@ -23,10 +23,10 @@ PBlossom 是一款将传统易理逻辑与现代数字化技术相结合的探�
 <p align="center">
   <a href="#开始使用">开始使用</a> &nbsp;|&nbsp;
   <a href="#功能简介">功能简介</a> &nbsp;|&nbsp;
+  <a href="#ai-与-agent-调用">AI 与 Agent 调用</a> &nbsp;|&nbsp;
   <a href="#界面展示">界面展示</a> &nbsp;|&nbsp;
   <a href="#本地运行与开发">本地运行与开发</a> &nbsp;|&nbsp;
-  <a href="#名称来源">名称来源</a> &nbsp;|&nbsp;
-  <a href="#logo设计">Logo设计</a> &nbsp;|&nbsp;
+  <a href="#名称与-logo-设计">名称与 Logo 设计</a> &nbsp;|&nbsp;
   <a href="#温馨提示">温馨提示</a> &nbsp;|&nbsp;
   <a href="#许可">许可</a>
 </p>
@@ -34,7 +34,7 @@ PBlossom 是一款将传统易理逻辑与现代数字化技术相结合的探�
 ## 开始使用
 - **网页**：https://wjsgzz.github.io/PBlossom/ （电脑、手机浏览器都能用）
 - **小程序**：微信搜索 **PBlossom**
-- **一次性计算 / Agent**：[参数说明](compute.md)。打开带参数的 `compute.html` 即可取得梅花、六壬或万年历的 JSON 结果，不写入历史；需支持 JavaScript 的浏览器。
+- **AI / Agent**：[通过参数链接计算](#ai-与-agent-调用)，获取 JSON 排盘结果。
 
 网页版与小程序是同一套代码：排盘算法、界面和导出图片都与小程序一致。记录只保存在你自己的浏览器里，不会上传。
 
@@ -46,21 +46,27 @@ PBlossom 是一款将传统易理逻辑与现代数字化技术相结合的探�
 - **常见问题** (FAQ)：使用说明、AI 解读提示词，以及主题色、五行标记等外观设置；网页版还能选择深色模式（跟随系统 / 浅色 / 深色）。
 - **导出与分享**：结果和时令都能导出为图片；网页版还可以复制一条链接，对方打开就能看到同一卦。
 
-## AI / Agent 一次性计算
+## AI 与 Agent 调用
 
-用**能执行 JavaScript 的浏览器工具**打开以下链接，即可获得精简 JSON 排盘结果；每次独立计算，不写入历史或本地存储：
+打开参数链接即可取得 JSON 排盘结果，每次独立计算，不保存记录。
+
+> **工具要求**：需要能执行 JavaScript 的浏览器工具；普通 HTTP fetch 无法取得动态计算结果。
+
+| 计算示例 | 返回内容 |
+| --- | --- |
+| [梅花：1、2、3](https://wjsgzz.github.io/PBlossom/compute.html?type=meihua&numbers=1,2,3) | 四柱、卦象与动爻 |
+| [万年历：当下](https://wjsgzz.github.io/PBlossom/compute.html?type=calendar) | 农历、四柱与节气 |
+| [六壬：当下](https://wjsgzz.github.io/PBlossom/compute.html?type=liuren) | 四课、三传与课体 |
+
+**时间**：默认取浏览器当下时刻。需要指定起卦时间时，在链接后追加带时区的参数，例如：
 
 ```text
-梅花：https://wjsgzz.github.io/PBlossom/compute.html?type=meihua&numbers=1,2,3&date=2026-10-25&time=14:30&timezone=Asia/Shanghai
-万年历：https://wjsgzz.github.io/PBlossom/compute.html?type=calendar&date=2026-10-25&time=14:30&timezone=Asia/Shanghai
-六壬：https://wjsgzz.github.io/PBlossom/compute.html?type=liuren&date=2026-10-25&time=14:30&timezone=Asia/Shanghai&longitude=120.86
+&datetime=2026-10-25T14:30:00%2B08:00
 ```
 
-`numbers` 是三个正整数；六壬的 `longitude` 可省略。不传日期时间时取浏览器当下时刻与时区。指定时间可用 `date=YYYY-MM-DD&time=HH:mm[:ss]&timezone=America/Los_Angeles`，AI 更推荐传 `datetime=2026-10-25T14:30:00%2B08:00`（与 date/time 二选一），避免 Agent 的运行时区影响用户时间。算法统一换算成北京时间 UTC+8，返回输入时间和计算时间。
+**读取**：等待页面完成计算，读取 `#result` 文本或 `window.pblossomResult`，以 `ok` 判断成功与否。
 
-页面只显示 JSON。Agent 等待 `html[data-state="ready"]` 或 `html[data-state="error"]`，再读取 `#result` 文本或 `window.pblossomResult`；以 `ok` 判断成功与否。`data` 直接给出四柱与卦名或六壬排盘，不返回界面样式、拆字和重复报告。
-
-只有普通 HTTP fetch／网页文本抓取能力的聊天 AI **不能直接使用这个动态入口**，因为此类工具不执行页面脚本。具备浏览器执行能力的聊天 AI 和 Agent 可以按上述方式调用。其他参数和连续调用方法见[完整说明](compute.md)。
+[完整说明 → 参数规则、时区处理与连续调用](compute.md)
 
 ## 界面展示
 ### 网页版
@@ -140,10 +146,10 @@ python3 -m http.server 8000
 - `app/`：网页专有的部分，包括微信接口的浏览器实现、电脑版侧边栏与两栏排版、液态玻璃效果。
 - `assets/`、`vendor/`：字体、Logo 和 Vue 3（各自的许可见文末）。
 
-## 名称来源
+## 名称与 Logo 设计
+
 PBlossom 是 Plum Blossom（梅花）的简写，来源于“梅花易数”。
 
-## Logo设计
 Logo 实际上是一个珊瑚橙
 <a title="珊瑚橙 #DA7756"><img src="pictures/color-coral.svg" width="18" alt="#DA7756"/></a>
 <code>#DA7756</code>

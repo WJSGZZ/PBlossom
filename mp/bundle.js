@@ -13,7 +13,8 @@ const STORAGE_KEY = 'pblossom_mini_history'
 const HISTORY_STORAGE_VERSION = 2
 const HISTORY_BACKUP_KEY = `${STORAGE_KEY}_backup_v1`
 const HISTORY_MIGRATION_KEY = `${STORAGE_KEY}_migrated_v2`
-const FAQ_SEEN_KEY = 'pblossom_faq_seen'
+// 旧记录只表示进入过帮助页，不能算读过使用建议，因此不沿用旧 key。
+const FAQ_SEEN_KEY = 'pblossom_usage_seen'
 const APP_VERSION = '3.0.0'
 
 const NAV_TABS = [
@@ -517,6 +518,7 @@ Page({
     collapsingId: null,
     faqItems: FAQ_SOURCE.map((item) => ({
       question: item.question,
+      isUsage: item.question === '【重要】使用建议说明',
       tag: /^【[^】]+】/.test(item.question) ? item.question.slice(1, item.question.indexOf('】')) : '',
       title: item.question.replace(/^【[^】]+】/, ''),
       blocks: buildFaqBlocks(item.answer),
@@ -815,7 +817,6 @@ Page({
   },
 
   switchToSharedTab(tab) {
-    if (tab === 'help') this.markFaqSeen()
     this.setData({
       activeTab: tab,
       resultMode: false,
@@ -1122,9 +1123,14 @@ Page({
     }, ms)
   },
 
-  // 收起全部常见问题
-  // 答案展开要 0.42 秒，刚开始时页面还不够长，滚动可能被提前截住；展开结束后若还没到位，再补一下
+  // Web 将定位与展开合为一次动画；小程序保留原生滚动的高度补偿。
   _scrollFaqTo(target) {
+    if (wx.scrollFaqTo) {
+      this._faqGrowingUntil = Date.now() + 500
+      if (!this.data.pageScrollable) this.setData({ pageScrollable: true })
+      wx.nextTick(() => wx.scrollFaqTo(target))
+      return
+    }
     const scroll = (top, then) => {
       this._scrollPageTo(top, 420)
       if (then) then()
@@ -1142,7 +1148,11 @@ Page({
     }))
   },
 
+  // 收起全部常见问题，并使尚未返回的测量和定位失效。
   _collapseFaq() {
+    this._faqToggleRun = (this._faqToggleRun || 0) + 1
+    clearTimeout(this._faqScrollTimer)
+    if (wx.cancelFaqScroll) wx.cancelFaqScroll()
     const patch = {}
     this.data.faqItems.forEach((item, i) => {
       if (item.open) {
@@ -1158,7 +1168,6 @@ Page({
     // 换页时新页面的卡片会依次升起，这段时间暂停背景柔光，把帧留给进场动画
     this._pauseAmbient(600)
     if (tab === 'help') {
-      this.markFaqSeen()
       // 点常见问题页签：收起全部问题并回到最上面；已经在这一页时平滑滚上去
       const already = this.data.activeTab === 'help'
       this._collapseFaq()
@@ -2879,6 +2888,9 @@ Page({
 
   // 一次只展开一个问题（与 iOS 一致）：展开这一个时收起其他的
   toggleFaq(e) {
+    const run = this._faqToggleRun = (this._faqToggleRun || 0) + 1
+    clearTimeout(this._faqScrollTimer)
+    if (wx.cancelFaqScroll) wx.cancelFaqScroll()
     const index = Number(e.currentTarget.dataset.index)
     const item = this.data.faqItems[index]
     const willOpen = !item.open
@@ -2896,6 +2908,7 @@ Page({
         .select('#faq-' + index).boundingClientRect()
         .select('.content-scroll').scrollOffset()
         .exec((res) => {
+          if (this._faqToggleRun !== run) return
           const h = res[0] ? res[0].height : 200
           patch[`faqItems[${index}].open`] = true
           patch[`faqItems[${index}].answerStyle`] = `height:${h}px;`
@@ -2911,7 +2924,10 @@ Page({
             })
             target = Math.max(0, offset.scrollTop + row.top - shift - this._faqTopInset)
           }
-          this.setData(patch, () => { if (target != null) this._scrollFaqTo(target) })
+          this.setData(patch, () => {
+            if (item.isUsage) this.markFaqSeen()
+            if (target != null) this._scrollFaqTo(target)
+          })
         })
     } else {
       patch[`faqItems[${index}].open`] = false

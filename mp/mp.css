@@ -1527,6 +1527,9 @@
 }
 
 .faq-title {
+  display: flex;
+  align-items: center;
+  min-width: 0;
   color: var(--ink);
   font-size: calc(34 * var(--rpx));
   line-height: 1.45;
@@ -1535,6 +1538,7 @@
 
 .faq-tag {
   display: inline-block;
+  flex-shrink: 0;
   margin-right: calc(14 * var(--rpx));
   padding: 0 calc(16 * var(--rpx));
   border-radius: calc(999 * var(--rpx));
@@ -1571,6 +1575,16 @@
 
 .plus::before { left: 0; right: 0; top: calc(12 * var(--rpx)); height: calc(2 * var(--rpx)); }
 .plus::after { top: 0; bottom: 0; left: calc(12 * var(--rpx)); width: calc(2 * var(--rpx)); }
+
+/* 红点由标题的 flex 行居中；不使用依赖字体 x-height 的 vertical-align: middle。 */
+.faq-unread-dot {
+  flex-shrink: 0;
+  width: calc(20 * var(--rpx));
+  height: calc(20 * var(--rpx));
+  margin-left: calc(16 * var(--rpx));
+  border-radius: 50%;
+  background: #FA5151;
+}
 
 .plus-open {
   transform: rotate(45deg);

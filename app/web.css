@@ -412,3 +412,9 @@ input, textarea { -webkit-user-select: text; user-select: text; }
   .form-swap .reveal-block, .form-swap .panel:has(.reveal-block) > .row,
   .form-swap .panel:has(.reveal-block) > .row .chevron { transition: none !important; }
 }
+
+/* FAQ 高度变化由展开与定位共同控制，不叠加浏览器的滚动锚定。 */
+.content-scroll:has(.faq-panel) { overflow-anchor: none; }
+@media (prefers-reduced-motion: reduce) {
+  .faq-answer, .faq-answer-inner, .faq-item-open .faq-answer-inner { transition: none; }
+}
