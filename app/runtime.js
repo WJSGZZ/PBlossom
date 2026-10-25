@@ -394,7 +394,7 @@
         })
       },
       // 侧边栏放进 .app 里面，才能用到主题色等变量
-      template: `<div class="mp-root">${window.__mpView.replace('长按一条记录可删除', '<span class="hint-touch">长按</span><span class="hint-mouse">右键点按</span>一条记录可删除').replace(/<\/div>$/, SIDEBAR + '</div>')}</div>`,
+      template: `<div class="mp-root">${window.__mpView.replace(/<\/div>$/, SIDEBAR + '</div>')}</div>`,
     })
     app.config.globalProperties.u = u
     app.config.globalProperties.$mp = {
@@ -647,8 +647,16 @@
       if (document.visibilityState === 'visible' && page.onShow) page.onShow()
       if (document.visibilityState === 'hidden' && page.onHide) page.onHide()
     })
-    // 手机上不缩放（与小程序一样）：iOS Safari 不理 viewport 里的 user-scalable=no，双指缩放要在这里拦下
-    document.addEventListener('gesturestart', (e) => e.preventDefault())
+    // Safari 可能忽略 viewport 的缩放限制；只拦缩放，不吞掉单指滚动和正常连点。
+    for (const type of ['gesturestart', 'gesturechange']) {
+      document.addEventListener(type, (e) => e.preventDefault(), { passive: false })
+    }
+    const preventPinch = (e) => { if (e.touches.length > 1) e.preventDefault() }
+    document.addEventListener('touchstart', preventPinch, { passive: false })
+    document.addEventListener('touchmove', preventPinch, { passive: false })
+    document.addEventListener('dblclick', (e) => {
+      if (matchMedia('(pointer: coarse)').matches) e.preventDefault()
+    })
   }
 
   // 电脑上的侧边栏：只有 logo 和图标，帮助放在最下面；手机上用小程序那条底部页签栏
@@ -694,14 +702,17 @@
       </div>`,
   }
 
-  // <switch>：与系统开关一样的外观，颜色取主题色
+  // Puppertino 原生 checkbox 开关；业务状态通过 checked 回传，覆盖定位失败等异步结果。
   const SWITCH = {
     props: ['checked', 'color'],
     emits: ['change'],
-    data() { return { on: !!this.checked } },
-    watch: { checked(v) { this.on = !!v } },
-    methods: { toggle() { this.on = !this.on; this.$emit('change', this.on) } },
-    template: `<button type="button" role="switch" :aria-checked="on" :class="['mp-switch', on ? 'on' : '']" :style="on && color ? { background: color } : null" @click="toggle"><span class="mp-switch-knob"></span></button>`,
+    data() { return { label: '开关' } },
+    watch: { checked(v) { this.$refs.input.checked = !!v } },
+    mounted() {
+      this.label = this.$el.closest('.row')?.querySelector('.row-title')?.textContent.trim() || '开关'
+      window.PuppertinoLiquidGlass.enhance(this.$el.parentElement)
+    },
+    template: `<label class="mp-switch p-switch p-switch-touch p-auto-dark-mode" :style="{ '--p-control-accent': color || 'var(--accent)' }"><input ref="input" type="checkbox" role="switch" :aria-label="label" :checked="!!checked" @change="$emit('change', $event.target.checked)" @keydown.enter.prevent="$refs.input.click()"><span aria-hidden="true"></span></label>`,
   }
 
   const LONGPRESS = {

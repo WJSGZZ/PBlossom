@@ -38,7 +38,7 @@ PBlossom 是一款将传统易理逻辑与现代数字化技术相结合的探�
 网页版与小程序是同一套代码：排盘算法、界面和导出图片都与小程序一致。记录只保存在你自己的浏览器里，不会上传。
 
 ## 功能简介
-- **新占** (Divination)：梅花易数起卦，自动推演本卦、变卦、互卦，以及它们与年月日时干支的生克关系。
+- **新占** (Divination)：梅花易数起卦，自动推演本卦、变卦、互卦，以及它们与年月日时干支的生克关系。默认按当前时间起卦，也可在高级设置中指定日期和时间，复现历史卦例。
 - **六壬** (Liuren)：大六壬排盘，支持真太阳时校正，给出天地盘、四课、三传与课体。
 - **往昔** (History)：梅花与六壬的记录统一保存、筛选，手机上长按、电脑上右键点按可删除；网页版可从文件导入卦例，电脑上也能直接把 .txt 拖进网页。
 - **时令** (Seasons)：任选日期时间，查看四柱干支、藏干、节气与月历，支持真太阳时。
@@ -146,4 +146,4 @@ Logo 实际上是一个珊瑚橙
 
 **PBlossom 这个名字和 Logo 不在许可范围内**：`assets/logo.svg` 及其衍生的图形、配色组合，未经同意不得用于其他项目、产品或宣传，也不得用来让人以为某个版本出自本项目。基于本项目修改发布的版本，请换用自己的名字和标志。
 
-内嵌字体取自思源宋体（Noto Serif SC），按 [SIL Open Font License 1.1](assets/fonts/OFL.txt) 分发；Vue 3 为 MIT 许可。
+内嵌字体取自思源宋体（Noto Serif SC），按 [SIL Open Font License 1.1](assets/fonts/OFL.txt) 分发；Vue 3 为 MIT 许可；网页开关使用 [Puppertino](https://github.com/codedgar/Puppertino)，按 [MIT 许可](vendor/puppertino/LICENSE) 分发，来源与适配见 [组件说明](vendor/puppertino/README.md)。

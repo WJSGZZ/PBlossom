@@ -6,8 +6,8 @@
  *   3. 电脑上（宽于 900px）底部页签栏换成左侧只有图标的侧边栏，内容居中
  */
 
-/* 手机上不缩放：双击不放大（双指缩放由 viewport 和 runtime.js 拦下），点按也不再有放大前的等待 */
-html { touch-action: manipulation; }
+/* 保留单指滚动，但不开放 pinch-zoom；manipulation 实际仍允许双指缩放。 */
+html, .mp-root, .content-scroll, .history-scroll { touch-action: pan-x pan-y; }
 
 /* 同名的两份字体：后声明的小子集（界面用到的字）优先；遇到子集里没有的字（如备注），
    浏览器才去下载前面这份完整字体补上 */
@@ -34,9 +34,6 @@ body { overflow: hidden; -webkit-text-size-adjust: 100%; -webkit-tap-highlight-c
 /* 和小程序一样，界面上的文字不能被选中；只有输入框可以 */
 body { -webkit-user-select: none; user-select: none; }
 input, textarea { -webkit-user-select: text; user-select: text; }
-/* 往昔的删除提示：有鼠标的设备说“右键点按”，触屏说“长按” */
-.hint-mouse { display: none; }
-@media (hover: hover) and (pointer: fine) { .hint-mouse { display: inline; } .hint-touch { display: none; } }
 
 .mp-root {
   /* 小程序的 750rpx = 屏宽；平板宽度时不再继续放大 */
@@ -71,17 +68,20 @@ input, textarea { -webkit-user-select: text; user-select: text; }
 .card.about:active { opacity: 0.7; }
 .faq-contact:active, .prompt-copy:active { opacity: 0.6; }
 
-/* 开关：与系统开关一样的外观 */
-.mp-switch {
-  position: relative; flex-shrink: 0; width: 51px; height: 31px; border-radius: 999px;
-  background: var(--fill) !important; transition: background 0.25s ease; transform: scale(0.82); transform-origin: right center;
+/* Puppertino 开关使用完整的触屏尺寸及动效，只接入项目主题与滚动规则。 */
+.mp-switch.p-switch {
+  position: relative; flex-shrink: 0; min-width: 64px; min-height: 44px;
+  touch-action: pan-y; -webkit-tap-highlight-color: transparent;
+  --p-control-knob: #fff;
+  --p-lens-duration: 0.22s; /* 日常开关反馈要快；释放时间由 JS 读取此值。 */
+  --p-switch-touch-off: var(--fill);
+  --p-switch-touch-liquid-off: #dededc;
+  --p-focus-ring-color: var(--accent);
 }
-.mp-switch.on { background: var(--accent) !important; }
-.mp-switch .mp-switch-knob {
-  position: absolute; top: 2px; left: 2px; width: 27px; height: 27px; border-radius: 50%; background: #fff;
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15), 0 1px 1px rgba(0, 0, 0, 0.16); transition: transform 0.3s var(--ease);
+.mp-switch.p-switch > input { width: 100%; height: 100%; margin: 0; inset: 0; }
+@media (prefers-color-scheme: dark) {
+  .mp-switch.p-switch { --p-switch-touch-liquid-off: #3a3a3a; }
 }
-.mp-switch.on .mp-switch-knob { transform: translateX(20px); }
 
 /* ── 液态玻璃（仿 iOS 26 的 .glassEffect(.regular)） ──
    几乎不着色，背后的画面轻微模糊、在边缘被折射（Chromium 由 lg.js 生成折射滤镜，其他浏览器只有模糊）；
@@ -289,7 +289,13 @@ input, textarea { -webkit-user-select: text; user-select: text; }
   .form-swap > .panel:has(.reveal-block) > .row {
     grid-column: 2; grid-row: 2; justify-self: start; align-self: center; min-height: 0;
     gap: calc(14 * var(--rpx)); padding: calc(14 * var(--rpx)) calc(26 * var(--rpx)); border-radius: 999px;
-    transition: background 0.2s ease;
+    transition: background 0.2s ease, opacity 0.2s ease, transform 0.36s var(--ease);
+  }
+  /* 桌面把高级设置的外层设成 display: contents，外层进场动画不会绘制。
+     动画必须交给实际可见的按钮与已展开面板，沿用其他表单块的时长和延迟。 */
+  .page-enter .form-swap > .panel:has(.reveal-block) > .row,
+  .page-enter .form-swap > .panel:has(.reveal-block) > .reveal-block-open {
+    animation: page-in 0.42s var(--ease) 0.06s backwards;
   }
   /* 底色跟主题色走，与切换框里选中的那一格一样 */
   .form-swap > .panel:has(.reveal-block) > .row:hover { background: rgba(var(--accent-rgb), 0.08); }
@@ -307,11 +313,23 @@ input, textarea { -webkit-user-select: text; user-select: text; }
     -webkit-backdrop-filter: blur(10px) saturate(140%); backdrop-filter: blur(10px) saturate(140%);
     box-shadow: 0 4px 14px var(--lg-drop);
     opacity: 0; transform: translateX(-16px); pointer-events: none;
-    transition: opacity 0.25s ease, transform 0.35s var(--ease);
+    /* 与其他表单块共用过渡节奏；不要在玻璃本体上加 filter/clip-path，避免隔断背景折射。 */
+    transition: opacity 0.2s ease, transform 0.36s var(--ease);
   }
   .form-swap .reveal-block-open { opacity: 1; transform: none; pointer-events: auto; }
-  .form-swap .reveal-block #adv-inner > .hairline:first-child { display: none; }
-  .form-swap .reveal-block #adv-inner { flex: 1; display: flex; flex-direction: column; justify-content: space-evenly; }
+  /* 外层是 display: contents，切换梅花/六壬的过渡同样要落在可见元素上。
+     一起进出，不再单独错开月将、占时、贵人。 */
+  .form-swap.swap-hide > .panel:has(.reveal-block) > .row,
+  .form-swap.swap-hide > .panel:has(.reveal-block) > .reveal-block-open {
+    opacity: 0; transform: translateX(calc(48 * var(--rpx))); pointer-events: none;
+  }
+  .form-swap .reveal-block .advanced-inner > .hairline:first-child { display: none; }
+  .form-swap .reveal-block .advanced-inner { flex: 1; display: flex; flex-direction: column; justify-content: space-evenly; }
+
+  /* 梅花也沿用同一高级设置：右栏日期/时间与左栏数字区对齐，手机仍在表单内展开。 */
+  .form-meihua > .calc-advanced-panel > .reveal-block { grid-row: 3 / span 2; align-self: stretch; }
+  .form-meihua.swap-hide > .panel:has(.reveal-block) > .row,
+  .form-meihua.swap-hide > .panel:has(.reveal-block) > .reveal-block-open { transform: translateX(calc(-48 * var(--rpx))); }
 
   /* 梅花结果：四柱、备注在左，三卦在右 */
   .stack:has(> .hex-card) > .r0, .stack:has(> .hex-card) > .r3 { grid-column: 1; }
@@ -389,4 +407,8 @@ input, textarea { -webkit-user-select: text; user-select: text; }
 }
 @media (prefers-reduced-motion: reduce) {
   .result-bar { animation: none !important; }
+  .page-enter .form-swap > .panel:has(.reveal-block) > .row,
+  .page-enter .form-swap > .panel:has(.reveal-block) > .reveal-block-open { animation: none !important; }
+  .form-swap .reveal-block, .form-swap .panel:has(.reveal-block) > .row,
+  .form-swap .panel:has(.reveal-block) > .row .chevron { transition: none !important; }
 }

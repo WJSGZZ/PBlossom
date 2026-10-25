@@ -495,6 +495,11 @@ Page({
     toastStyle: '',
     calendarMonthAnim: '',
     calendarMonthStyle: '',
+    calcAdvanced: false,
+    calcAdvStyle: 'height:0;',
+    calcDateStr: '',
+    calcTimeStr: '',
+    calcCustomTime: false,
     calcInput: '',
     calcDigits: ['', '', ''],
     calcSeedDigits: ['', '', ''],
@@ -549,6 +554,7 @@ Page({
     calendarPillarView: {},
 
     // ── Liuren (六壬) ─────────────────────────────────────────────────
+    liurenCustomTime: false,      // 手动编辑后固定；“现在”恢复跟随时钟
     liurenDateStr: '',             // YYYY-MM-DD
     liurenDateDisplay: '',         // YYYY年MM月DD日
     liurenTimeStr: '',             // HH:MM:SS
@@ -864,6 +870,7 @@ Page({
     const historyItems = this.prependHistoryItem(record)
     this.enterLiurenResult(result, 'history', {
       historyItems,
+      liurenCustomTime: true,
       liurenDateStr: dateStr,
       liurenDateDisplay: formatDateDisplay(dateStr),
       liurenTimeStr: timeStr,
@@ -887,6 +894,7 @@ Page({
     const overrides = parseShareOverrides(options)
     const lonValue = decodeShare(options.lon)
     this.enterLiurenForm({
+      liurenCustomTime: Boolean(dateStr && timeStr),
       liurenDateStr: dateStr || this.data.liurenDateStr,
       liurenDateDisplay: dateStr ? formatDateDisplay(dateStr) : this.data.liurenDateDisplay,
       liurenTimeStr: timeStr || this.data.liurenTimeStr,
@@ -960,8 +968,9 @@ Page({
   // ── Page state helpers ───────────────────────────────────────────────────
 
   getLiurenFormState(date = new Date()) {
-    const liurenDateStr = formatDateLite(date)
-    const liurenTimeStr = formatTimeLite(date)
+    const liurenCustomTime = Boolean(this.data && this.data.liurenCustomTime)
+    const liurenDateStr = liurenCustomTime ? this.data.liurenDateStr : formatDateLite(date)
+    const liurenTimeStr = liurenCustomTime ? this.data.liurenTimeStr : formatTimeLite(date)
     const liurenLongitude = this.data ? this.data.liurenLongitude : null
     const liurenAutoLocationDone = Boolean(this.data && this.data.liurenAutoLocationDone)
     return Object.assign(this.buildNowStrip(date), {
@@ -970,6 +979,7 @@ Page({
       homeDisplayMethod: 'liuren',
       homeModePhase: '',
       resultMode: false,
+      liurenCustomTime,
       liurenDateStr,
       liurenDateDisplay: formatDateDisplay(liurenDateStr),
       liurenTimeStr,
@@ -982,16 +992,20 @@ Page({
       liurenLongitudeText: formatLongitudeText(liurenLongitude),
       liurenLocationAttempted: liurenAutoLocationDone || Boolean(liurenLongitude),
       liurenAutoLocationDone,
-      liurenAdvanced: false,
-      liurenAdvStyle: 'height:0;',
-      liurenMgIdx: 0,
-      liurenHbIdx: 0,
-      liurenNmIdx: 0,
+      // 切页、切换梅花/六壬都会经过这里；高级设置属于当前界面状态，不能随表单初始化清空。
+      liurenAdvanced: Boolean(this.data && this.data.liurenAdvanced),
+      liurenAdvStyle: this.data && this.data.liurenAdvanced ? this.data.liurenAdvStyle : 'height:0;',
+      liurenMgIdx: this.data && this.data.liurenMgIdx || 0,
+      liurenHbIdx: this.data && this.data.liurenHbIdx || 0,
+      liurenNmIdx: this.data && this.data.liurenNmIdx || 0,
     })
   },
 
   _tickNowStrip() {
     if ((this.data.activeTab !== 'calc' && this.data.activeTab !== 'liuren') || this.data.resultMode) return
+    // 梅花、六壬共用时钟：自动模式持续刷新，手动编辑后固定；“现在”恢复自动模式。
+    if (this.data.calcAdvanced && !this.data.calcCustomTime && this.data.calcMethod === 'meihua') this.resetCalcTimeToNow()
+    if (!this.data.liurenCustomTime && this.data.calcMethod === 'liuren') this.resetLiurenToNow()
     const strip = this.buildNowStrip()
     const old = this.data.nowPillars || []
     if (strip.nowLunar === this.data.nowLunar && strip.nowPillars.every((p, i) => old[i] && old[i].gz === p.gz)) return
@@ -1361,6 +1375,7 @@ Page({
     const liurenDateStr = formatDateLite(now)
     const liurenTimeStr = formatTimeLite(now)
     this.setData({
+      liurenCustomTime: false,
       liurenDateStr,
       liurenDateDisplay: formatDateDisplay(liurenDateStr),
       liurenTimeStr,
@@ -1370,6 +1385,38 @@ Page({
   },
 
   // ── Calc (新占) ───────────────────────────────────────────────────────────
+
+  toggleCalcAdvanced() {
+    this._pauseAmbient(450)
+    const closing = this.data.calcAdvanced
+    const run = this._calcAdvancedRun = (this._calcAdvancedRun || 0) + 1
+    if (closing) {
+      this.setData({ calcAdvanced: false, calcAdvStyle: 'height:0;' })
+      this._scrollPageTo(0, 350)
+      return
+    }
+    if (!this.data.calcCustomTime) this.resetCalcTimeToNow()
+    this.setData({ calcAdvanced: true })
+    this.createSelectorQuery().select('#calc-adv-inner').boundingClientRect().exec((res) => {
+      if (this._calcAdvancedRun !== run || !this.data.calcAdvanced) return
+      const height = res && res[0] ? res[0].height : 160
+      this.setData({ calcAdvStyle: `height:${height}px;` })
+    })
+  },
+
+  resetCalcTimeToNow() {
+    const now = new Date()
+    this.setData({ calcDateStr: formatDateLite(now), calcTimeStr: formatTimeLite(now), calcCustomTime: false })
+  },
+
+  onCalcDateChange(e) {
+    this.setData({ calcDateStr: e.detail.value, calcCustomTime: true })
+  },
+
+  onCalcTimeChange(e) {
+    const [hour, minute, second] = pickedTime(e.detail.value)
+    this.setData({ calcTimeStr: `${pad(hour)}:${pad(minute)}:${pad(second)}`, calcCustomTime: true })
+  },
 
   onCalcDigitInput(e) {
     const index = Number(e.currentTarget.dataset.index)
@@ -1468,7 +1515,16 @@ Page({
     }
     const nums = inputParts.map(Number)
     const divinationUtils = loadDivinationUtils()
-    const result = divinationUtils.decorateResult(divinationUtils.performDivination(nums))
+    let at
+    if (this.data.calcCustomTime) {
+      const dateParts = this.data.calcDateStr.split('-').map(Number)
+      const timeParts = this.data.calcTimeStr.split(':').map(Number)
+      at = makeValidDate(dateParts[0], dateParts[1], dateParts[2], timeParts[0], timeParts[1], timeParts[2] || 0)
+      if (!at || dateParts[0] < 1900 || dateParts[0] > 2100) {
+        this.showCustomToast('请选择有效的起卦日期和时间'); return
+      }
+    }
+    const result = divinationUtils.decorateResult(divinationUtils.performDivination(nums, at))
     const historyItems = this.prependHistoryItem(result)
     this.setData({ calcTransitioning: true, calcTransitionPhase: 'launch' })
     if (this._calcTransitionTimer) clearTimeout(this._calcTransitionTimer)
@@ -2657,13 +2713,13 @@ Page({
 
   onLiurenDateChange(e) {
     const liurenDateStr = e.detail.value
-    this.setData({ liurenDateStr, liurenDateDisplay: formatDateDisplay(liurenDateStr) })
+    this.setData({ liurenDateStr, liurenDateDisplay: formatDateDisplay(liurenDateStr), liurenCustomTime: true })
   },
 
   onLiurenTimeChange(e) {
     const [hIdx, mIdx, sIdx] = pickedTime(e.detail.value)
     const liurenTimeStr = `${pad(hIdx)}:${pad(mIdx)}:${pad(sIdx)}`
-    this.setData({ liurenTimeStr, liurenTimeDisplay: formatTimeDisplay(liurenTimeStr), liurenTimePickerValue: [hIdx, mIdx, sIdx] })
+    this.setData({ liurenTimeStr, liurenTimeDisplay: formatTimeDisplay(liurenTimeStr), liurenTimePickerValue: [hIdx, mIdx, sIdx], liurenCustomTime: true })
   },
 
   onLiurenQuestionInput(e) {
@@ -2692,13 +2748,16 @@ Page({
   toggleLiurenAdvanced() {
     this._pauseAmbient(450)
     const closing = this.data.liurenAdvanced
+    const run = this._liurenAdvancedRun = (this._liurenAdvancedRun || 0) + 1
     if (closing) {
       this.setData({ liurenAdvanced: false, liurenAdvStyle: 'height:0;' })
     } else {
-      // 按内容的实际高度展开（与常见问题同一做法）
+      // 先记录目标状态，让连点可以立即反向；测量回调只应用于本次展开。
+      this.setData({ liurenAdvanced: true })
       this.createSelectorQuery().select('#adv-inner').boundingClientRect().exec((res) => {
+        if (this._liurenAdvancedRun !== run || !this.data.liurenAdvanced) return
         const h = res && res[0] ? res[0].height : 160
-        this.setData({ liurenAdvanced: true, liurenAdvStyle: `height:${h}px;` })
+        this.setData({ liurenAdvStyle: `height:${h}px;` })
       })
     }
     // 收起时页面变短：若此前往下滚过，和收起动画同时平滑滚回顶部。
@@ -2713,6 +2772,7 @@ Page({
   onLiurenNmChange(e) { this.setData({ liurenNmIdx: Number(e.detail.value) }) },
 
   submitLiuren() {
+    if (!this.data.liurenCustomTime) this.resetLiurenToNow()
     const { liurenDateStr, liurenTimeStr, liurenQuestion, liurenLongitude, liurenLocationAttempted,
             liurenMgIdx, liurenHbIdx, liurenNmIdx } = this.data
     if (!liurenDateStr || !liurenTimeStr) {
@@ -15940,8 +16000,10 @@ function decorateResult(result) {
   return next
 }
 
-function performDivination(inputNumbers) {
-  const now = new Date()
+function performDivination(inputNumbers, at) {
+  // 同一份时间用于干支、四令关系和报告；不传时仍按提交当刻起卦。
+  const now = at === undefined ? new Date() : new Date(at.getTime())
+  if (!Number.isFinite(now.getTime())) throw new Error('起卦时间无效')
   const n1 = normalizeNumber(inputNumbers[0], 8)
   const n2 = normalizeNumber(inputNumbers[1], 8)
   const n3 = normalizeNumber(inputNumbers[2], 6)
@@ -16647,7 +16709,7 @@ function liurenNote(locating, longitudeText, attempted) {
 
 function calendarNote(locating, tst, longitude) {
   if (locating) return '定位中…'
-  if (tst) return longitude != null ? tst + ' · 东经 ' + longitude.toFixed(2) + '°' : tst
+  if (tst) return longitude != null ? hm(tst) + ' · 东经 ' + longitude.toFixed(2) + '°' : hm(tst)
   return '北京时间 · 按所在经度换算'
 }
 

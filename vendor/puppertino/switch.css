@@ -1,0 +1,868 @@
+/* Puppertino switch + Liquid Glass lens; MIT. See README.md and LICENSE. */
+@property --p-gel {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 0;
+}
+
+
+.p-switch > input { position: absolute; opacity: 0; pointer-events: none; }
+:root {
+  /* Off track: black 85% at 10% group opacity. */
+  --p-switch-track-off: rgba(0, 0, 0, 0.085);
+  --p-switch-track-disabled: rgba(0, 0, 0, 0.05);
+  /* Pressed overlay, laid over the whole track (on and off alike). */
+  --p-switch-press: rgba(0, 0, 0, 0.08);
+  --p-switch-knob-shadow: 0 3px 36px rgba(0, 0, 0, 0.05);
+  /* The clear lens. */
+  --p-switch-lens-body: rgba(255, 255, 255, 0.09);
+  --p-switch-lens-rim: rgba(0, 0, 0, 0.12);
+  --p-switch-lens-band: rgba(0, 0, 0, 0.06);
+  --p-switch-lens-glint: rgba(255, 255, 255, 0);
+  --p-switch-lens-shadow: rgba(0, 0, 0, 0.07);
+  --p-switch-lens-ring: rgba(0, 0, 0, 0.65);
+}
+
+.p-dark-mode,
+[data-p-theme="darkmode"] {
+  --p-switch-track-off: rgba(255, 255, 255, 0.085);
+  --p-switch-track-disabled: rgba(255, 255, 255, 0.055);
+  --p-switch-press: rgba(255, 255, 255, 0.08);
+  --p-switch-lens-body: rgba(255, 255, 255, 0.09);
+  --p-switch-lens-rim: rgba(0, 0, 0, 0.4);
+  --p-switch-lens-band: rgba(0, 0, 0, 0.06);
+  --p-switch-lens-glint: rgba(255, 255, 255, 0.28);
+  --p-switch-lens-shadow: rgba(0, 0, 0, 0.1);
+  --p-switch-lens-ring: rgba(0, 0, 0, 0.3);
+}
+
+@media (prefers-color-scheme: dark) {
+  .p-auto-dark-mode {
+    --p-switch-track-off: rgba(255, 255, 255, 0.085);
+    --p-switch-track-disabled: rgba(255, 255, 255, 0.055);
+    --p-switch-press: rgba(255, 255, 255, 0.08);
+    --p-switch-lens-body: rgba(255, 255, 255, 0.09);
+    --p-switch-lens-rim: rgba(0, 0, 0, 0.4);
+    --p-switch-lens-band: rgba(0, 0, 0, 0.06);
+    --p-switch-lens-glint: rgba(255, 255, 255, 0.28);
+    --p-switch-lens-shadow: rgba(0, 0, 0, 0.1);
+    --p-switch-lens-ring: rgba(0, 0, 0, 0.3);
+  }
+}
+
+.p-light-mode,
+[data-p-theme="lightmode"] {
+  --p-switch-track-off: rgba(0, 0, 0, 0.085);
+  --p-switch-track-disabled: rgba(0, 0, 0, 0.05);
+  --p-switch-press: rgba(0, 0, 0, 0.08);
+  --p-switch-lens-body: rgba(255, 255, 255, 0.09);
+  --p-switch-lens-rim: rgba(0, 0, 0, 0.12);
+  --p-switch-lens-band: rgba(0, 0, 0, 0.06);
+  --p-switch-lens-glint: rgba(255, 255, 255, 0);
+  --p-switch-lens-shadow: rgba(0, 0, 0, 0.07);
+  --p-switch-lens-ring: rgba(0, 0, 0, 0.65);
+}
+
+.p-switch {
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  background: transparent; /* cancel the .p-sys-* swatch paint on the wrapper */
+  --p-control-accent: var(--p-color-current, #0088FF);
+
+  /* Geometry, in tokens so a size variant is a swap rather than a second
+     copy of the morph math below. Travel is derived, never restated:
+     track width minus the knob minus both insets. */
+  --p-switch-track-w: 36px;
+  --p-switch-track-h: 16px;
+  --p-switch-knob-w: 21px;
+  --p-switch-knob-inset: 1.5px;
+  --p-switch-travel: calc(
+    var(--p-switch-track-w) - var(--p-switch-knob-w) - 2 * var(--p-switch-knob-inset)
+  );
+  /* The pressed lens box, and how far it reaches past the track end on
+     the side the knob sits on. */
+  --p-switch-lens-w: 35px;
+  --p-switch-lens-h: 22px;
+  --p-switch-lens-overhang: 6px;
+  /* Legacy token (v2.0 morph): how much wider the knob grows. Derived. */
+  --p-switch-lens-grow: calc(var(--p-switch-lens-w) - var(--p-switch-knob-w));
+  /* Lens left edge, relative to the track, when fully pressed off (0)
+     and on (1). */
+  --p-switch-lens-x0: calc(var(--p-switch-lens-overhang) * -1);
+  --p-switch-lens-x1: calc(
+    var(--p-switch-track-w) + var(--p-switch-lens-overhang) - var(--p-switch-lens-w)
+  );
+  /* Lens top edge to track top edge. The refraction band (darker, at the
+     inside edge of the glass where the track begins) sits here. */
+  --p-switch-lens-rise: calc((var(--p-switch-lens-h) - var(--p-switch-track-h)) / 2);
+}
+
+/* Sizes. The default is the 16px track (mini on the shared ladder);
+   .p-switch-mini names it explicitly. */
+.p-switch-small {
+  --p-switch-track-w: 44px;
+  --p-switch-track-h: 20px;
+  --p-switch-knob-w: 26px;
+  --p-switch-knob-inset: 2px;
+  --p-switch-lens-w: 42px;
+  --p-switch-lens-h: 28px;
+  --p-switch-lens-overhang: 6px;
+}
+
+.p-switch-regular {
+  --p-switch-track-w: 54px;
+  --p-switch-track-h: 24px;
+  --p-switch-knob-w: 32px;
+  --p-switch-knob-inset: 2px;
+  --p-switch-lens-w: 52px;
+  --p-switch-lens-h: 33px;
+  --p-switch-lens-overhang: 7px;
+}
+
+.p-switch-large {
+  --p-switch-track-w: 64px;
+  --p-switch-track-h: 28px;
+  --p-switch-knob-w: 38px;
+  --p-switch-knob-inset: 2px;
+  --p-switch-lens-w: 61px;
+  --p-switch-lens-h: 39px;
+  --p-switch-lens-overhang: 7.5px;
+}
+
+.p-switch-xlarge {
+  --p-switch-track-w: 80px;
+  --p-switch-track-h: 36px;
+  --p-switch-knob-w: 47px;
+  --p-switch-knob-inset: 3px;
+  --p-switch-lens-w: 75px;
+  --p-switch-lens-h: 48px;
+  --p-switch-lens-overhang: 10px;
+}
+
+.p-switch > input + span {
+  position: relative;
+  flex-shrink: 0;
+  width: var(--p-switch-track-w);
+  height: var(--p-switch-track-h);
+  border-radius: 999px;
+
+  background: var(--p-switch-track-off);
+  transition: background 0.25s ease-out;
+}
+
+/* Held: the whole track darkens under the lens. (Not on the iOS touch
+   size, which keeps its own track, and not once liquid_glass.js has
+   enhanced the switch: there the track is painted by the knockout
+   layer and this element must stay transparent, or the old state's
+   color shows around and through the glass while it is dragged.) */
+.p-switch:not(.p-switch-touch):not(.p-switch-liquid):active > input:not(:disabled) + span {
+  background:
+    linear-gradient(var(--p-switch-press), var(--p-switch-press)),
+    var(--p-switch-track-off);
+}
+
+.p-switch:not(.p-switch-touch):not(.p-switch-liquid):active > input:not(:disabled):checked + span {
+  background:
+    linear-gradient(var(--p-switch-press), var(--p-switch-press)),
+    var(--p-control-accent);
+}
+
+.p-switch > input + span::after {
+  content: "";
+  position: absolute;
+  /* Top and bottom anchored, so the knob stays centered at any inset.
+     The shadow is the macOS 27 knob shadow: one soft drop. */
+  top: var(--p-switch-knob-inset);
+  bottom: var(--p-switch-knob-inset);
+  left: var(--p-switch-knob-inset);
+  width: var(--p-switch-knob-w);
+  border-radius: 999px;
+
+  background: var(--p-control-knob);
+  box-shadow: var(--p-switch-knob-shadow);
+  transition:
+    left 0.35s cubic-bezier(0.3, 1.25, 0.5, 1),
+    top 0.15s ease-out,
+    bottom 0.15s ease-out,
+    width 0.15s ease-out,
+    background 0.15s ease-out,
+    box-shadow 0.15s ease-out;
+}
+
+.p-switch > input:checked + span {
+  background: var(--p-control-accent);
+}
+
+.p-switch > input:checked + span::after {
+  left: calc(var(--p-switch-knob-inset) + var(--p-switch-travel));
+}
+
+/* Disabled: the knob stays solid white; only the track fades (off to
+   5%, on to a 50% accent). Overrides the shared 50% group opacity. */
+.p-switch:not(.p-switch-touch) > input:disabled + span {
+  opacity: 1;
+  background: var(--p-switch-track-disabled);
+}
+
+.p-switch:not(.p-switch-touch) > input:disabled:checked + span {
+  background: color-mix(in srgb, var(--p-control-accent) 50%, transparent);
+}
+
+.p-switch:not(.p-switch-touch) > input:disabled + span > .p-switch-knockout {
+  opacity: 0.6;
+}
+
+/* Held (press and hold): the knob becomes the clear lens. */
+.p-switch:active > input:not(:disabled) + span::after {
+  top: calc((var(--p-switch-track-h) - var(--p-switch-lens-h)) / 2);
+  bottom: calc((var(--p-switch-track-h) - var(--p-switch-lens-h)) / 2);
+  left: var(--p-switch-lens-x0);
+  width: var(--p-switch-lens-w);
+
+  background:
+    linear-gradient(
+      transparent calc(var(--p-switch-lens-rise) - 2px),
+      var(--p-switch-lens-band) calc(var(--p-switch-lens-rise) + 2px),
+      transparent calc(var(--p-switch-lens-rise) + 9px)
+    ),
+    var(--p-switch-lens-body);
+  box-shadow:
+    0 7px 6px -1.5px var(--p-switch-lens-shadow),
+    inset 0 0 0 0.5px var(--p-switch-lens-rim),
+    inset 0 2px 0.5px -0.5px var(--p-switch-lens-glint),
+    inset 0 -2px 0.5px -0.5px var(--p-switch-lens-glint);
+}
+
+/* The lens overhangs the track end on the side the knob is on. */
+.p-switch:active > input:not(:disabled):checked + span::after {
+  left: var(--p-switch-lens-x1);
+}
+
+/* ─── The lens morph on click ──────────────────────────────────────── */
+/* The animation contract: grow, travel while grown, shrink into place —
+   on a plain click, no holding required. One registered custom property
+   --p-gel transitions 0↔1 on toggle. Position is linear in it. The lens
+   amount is a plateau, max(0, min(1, gel×5, (1−gel)×3)). It is fully
+   grown by 20% of the timeline, held grown through the travel, and
+   shrunk over the last third. Releasing a held switch joins the same curve,
+   so a hold keeps the lens up, travels, then sets it down. Transitions never
+   run at initial style, so pre-checked switches do not flash on page load.
+   Browsers without modern CSS math keep the plain slide above. */
+
+@supports (width: calc(21px + sin(90deg) * 9px)) {
+  .p-switch > input + span {
+    --p-gel: 0;
+    transition:
+      background 0.2s ease-out,
+      --p-gel 0.42s cubic-bezier(0.32, 1.2, 0.36, 1);
+  }
+
+  .p-switch > input:checked + span {
+    --p-gel: 1;
+  }
+
+  .p-switch > input + span::after,
+  .p-switch > input:checked + span::after {
+    --p-grow: calc(max(0, min(1, var(--p-gel) * 5, (1 - var(--p-gel)) * 3)));
+    /* Knob box and lens box at the current travel; the morph blends
+       between them by --p-grow. */
+    --p-switch-knob-x: calc(var(--p-switch-knob-inset) + var(--p-switch-travel) * var(--p-gel));
+    --p-switch-lens-x: calc(
+      var(--p-switch-lens-x0) + (var(--p-switch-lens-x1) - var(--p-switch-lens-x0)) * var(--p-gel)
+    );
+    --p-switch-lens-y: calc((var(--p-switch-track-h) - var(--p-switch-lens-h)) / 2);
+
+    left: calc(
+      var(--p-switch-knob-x) + (var(--p-switch-lens-x) - var(--p-switch-knob-x)) * var(--p-grow)
+    );
+    width: calc(
+      var(--p-switch-knob-w) + (var(--p-switch-lens-w) - var(--p-switch-knob-w)) * var(--p-grow)
+    );
+    top: calc(
+      var(--p-switch-knob-inset) + (var(--p-switch-lens-y) - var(--p-switch-knob-inset)) * var(--p-grow)
+    );
+    bottom: calc(
+      var(--p-switch-knob-inset) + (var(--p-switch-lens-y) - var(--p-switch-knob-inset)) * var(--p-grow)
+    );
+
+    /* Clear, not frosted: the white knob thins to a 9% white body, and
+       the glass edges fade in as it grows. */
+    background:
+      linear-gradient(
+        transparent calc(var(--p-switch-lens-rise) - 2px),
+        color-mix(in srgb, var(--p-switch-lens-band) calc(var(--p-grow) * 100%), transparent) calc(var(--p-switch-lens-rise) + 2px),
+        transparent calc(var(--p-switch-lens-rise) + 9px)
+      ),
+      color-mix(
+        in srgb,
+        var(--p-switch-lens-body) calc(var(--p-grow) * 100%),
+        var(--p-control-knob)
+      );
+    box-shadow:
+      0 3px 36px rgb(0 0 0 / calc(0.05 * (1 - var(--p-grow)))),
+      0 7px 6px -1.5px color-mix(in srgb, var(--p-switch-lens-shadow) calc(var(--p-grow) * 100%), transparent),
+      inset 0 0 0 0.5px color-mix(in srgb, var(--p-switch-lens-rim) calc(var(--p-grow) * 100%), transparent),
+      inset 0 2px 0.5px -0.5px color-mix(in srgb, var(--p-switch-lens-glint) calc(var(--p-grow) * 100%), transparent),
+      inset 0 -2px 0.5px -0.5px color-mix(in srgb, var(--p-switch-lens-glint) calc(var(--p-grow) * 100%), transparent);
+
+    /* These only fire on :active enter/exit — the gel-driven values
+       change through the animating variable, which does not trigger
+       property transitions of its own. */
+    transition:
+      top 0.18s ease-out,
+      bottom 0.18s ease-out,
+      left 0.18s ease-out,
+      width 0.18s ease-out,
+      background 0.18s ease-out,
+      box-shadow 0.18s ease-out;
+  }
+}
+
+/* ─── Switch, touch size ───────────────────────────────────────────── */
+/* iOS 27 runs a larger switch than macOS: a 64x28 track with a 38x24
+   knob inset 2px, so the knob travels 22px. Pressed, the knob becomes
+   the same clear lens as macOS 27 at iOS proportions. The lens is
+   60x40 and centered on the knob, so it overhangs the track end by 9px. Only
+   the tokens change; the morph, the states, and the focus ring are shared
+   with the default size. The macOS track darkens while held. This one does not,
+   and disabled fades the whole control to 50%. The whole control clears 44px
+   through the hit area below. */
+
+/* The lens rim lines pick up the track color. Light mode uses a
+   pale tint of it and dark mode a stronger one (--p-switch-touch-glint-tint
+   is the track's share). */
+:root {
+  --p-switch-touch-lens-rim: rgba(0, 0, 0, 0.2);
+  --p-switch-touch-lens-glint: rgba(255, 255, 255, 0.95);
+  --p-switch-touch-glint-tint: 25%;
+  --p-switch-touch-lens-ring: rgba(0, 0, 0, 0.5);
+}
+
+.p-dark-mode,
+[data-p-theme="darkmode"] {
+  --p-switch-touch-lens-rim: rgba(0, 0, 0, 0.8);
+  --p-switch-touch-lens-glint: rgba(255, 255, 255, 0.4);
+  --p-switch-touch-glint-tint: 45%;
+  --p-switch-touch-lens-ring: rgba(0, 0, 0, 0.5);
+}
+
+@media (prefers-color-scheme: dark) {
+  .p-auto-dark-mode {
+    --p-switch-touch-lens-rim: rgba(0, 0, 0, 0.8);
+    --p-switch-touch-lens-glint: rgba(255, 255, 255, 0.4);
+    --p-switch-touch-glint-tint: 45%;
+    --p-switch-touch-lens-ring: rgba(0, 0, 0, 0.5);
+  }
+}
+
+.p-light-mode,
+[data-p-theme="lightmode"] {
+  --p-switch-touch-lens-rim: rgba(0, 0, 0, 0.2);
+  --p-switch-touch-lens-glint: rgba(255, 255, 255, 0.95);
+  --p-switch-touch-glint-tint: 25%;
+  --p-switch-touch-lens-ring: rgba(0, 0, 0, 0.5);
+}
+
+.p-switch-touch {
+  --p-switch-track-w: 64px;
+  --p-switch-track-h: 28px;
+  --p-switch-knob-w: 38px;
+  --p-switch-knob-inset: 2px;
+  --p-switch-lens-w: 60px;
+  --p-switch-lens-h: 40px;
+  --p-switch-lens-overhang: 9px;
+  --p-switch-lens-rim: var(--p-switch-touch-lens-rim);
+  --p-switch-lens-glint: var(--p-switch-touch-lens-glint);
+  --p-switch-lens-ring: var(--p-switch-touch-lens-ring);
+
+  /* The track is 28px tall, so the label makes up the rest of the 44px
+     target. The label is the click surface, so growing it is enough. */
+  min-height: 44px;
+}
+
+/* iOS switches are green unless the app tints them. A tint class on the
+   element publishes --p-color-current, which the default accent already
+   reads, so the green default steps aside whenever one is present. */
+.p-switch-touch:not([class*="p-sys-"]) {
+  --p-control-accent: var(--p-sys-green);
+}
+
+/* Off state fill. iOS uses the tertiary label color, which reads slightly darker than the macOS switch track. */
+.p-switch-touch > input + span {
+  background: var(--p-switch-touch-off);
+}
+
+/* With liquid_glass.js: the lens rim lines take the live track color
+   (--p-switch-color is set on the track), a line 1px inside the top and
+   bottom edges. */
+.p-switch-touch.p-switch-liquid .p-lens-clear .p-lens-rim {
+  --p-switch-lens-glint: color-mix(
+    in srgb,
+    var(--p-switch-color, var(--p-control-accent)) var(--p-switch-touch-glint-tint),
+    var(--p-switch-touch-lens-glint)
+  );
+
+  box-shadow:
+    inset 0 0 0 0.5px var(--p-switch-lens-rim),
+    inset 0 2.5px 0 -0.5px var(--p-switch-lens-glint),
+    inset 0 -2.5px 0 -0.5px var(--p-switch-lens-glint);
+}
+
+
+/* ─── Switch on/off glyphs ─────────────────────────────────────────── */
+/* A bar when on, a ring when off, so the state does not rest on color
+   alone. Opt in with .p-switch-labels.
+
+   Not tied to prefers-contrast: on iOS that flag is Increase Contrast,
+   while the glyphs are a separate setting (On/Off Labels). Drawing
+   them for everyone who raised contrast changes a control they did not
+   ask to change. The knob position already carries the state without
+   color.
+
+   The glyph sits in the strip the knob is not covering, which is
+   exactly inset + travel wide, and is centered in it. Deriving the
+   position keeps the glyph centered at any track size. Geometry is declared once and
+   switched on with content, which is inert until then. */
+
+.p-switch > input + span::before {
+  content: none;
+
+  --p-switch-gap: calc(var(--p-switch-knob-inset) + var(--p-switch-travel));
+  --p-switch-ring: calc(var(--p-switch-track-h) * 0.32);
+
+  position: absolute;
+  top: 50%;
+  right: calc(var(--p-switch-gap) / 2 - var(--p-switch-ring) / 2);
+  translate: 0 -50%;
+
+  width: var(--p-switch-ring);
+  height: var(--p-switch-ring);
+  border: 1px solid currentcolor;
+  border-radius: 50%;
+  color: var(--p-control-knob);
+  opacity: 0.55;
+}
+
+/* On: a bar, centered in the strip on the leading side. */
+.p-switch > input:checked + span::before {
+  right: auto;
+  left: calc(var(--p-switch-gap) / 2 - 0.5px);
+
+  width: 1px;
+  height: calc(var(--p-switch-track-h) * 0.357);
+  border: 0;
+  border-radius: 0;
+  background: var(--p-control-knob);
+  opacity: 1;
+}
+
+.p-switch-labels > input + span::before,
+.p-switch-labels > input:checked + span::before {
+  content: "";
+}
+
+/* ─── Switch, Liquid Glass ─────────────────────────────────────────── */
+/* src/js/liquid_glass.js adds .p-switch-liquid and injects a knockout
+   and a .p-lens (see materials.css) into the track. Press and the knob
+   lifts into glass; drag across the middle and it slides under your
+   finger; release and it settles. Without the script the CSS morph
+   above still runs, so nothing here is required.
+
+   The default is the liquid lens. The knockout cuts the track out
+   under the glass and the lens redraws the track, magnified, through
+   an SVG alpha threshold. That would erase a translucent fill, so the
+   liquid copy uses an opaque equivalent of the off track. The real
+   track keeps its translucent token.
+
+   data-p-lens="clear" on the label opts into the flat macOS 27 / iOS 27
+   lens: a .p-lens-clear (a rim and the resting knob, no refraction
+   layers), no knockout, and the track shows through unmagnified. On
+   macOS its pressed overlay darkens the track; the touch size keeps
+   its track as it is. */
+
+:root {
+  --p-switch-liquid-off: #e0e0e0;
+  --p-switch-touch-liquid-off: #c5c5c9;
+}
+
+.p-dark-mode,
+[data-p-theme="darkmode"] {
+  --p-switch-liquid-off: #3a3a3a;
+  --p-switch-touch-liquid-off: #4a4a4d;
+}
+
+@media (prefers-color-scheme: dark) {
+  .p-auto-dark-mode {
+    --p-switch-liquid-off: #3a3a3a;
+    --p-switch-touch-liquid-off: #4a4a4d;
+  }
+}
+
+.p-light-mode,
+[data-p-theme="lightmode"] {
+  --p-switch-liquid-off: #e0e0e0;
+  --p-switch-touch-liquid-off: #c5c5c9;
+}
+
+.p-switch-liquid {
+  --p-switch-off: var(--p-switch-track-off);
+  --p-switch-off-solid: var(--p-switch-liquid-off);
+  --p-switch-on: var(--p-control-accent);
+  --p-switch-knob-h: calc(var(--p-switch-track-h) - 2 * var(--p-switch-knob-inset));
+
+  /* Without this the browser claims a sideways drag as a scroll and
+     pointermove stops arriving, so the knob stops following. */
+  touch-action: none;
+}
+
+.p-switch-liquid.p-switch-touch {
+  --p-switch-off: var(--p-switch-touch-off);
+  --p-switch-off-solid: var(--p-switch-touch-liquid-off);
+}
+
+.p-switch.p-switch-liquid > input + span {
+  --p-gel: 0;
+  /* The color follows the knob position, so it stays off until the
+     knob is 85% of the way across, then snaps and fades over 175ms.
+     Clamped so the spring's undershoot and overshoot cannot step it. */
+  --p-switch-lit: clamp(0, round(down, var(--p-gel), 0.85) / 0.85, 1);
+  --p-switch-color: color-mix(
+    in srgb,
+    var(--p-switch-on) calc(var(--p-switch-lit) * 100%),
+    var(--p-switch-off)
+  );
+  --p-switch-solid: color-mix(
+    in srgb,
+    var(--p-switch-on) calc(var(--p-switch-lit) * 100%),
+    var(--p-switch-off-solid)
+  );
+  --p-lens-h: var(--p-switch-knob-h);
+  --p-lens-scale-now: calc(1 + 0.65 * var(--p-lens-lift));
+
+  background: transparent;
+  transition:
+    --p-gel var(--p-lens-duration) cubic-bezier(0.32, 1.2, 0.36, 1),
+    --p-lens-lift var(--p-lens-duration) cubic-bezier(0.32, 1.2, 0.36, 1);
+  transition:
+    --p-gel var(--p-lens-duration) var(--p-lens-spring),
+    --p-lens-lift var(--p-lens-duration) var(--p-lens-spring);
+}
+
+/* Knob side: the checkbox, unless a drag is in progress, in which case
+   the script says which side the knob is on. */
+.p-switch.p-switch-liquid > input:checked + span,
+.p-switch.p-switch-liquid[data-p-state="on"] > input + span {
+  --p-gel: 1;
+}
+
+.p-switch.p-switch-liquid[data-p-state="off"] > input + span {
+  --p-gel: 0;
+}
+
+.p-switch.p-switch-liquid[data-p-lift] > input:not(:disabled) + span {
+  --p-lens-lift: 1;
+}
+
+/* The lens replaces the pseudo-element knob. */
+.p-switch.p-switch-liquid > input + span::after {
+  content: none;
+}
+
+/* On/off glyphs stay above the track paint. */
+.p-switch.p-switch-liquid > input + span::before {
+  z-index: 1;
+}
+
+/* Layer 1, the baseline: the track, with a capsule cut out wherever the
+   lens is. The cut is a mask built from two round caps and a bar, so
+   it follows the knob and grows with the lens every frame. */
+.p-switch-knockout {
+  --p-hole-cx: calc(
+    var(--p-switch-knob-inset) + var(--p-switch-travel) * var(--p-gel) + var(--p-switch-knob-w) / 2
+  );
+  /* At rest the hole tucks 1px under the knob so no page shows around
+     it; lifted, it opens 1px past the glass. */
+  --p-hole-pad: calc(2px * var(--p-lens-lift) - 1px);
+  --p-hole-w: calc(var(--p-switch-knob-w) * var(--p-lens-scale-now) + var(--p-hole-pad));
+  --p-hole-h: calc(var(--p-switch-knob-h) * var(--p-lens-scale-now) + var(--p-hole-pad));
+  --p-hole-l: calc(var(--p-hole-cx) - var(--p-hole-w) / 2);
+
+  position: absolute;
+  inset: 0;
+  /* Rounded with clip-path, not border-radius: Chromium leaves the
+     antialiased radius edge unmasked, a hairline arc inside the glass. */
+  clip-path: inset(0 round 999px);
+  background: var(--p-switch-color);
+  transition: background 0.175s ease-out;
+
+  mask:
+    linear-gradient(#000 0 0) 0 0 / 100% 100% no-repeat,
+    radial-gradient(closest-side, #000 calc(100% - 0.5px), #0000) var(--p-hole-l) 50% / var(--p-hole-h) var(--p-hole-h) no-repeat,
+    radial-gradient(closest-side, #000 calc(100% - 0.5px), #0000) calc(var(--p-hole-l) + var(--p-hole-w) - var(--p-hole-h)) 50% / var(--p-hole-h) var(--p-hole-h) no-repeat,
+    linear-gradient(#000 0 0) calc(var(--p-hole-l) + var(--p-hole-h) / 2) 50% / calc(var(--p-hole-w) - var(--p-hole-h)) var(--p-hole-h) no-repeat;
+  mask-composite: exclude, add, add, add;
+}
+
+/* Clear lens (opt-in): no hole. The whole track stays painted; on
+   macOS it darkens by the pressed overlay as the glass lifts. */
+.p-switch-liquid[data-p-lens="clear"] .p-switch-knockout {
+  mask: none;
+}
+
+.p-switch-liquid:not(.p-switch-touch)[data-p-lens="clear"] .p-switch-knockout {
+  background:
+    linear-gradient(
+      color-mix(in srgb, var(--p-switch-press) calc(var(--p-lens-lift) * 100%), transparent),
+      color-mix(in srgb, var(--p-switch-press) calc(var(--p-lens-lift) * 100%), transparent)
+    ),
+    var(--p-switch-color);
+}
+
+/* Layers 2 and 3: the lens, riding the knob position. */
+.p-switch-liquid .p-lens {
+  --p-lens-knob: var(--p-control-knob);
+
+  z-index: 2;
+  top: 50%;
+  left: var(--p-switch-knob-inset);
+  width: var(--p-switch-knob-w);
+  height: var(--p-switch-knob-h);
+  translate: calc(var(--p-switch-travel) * var(--p-gel)) -50%;
+}
+
+.p-switch-liquid .p-lens-cover {
+  box-shadow: 0 0 1px rgba(0, 0, 0, 0.06);
+}
+
+/* The clear lens is sized, not scaled, so its hairline stays 0.5px.
+   It blends from the knob box to the lens box (see the size tokens) by
+   the lift. It blends from the off to the on position by --p-gel. */
+.p-switch-liquid .p-lens-clear {
+  --p-switch-knob-x: calc(var(--p-switch-knob-inset) + var(--p-switch-travel) * var(--p-gel));
+  --p-switch-lens-x: calc(
+    var(--p-switch-lens-x0) + (var(--p-switch-lens-x1) - var(--p-switch-lens-x0)) * var(--p-gel)
+  );
+
+  scale: none;
+  translate: 0 -50%;
+  left: calc(
+    var(--p-switch-knob-x) + (var(--p-switch-lens-x) - var(--p-switch-knob-x)) * var(--p-lens-lift)
+  );
+  width: calc(
+    var(--p-switch-knob-w) + (var(--p-switch-lens-w) - var(--p-switch-knob-w)) * var(--p-lens-lift)
+  );
+  height: calc(
+    var(--p-switch-knob-h) + (var(--p-switch-lens-h) - var(--p-switch-knob-h)) * var(--p-lens-lift)
+  );
+}
+
+.p-switch-liquid .p-lens-clear .p-lens-cover {
+  box-shadow: var(--p-switch-knob-shadow);
+}
+
+.p-switch-liquid .p-lens-clear .p-lens-rim {
+  filter: none;
+  background:
+    linear-gradient(
+      transparent calc(var(--p-switch-lens-rise) - 2px),
+      var(--p-switch-lens-band) calc(var(--p-switch-lens-rise) + 2px),
+      transparent calc(var(--p-switch-lens-rise) + 9px)
+    ),
+    var(--p-switch-lens-body);
+  box-shadow:
+    inset 0 0 0 0.5px var(--p-switch-lens-rim),
+    inset 0 2px 0.5px -0.5px var(--p-switch-lens-glint),
+    inset 0 -2px 0.5px -0.5px var(--p-switch-lens-glint);
+}
+
+/* The cast shadow: a 1px ring 1.5px inside the glass, blurred and
+   dropped 7px, as the native macOS 27 switch draws it. (The CSS-only morph above
+   approximates it with a box-shadow.) */
+.p-switch-liquid .p-lens-clear .p-lens-rim::before {
+  content: "";
+  position: absolute;
+  inset: 1.5px;
+  z-index: -1;
+  border: 1px solid var(--p-switch-lens-ring);
+  border-radius: inherit;
+  translate: 0 7px;
+  filter: blur(3px);
+}
+
+/* Refraction concentrates the track color at the glass edge, heavier on
+   the side the knob is leaving. */
+.p-switch-liquid .p-lens-edge {
+  box-shadow:
+    inset 0 0 calc(var(--p-lens-u) * 0.6) calc(var(--p-lens-u) * 0.8) var(--p-switch-solid),
+    inset calc(var(--p-gel) * var(--p-lens-u) * 1.6 - var(--p-lens-u) * 0.8) 0 calc(var(--p-lens-u) * 0.6) calc(var(--p-lens-u) * 0.8) var(--p-switch-solid);
+  transition: box-shadow 0.175s ease-out;
+}
+
+/* The track as seen through the glass: a band that thins while lifted. It is
+   magnified by the lens scale and shifted so its rounded end sits in
+   the glass on either side. */
+.p-switch-liquid .p-lens-track {
+  --p-u: calc(var(--p-switch-track-h) / 12);
+
+  width: var(--p-switch-track-w);
+  height: max(
+    calc(var(--p-switch-track-h) - 6 * var(--p-u)),
+    calc(var(--p-switch-track-h) - 6 * var(--p-u) * var(--p-lens-lift))
+  );
+  left: calc(6 * var(--p-u) * var(--p-gel) * (1 - var(--p-lens-lift)) + 3 * var(--p-u) * var(--p-lens-lift));
+  translate: calc(var(--p-gel) * (var(--p-switch-knob-w) - var(--p-switch-track-w) - 6 * var(--p-u))) -50%;
+  background: var(--p-switch-solid);
+  transition: background 0.175s ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .p-switch.p-switch-liquid > input + span {
+    transition: none;
+  }
+}
+
+.p-switch > input:focus-visible + span { box-shadow: 0 0 0 3.5px var(--p-focus-ring-color, #0088ff80); outline: 2px solid transparent; outline-offset: 2px; }
+/* ─── Liquid Glass lens ────────────────────────────────────────────── */
+/* The faux Liquid Glass lens that switch knobs and slider thumbs turn
+   into while they are held. There are two looks:
+
+   - Clear (.p-lens-clear, opt-in with data-p-lens="clear"): the flat
+     macOS 27 / iOS 27 look. A near-transparent body, a hairline rim and a
+     soft cast shadow. No magnification, goo, or color split; it uses the
+     rim and cover layers only. Its tokens live with the host control in
+     forms.css (switch) and sliders.css (slider).
+   - Liquid: the default, at every size. The refracting lens described
+     below, with the knockout. The clear lens is opt-in with
+     data-p-lens="clear" on the switch label or the slider input.
+     A slider's liquid lens keeps the knockout and the track copy but
+     does not magnify, goo, or split color: sliders.css restyles it as
+     clear glass with the fill color wrapped around the rim.
+
+   The liquid lens is adapted from Jhey Tompkins' liquid glass toggle.
+   Three layers do the work:
+
+   1. Baseline. The control paints its own track. Switches cut a hole
+      in it where the lens sits (the knockout) so the page shows through
+      the glass instead of the flat track.
+   2. Liquid. Inside the lens a copy of the track is redrawn, magnified
+      by the lens scale. It runs through an SVG goo filter (blur, then an
+      alpha threshold) so it melts into a colored rim at the glass edge.
+      That is the refraction.
+   3. Glass. A stack of inset and outer shadows with a sub-pixel
+      chromatic aberration filter draws the rim, specular edge, and the
+      shadow the glass casts.
+
+   It never samples the page behind it, so it runs in every modern
+   engine. The markup and the SVG filters are injected by
+   src/js/liquid_glass.js. The filters' blur and offset are absolute SVG
+   values, so the script builds a set per lens height and scales them
+   with it. #p-lens-goo and #p-lens-aberration are the 50px originals the
+   CSS falls back to. Without the script none of this CSS matches
+   anything.
+
+   Markup, as the script builds it:
+   <span class="p-lens">
+     <span class="p-lens-rim"></span>
+     <span class="p-lens-body">
+       <span class="p-lens-liquid">
+         <span class="p-lens-edge"></span>
+         <span class="p-lens-track"></span>
+       </span>
+     </span>
+     <span class="p-lens-cover"></span>
+   </span>
+
+   Hosts set --p-lens-h (resting lens height) and drive
+   --p-lens-lift from 0 (a plain knob) to 1 (fully lifted glass). */
+
+@property --p-lens-lift {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 0;
+}
+
+:root {
+  /* A lightly damped spring (ζ≈0.75): quick out, a ~3% overshoot, soft
+     settle. The slide, the scale, and the blur all share it. Hosts fall
+     back to the cubic-bezier where linear() is unsupported. */
+  --p-lens-spring: linear(
+    0 0%, 0.133 5%, 0.386 10%, 0.631 15%, 0.816 20%, 0.933 25%,
+    0.997 30%, 1.023 35%, 1.028 40%, 1.024 45%, 1.017 50%, 1.01 55%,
+    1.005 60%, 1.002 65%, 1 70%, 1 100%
+  );
+  --p-lens-duration: 0.35s;
+}
+
+.p-lens {
+  /* Every magic number below is written for a 50px lens, in tenths of
+     the lens height (u) or fiftieths (px). The same glass then reads
+     right on a 12px knob and a 28px thumb. */
+  --p-lens-u: calc(var(--p-lens-h, 50px) / 10);
+  --p-lens-px: calc(var(--p-lens-h, 50px) / 50);
+  --p-lens-scale: 1.65;
+
+  position: absolute;
+  border-radius: 999px;
+  pointer-events: none;
+  scale: calc(1 + (var(--p-lens-scale) - 1) * var(--p-lens-lift));
+}
+
+.p-lens-rim,
+.p-lens-body,
+.p-lens-liquid,
+.p-lens-edge,
+.p-lens-cover {
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  pointer-events: none;
+}
+
+/* The glass itself: edge highlights, the inner shade that sells the
+   curvature, and the shadow cast below. Split into color channels a
+   fraction of a pixel apart by #p-lens-aberration. */
+.p-lens-rim {
+  z-index: 2;
+  opacity: var(--p-lens-lift);
+  filter: url(#p-lens-aberration);
+  box-shadow:
+    inset var(--p-lens-px) calc(var(--p-lens-px) * -1) calc(var(--p-lens-px) * 2) hsl(0 0% 100% / 0.5),
+    inset 0 calc(var(--p-lens-px) * -1) calc(var(--p-lens-px) * 2) hsl(0 0% 100% / 0.5),
+    inset calc(var(--p-lens-px) * -1) calc(var(--p-lens-px) * -1) calc(var(--p-lens-px) * 2) hsl(0 0% 100% / 0.5),
+    inset var(--p-lens-px) var(--p-lens-px) calc(var(--p-lens-px) * 2) hsl(0 0% 30% / 0.5),
+    inset calc(var(--p-lens-px) * -8) calc(var(--p-lens-px) * 4) calc(var(--p-lens-px) * 10) calc(var(--p-lens-px) * -6) hsl(0 0% 30% / 0.25),
+    inset calc(var(--p-lens-px) * -1) var(--p-lens-px) calc(var(--p-lens-px) * 6) hsl(0 0% 30% / 0.25),
+    calc(var(--p-lens-px) * -1) calc(var(--p-lens-px) * -1) calc(var(--p-lens-px) * 8) hsl(0 0% 60% / 0.15),
+    var(--p-lens-px) var(--p-lens-px) calc(var(--p-lens-px) * 2) hsl(0 0% 30% / 0.15),
+    calc(var(--p-lens-px) * 2) calc(var(--p-lens-px) * 2) calc(var(--p-lens-px) * 6) hsl(0 0% 30% / 0.15),
+    inset calc(var(--p-lens-px) * -2) calc(var(--p-lens-px) * -1) calc(var(--p-lens-px) * 2) hsl(0 0% 100% / 0.25),
+    calc(var(--p-lens-px) * 3) calc(var(--p-lens-px) * 6) calc(var(--p-lens-px) * 16) calc(var(--p-lens-px) * -6) hsl(0 0% 30% / 0.5);
+}
+
+/* Out of focus while the knob is at rest, sharpening as it lifts. */
+.p-lens-body {
+  clip-path: inset(0 round 999px);
+  filter: blur(max(0px, calc(var(--p-lens-u) * 1.2 * (1 - var(--p-lens-lift)))));
+}
+
+.p-lens-liquid {
+  overflow: hidden;
+  filter: url(#p-lens-goo);
+}
+
+.p-lens-track {
+  position: absolute;
+  top: 50%;
+  border-radius: 999px;
+}
+
+/* The resting knob. Fades out as the glass lifts. */
+.p-lens-cover {
+  background: var(--p-lens-knob, #ffffff);
+  opacity: calc(1 - var(--p-lens-lift));
+}
+
+@media (prefers-reduced-motion: reduce) { .p-switch > input + span, .p-switch > input:checked + span, .p-switch > input + span::after, .p-switch > input:checked + span::after { transition: none; } }
