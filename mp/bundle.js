@@ -1128,13 +1128,16 @@ Page({
       this.enterLiurenForm()
       return
     }
-    this.setData({
+    const next = {
       activeTab: tab,
       resultMode: false,
       liurenMode: false,
       currentResult: null,
       liurenResult: null,
-    })
+    }
+    // 点往昔页签总是从“全部”看起；从一条记录返回（goBack）时保留原来的筛选
+    if (tab === 'history' && !e.currentTarget.dataset.keepFilter) next.historyFilter = 'all'
+    this.setData(next)
     if (tab === 'history') this.ensureHistoryLoaded()
     this._scrollToTop()
   },
@@ -1142,7 +1145,7 @@ Page({
   // 结果页左上角的返回：回到来的地方
   goBack() {
     if (this.data.activeTab === 'history') {
-      this.switchTab({ currentTarget: { dataset: { tab: 'history' } } })
+      this.switchTab({ currentTarget: { dataset: { tab: 'history', keepFilter: true } } })
       return
     }
     if (this.data.liurenMode) {
