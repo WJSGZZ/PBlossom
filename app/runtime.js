@@ -207,13 +207,20 @@
   const darkQuery = window.matchMedia('(prefers-color-scheme: dark)')
   const themeListeners = new Map()
 
-  // ── 深色模式：跟随系统 / 浅色 / 深色（网页专有，记在这台设备的浏览器里） ──
+  // ── 深色模式：跟随系统 / 浅色 / 深色（选项在小程序的“外观”里，选择与小程序存在同一个键下） ──
   // 系统的深浅色由浏览器的 prefers-color-scheme 告诉网页：macOS、iOS、安卓，以及 Windows 10/11
   // （设置 → 个性化 → 颜色 → 应用模式）上的 Chrome、Edge、Firefox 都支持，系统切换时网页跟着变。
-  // 手动选浅色或深色时，把样式表里所有“系统是深色”的条件改成恒真或恒假；选回跟随系统就还原
-  const APPEARANCE_KEY = STORE_PREFIX + 'appearance'
+  // 小程序的颜色由 .app.dark 切换；网页自己的样式（玻璃、弹层）写在“系统是深色”的媒体查询里，
+  // 手动选浅色或深色时，把这些条件改成恒真或恒假；选回跟随系统就还原
+  const APPEARANCE_KEY = STORE_PREFIX + 'pblossom_appearance'
   let appearance = 'system'
-  try { appearance = localStorage.getItem(APPEARANCE_KEY) || 'system' } catch (e) {}
+  try {
+    // 旧网页版存在 pblossom:appearance（不是 JSON），搬到小程序的键下
+    const old = localStorage.getItem(STORE_PREFIX + 'appearance')
+    if (old) { localStorage.setItem(APPEARANCE_KEY, JSON.stringify(old)); localStorage.removeItem(STORE_PREFIX + 'appearance') }
+    appearance = JSON.parse(localStorage.getItem(APPEARANCE_KEY) || '"system"')
+  } catch (e) {}
+  if (!['system', 'light', 'dark'].includes(appearance)) appearance = 'system'
   const effectiveDark = () => appearance === 'dark' || (appearance === 'system' && darkQuery.matches)
   const themeOf = () => (effectiveDark() ? 'dark' : 'light')
   const DARK_COND = /\(\s*prefers-color-scheme:\s*dark\s*\)/
@@ -238,7 +245,6 @@
   }
   function setAppearance(mode) {
     appearance = mode
-    try { localStorage.setItem(APPEARANCE_KEY, mode) } catch (e) {}
     applyAppearance()
     themeListeners.forEach((fn) => fn(true))
   }
@@ -365,7 +371,7 @@
     const app = createApp({
       setup() { return state },
       // 侧边栏放进 .app 里面，才能用到主题色等变量
-      template: `<div class="mp-root">${window.__mpView.replace(APPEARANCE_ANCHOR, APPEARANCE_ANCHOR + APPEARANCE_ROW).replace('长按一条记录可删除', '<span class="hint-touch">长按</span><span class="hint-mouse">右键点按</span>一条记录可删除').replace(/<\/div>$/, SIDEBAR + '</div>')}</div>`,
+      template: `<div class="mp-root">${window.__mpView.replace('长按一条记录可删除', '<span class="hint-touch">长按</span><span class="hint-mouse">右键点按</span>一条记录可删除').replace(/<\/div>$/, SIDEBAR + '</div>')}</div>`,
     })
     app.config.globalProperties.u = u
     app.config.globalProperties.$mp = {
@@ -418,30 +424,13 @@
     // 小程序打不开外部网页，只能复制链接；网页版点“关于”卡片直接在新标签页打开 GitHub 仓库
     page.openGithubRepo = () => window.open('https://github.com/WJSGZZ/PBlossom', '_blank', 'noopener')
 
-    // 外观里的“深色模式”（网页专有，见上面的 setAppearance）
-    page.setData({ webAppearance: appearance })
+    // 外观里的“深色模式”：网页先把自己样式里的深色条件改好（小程序判断深浅时要问它），
+    // 小程序再存好选择、换上 .app.dark
+    const selectAppearance = page.selectAppearance
     page.selectAppearance = (e) => {
-      const mode = e.currentTarget.dataset.id
-      if (mode === appearance) return
-      page.setData({ webAppearance: mode })
-      setAppearance(mode)
+      setAppearance(e.currentTarget.dataset.id)
+      selectAppearance.call(page, e)
     }
-
-    // 翻月份时给日历网格标上方向（往后翻 / 往前翻），web.css 按方向让日期滑入
-    let shownMonth = null
-    new MutationObserver(() => {
-      const title = document.querySelector('.month-title')
-      const grid = document.querySelector('.date-grid')
-      const m = title && title.textContent.match(/(\d+)\s*年\s*(\d+)\s*月/)
-      if (!m || !grid) { shownMonth = null; return }
-      const month = +m[1] * 12 + +m[2]
-      if (shownMonth !== null && month !== shownMonth) {
-        grid.classList.remove('web-month-fwd', 'web-month-back')
-        void grid.offsetWidth // 连续翻页时让动画重新开始
-        grid.classList.add(month > shownMonth ? 'web-month-fwd' : 'web-month-back')
-      }
-      shownMonth = month
-    }).observe(document.getElementById('app'), { childList: true, subtree: true, characterData: true })
 
     // ── 从文件导入卦例（网页专有）：文件内容与“复制文字”导出的文本相同（旧网页版导出的 .txt 也是这种格式），
     //    解析直接复用小程序的“从剪贴板导入”。可以在往昔的“⋯”菜单里选文件，也可以把文件拖进网页 ──
@@ -511,9 +500,6 @@
   }
 
   // 电脑上的侧边栏：只有 logo 和图标，帮助放在最下面；手机上用小程序那条底部页签栏
-  // 外观卡片里“五行标记”下面加一行“深色模式”（选项见 selectAppearance）
-  const APPEARANCE_ANCHOR = `'selectElementStyle', $event, { id: item.id }, '')">{{item.name}}</div></div>`
-  const APPEARANCE_ROW = `<div class="setting-label">深色模式</div><div class="segmented seg-3 seg-compact"><div :class="['seg-thumb', 'seg-thumb-of3', webAppearance === 'light' ? 'seg-thumb-2' : webAppearance === 'dark' ? 'seg-thumb-3' : '']"></div><div v-for="item in [{ id: 'system', name: '跟随系统' }, { id: 'light', name: '浅色' }, { id: 'dark', name: '深色' }]" :key="item.id" :class="['seg-item', webAppearance === item.id ? 'seg-item-on' : '']" @click="$mp.ev('selectAppearance', $event, { id: item.id }, '')">{{item.name}}</div></div>`
   const SIDEBAR = `
     <nav class="web-sidebar" aria-label="页面">
       <img class="web-sidebar-logo" src="assets/logo.svg" alt="PBlossom">

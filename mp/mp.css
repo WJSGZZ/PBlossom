@@ -19,19 +19,12 @@
   --hairline: #E3E1DB;
   --placeholder: rgba(124, 123, 118, 0.5);
   --on-accent: #FFFFFF;
-  --glass: rgba(255, 255, 255, 0.56);
-  --glass-strong: rgba(255, 255, 255, 0.74);
-  --glass-edge: rgba(255, 255, 255, 0.8);
-  --lg-tint-top: rgba(255, 255, 255, 0.3);
-  --lg-tint-bottom: rgba(255, 255, 255, 0.14);
-  --lg-edge: rgba(255, 255, 255, 0.6);
-  --lg-rim: rgba(255, 255, 255, 0.95);
-  --lg-rim-low: rgba(255, 255, 255, 0.45);
-  --lg-depth: rgba(18, 18, 17, 0.06);
-  --lg-sheen: rgba(255, 255, 255, 0.5);
-  --shadow: rgba(18, 18, 17, 0.06);
+  /* 玻璃（与网页相同）：从左上到右下由亮到淡的一层白，背后轻模糊，一层淡投影，不画高光边 */
+  --lg-tint-a: rgba(255, 255, 255, 0.34);
+  --lg-tint-b: rgba(255, 255, 255, 0.1);
+  --lg-drop: rgba(0, 0, 0, 0.07);
+  --lg-lift: rgba(10, 15, 40, 0.12);
   --fill: rgba(118, 118, 128, 0.12);
-  --thumb: #FFFFFF;
   --gold: #B3903F;
   --wood: #5E8C6A;
   --water: #4E7A9B;
@@ -54,33 +47,24 @@
   -webkit-font-smoothing: antialiased;
 }
 
-@media (prefers-color-scheme: dark) {
-  .app {
-    --paper: #0E0E0D;
-    --ink: #F2F1EE;
-    --subtle: #8D8C87;
-    --hairline: #2B2B29;
-    --placeholder: rgba(141, 140, 135, 0.5);
-    --on-accent: #0E0E0D;
-    --glass: rgba(34, 34, 32, 0.56);
-    --glass-strong: rgba(40, 40, 38, 0.78);
-    --glass-edge: rgba(255, 255, 255, 0.07);
-    --lg-tint-top: rgba(70, 70, 66, 0.34);
-    --lg-tint-bottom: rgba(24, 24, 22, 0.36);
-    --lg-edge: rgba(255, 255, 255, 0.1);
-    --lg-rim: rgba(255, 255, 255, 0.22);
-    --lg-rim-low: rgba(255, 255, 255, 0.06);
-    --lg-depth: rgba(0, 0, 0, 0.35);
-    --lg-sheen: rgba(255, 255, 255, 0.08);
-    --shadow: rgba(0, 0, 0, 0.3);
-    --fill: rgba(118, 118, 128, 0.24);
-    --thumb: rgba(99, 99, 102, 0.9);
-    --gold: #D0B06B;
-    --wood: #8DBB99;
-    --water: #82AACB;
-    --fire: #E3806A;
-    --earth: #B59C7C;
-  }
+/* 深色：由页面按“深色模式”的选择（跟随系统 / 浅色 / 深色）加上 .dark */
+.app.dark {
+  --paper: #0E0E0D;
+  --ink: #F2F1EE;
+  --subtle: #8D8C87;
+  --hairline: #2B2B29;
+  --placeholder: rgba(141, 140, 135, 0.5);
+  --on-accent: #0E0E0D;
+  --lg-tint-a: rgba(255, 255, 255, 0.1);
+  --lg-tint-b: rgba(255, 255, 255, 0.02);
+  --lg-drop: rgba(0, 0, 0, 0.35);
+  --lg-lift: rgba(0, 0, 0, 0.4);
+  --fill: rgba(118, 118, 128, 0.24);
+  --gold: #D0B06B;
+  --wood: #8DBB99;
+  --water: #82AACB;
+  --fire: #E3806A;
+  --earth: #B59C7C;
 }
 
 /* ── 游光背景：几团柔光缓慢游走、彼此交融 ── */
@@ -264,11 +248,10 @@
 .panel {
   position: relative;
   border-radius: calc(56 * var(--rpx));
-  background: var(--glass);
-  border: calc(1 * var(--rpx)) solid var(--glass-edge);
-  box-shadow: 0 calc(16 * var(--rpx)) calc(48 * var(--rpx)) var(--shadow);
-  -webkit-backdrop-filter: blur(28px) saturate(170%);
-  backdrop-filter: blur(28px) saturate(170%);
+  background: linear-gradient(135deg, var(--lg-tint-a), var(--lg-tint-b));
+  -webkit-backdrop-filter: blur(10px) saturate(140%);
+  backdrop-filter: blur(10px) saturate(140%);
+  box-shadow: 0 calc(8 * var(--rpx)) calc(28 * var(--rpx)) var(--lg-drop), 0 calc(2 * var(--rpx)) calc(6 * var(--rpx)) rgba(0, 0, 0, 0.04);
   box-sizing: border-box;
 }
 
@@ -293,11 +276,11 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--glass-strong);
-  border: calc(1 * var(--rpx)) solid var(--glass-edge);
-  box-shadow: 0 calc(8 * var(--rpx)) calc(24 * var(--rpx)) var(--shadow);
-  -webkit-backdrop-filter: blur(20px);
-  backdrop-filter: blur(20px);
+  background: linear-gradient(135deg, var(--lg-tint-a), var(--lg-tint-b));
+  -webkit-backdrop-filter: blur(10px) saturate(140%);
+  backdrop-filter: blur(10px) saturate(140%);
+  box-shadow: 0 calc(28 * var(--rpx)) calc(72 * var(--rpx)) var(--lg-lift), 0 calc(6 * var(--rpx)) calc(20 * var(--rpx)) var(--lg-drop);
+  transition: transform 0.22s var(--ease), opacity 0.22s ease;
 }
 
 /* 圆按钮里的图标跟随主题色（玄墨主题下仍是墨色） */
@@ -466,7 +449,7 @@
   transition: height 0.4s var(--ease), opacity 0.3s ease 0.05s;
 }
 
-/* ── 分段控件（系统样式：灰色底槽 + 白色滑块） ── */
+/* ── 分段控件：玻璃底槽 + 一层淡淡主题色的选中块（与页签栏一致） ── */
 
 .segmented {
   position: relative;
@@ -474,7 +457,10 @@
   height: calc(80 * var(--rpx));
   padding: calc(6 * var(--rpx));
   border-radius: calc(999 * var(--rpx));
-  background: var(--fill);
+  background: linear-gradient(135deg, var(--lg-tint-a), var(--lg-tint-b));
+  -webkit-backdrop-filter: blur(10px) saturate(140%);
+  backdrop-filter: blur(10px) saturate(140%);
+  box-shadow: 0 calc(8 * var(--rpx)) calc(28 * var(--rpx)) var(--lg-drop), 0 calc(2 * var(--rpx)) calc(6 * var(--rpx)) rgba(0, 0, 0, 0.04);
   box-sizing: border-box;
 }
 
@@ -490,8 +476,7 @@
   left: calc(6 * var(--rpx));
   width: calc(50% - calc(6 * var(--rpx)));
   border-radius: calc(999 * var(--rpx));
-  background: var(--thumb);
-  box-shadow: 0 calc(6 * var(--rpx)) calc(16 * var(--rpx)) rgba(0, 0, 0, 0.08), 0 calc(1 * var(--rpx)) calc(2 * var(--rpx)) rgba(0, 0, 0, 0.06);
+  background: rgba(var(--accent-rgb), 0.12);
   transition: transform 0.38s var(--ease);
 }
 
@@ -517,7 +502,7 @@
   font-weight: 600;
 }
 
-/* ── 主按钮：主色胶囊，宋体大字，字距放开 ── */
+/* ── 主按钮：主色胶囊，宋体大字，字距放开；不画高光边，只有一层淡淡的投影 ── */
 
 .primary-btn {
   height: calc(100 * var(--rpx));
@@ -527,12 +512,12 @@
   align-items: center;
   justify-content: center;
   gap: calc(18 * var(--rpx));
-  background: var(--accent);
+  background: rgba(var(--accent-rgb), 0.96);
   color: var(--on-accent);
   font-size: calc(44 * var(--rpx));
   line-height: 1;
   font-weight: 600;
-  box-shadow: 0 calc(16 * var(--rpx)) calc(36 * var(--rpx)) rgba(var(--accent-rgb), 0.22);
+  box-shadow: 0 calc(16 * var(--rpx)) calc(40 * var(--rpx)) rgba(var(--accent-rgb), 0.22);
   transition: transform 0.2s var(--ease), opacity 0.2s ease;
 }
 
@@ -541,10 +526,15 @@
   opacity: 0.88;
 }
 
+.app.dark .primary-btn { box-shadow: 0 calc(16 * var(--rpx)) calc(40 * var(--rpx)) rgba(0, 0, 0, 0.35); }
+
+/* 不可点时是一块普通的玻璃，没有投影 */
 .primary-btn-off {
-  background: var(--glass-strong);
+  background: linear-gradient(135deg, var(--lg-tint-a), var(--lg-tint-b));
+  -webkit-backdrop-filter: blur(10px) saturate(140%);
+  backdrop-filter: blur(10px) saturate(140%);
   color: var(--subtle);
-  box-shadow: 0 calc(8 * var(--rpx)) calc(24 * var(--rpx)) var(--shadow);
+  box-shadow: none;
 }
 
 .primary-btn-launch {
@@ -823,11 +813,10 @@
   padding: calc(26 * var(--rpx)) calc(28 * var(--rpx));
   border-radius: calc(48 * var(--rpx));
   box-sizing: border-box;
-  background: var(--glass);
-  border: calc(1 * var(--rpx)) solid var(--glass-edge);
-  box-shadow: 0 calc(12 * var(--rpx)) calc(36 * var(--rpx)) var(--shadow);
-  -webkit-backdrop-filter: blur(24px) saturate(170%);
-  backdrop-filter: blur(24px) saturate(170%);
+  background: linear-gradient(135deg, var(--lg-tint-a), var(--lg-tint-b));
+  -webkit-backdrop-filter: blur(10px) saturate(140%);
+  backdrop-filter: blur(10px) saturate(140%);
+  box-shadow: 0 calc(8 * var(--rpx)) calc(28 * var(--rpx)) var(--lg-drop), 0 calc(2 * var(--rpx)) calc(6 * var(--rpx)) rgba(0, 0, 0, 0.04);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -835,7 +824,7 @@
 }
 
 .tile-active {
-  border: calc(3 * var(--rpx)) solid var(--accent);
+  box-shadow: inset 0 0 0 calc(3 * var(--rpx)) var(--accent), 0 calc(12 * var(--rpx)) calc(40 * var(--rpx)) var(--lg-drop);
   transform: scale(1.025);
 }
 
@@ -1379,6 +1368,16 @@
 
 /* 节气名像走马灯：往后走时新名字从右侧滑入，往前走则从左侧滑入。
    a / b 两个同样的动画轮流使用，连续换节气时动画才会重新播放 */
+/* 翻月份：日期按方向滑入，往后翻从右边进来、往前翻从左边进来（与节气名的方向一致）；a/b 两份交替，连续翻也能重播 */
+.month-fwd-a { animation: month-from-right 0.36s var(--ease) both; }
+.month-fwd-b { animation: month-from-right-b 0.36s var(--ease) both; }
+.month-back-a { animation: month-from-left 0.36s var(--ease) both; }
+.month-back-b { animation: month-from-left-b 0.36s var(--ease) both; }
+@keyframes month-from-right { from { opacity: 0; transform: translateX(calc(56 * var(--rpx))); } to { opacity: 1; transform: none; } }
+@keyframes month-from-right-b { from { opacity: 0; transform: translateX(calc(56 * var(--rpx))); } to { opacity: 1; transform: none; } }
+@keyframes month-from-left { from { opacity: 0; transform: translateX(calc(-56 * var(--rpx))); } to { opacity: 1; transform: none; } }
+@keyframes month-from-left-b { from { opacity: 0; transform: translateX(calc(-56 * var(--rpx))); } to { opacity: 1; transform: none; } }
+
 .term-in-fwd-a .term, .term-in-fwd-b .term { animation: term-from-right 0.45s var(--ease) both; }
 .term-in-fwd-b .term { animation-name: term-from-right-b; }
 .term-in-back-a .term, .term-in-back-b .term { animation: term-from-left 0.45s var(--ease) both; }
@@ -1439,6 +1438,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: opacity 0.22s ease;
 }
 
 .nav-btn .icon {
@@ -1787,31 +1787,11 @@
   box-sizing: border-box;
   display: flex;
   border-radius: calc(999 * var(--rpx));
-  /* 液态玻璃（参考 shuding/liquid-glass，去掉小程序做不了的 SVG 折射）：
-     几乎不着色、只轻微模糊，背后的内容清楚透过来，再略提亮度、对比度和饱和度，像一块厚玻璃；
-     上沿一道镜面高光、下沿一道反光，底部一圈内阴影做出厚度；::before 是左上方的一片反光 */
-  background: linear-gradient(180deg, var(--lg-tint-top), var(--lg-tint-bottom));
-  border: calc(1 * var(--rpx)) solid var(--lg-edge);
-  box-shadow:
-    inset 0 calc(2 * var(--rpx)) calc(1 * var(--rpx)) var(--lg-rim),
-    inset 0 calc(-2 * var(--rpx)) calc(1 * var(--rpx)) var(--lg-rim-low),
-    inset 0 calc(-20 * var(--rpx)) calc(50 * var(--rpx)) calc(-10 * var(--rpx)) var(--lg-depth),
-    0 calc(8 * var(--rpx)) calc(16 * var(--rpx)) rgba(0, 0, 0, 0.1),
-    0 calc(24 * var(--rpx)) calc(60 * var(--rpx)) rgba(0, 0, 0, 0.08);
-  -webkit-backdrop-filter: blur(6px) saturate(160%) brightness(1.05) contrast(1.1);
-  backdrop-filter: blur(6px) saturate(160%) brightness(1.05) contrast(1.1);
-}
-
-.tabbar::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  border-radius: inherit;
-  background: radial-gradient(90% 120% at 20% -40%, var(--lg-sheen), rgba(255, 255, 255, 0) 60%);
-  pointer-events: none;
+  /* 与卡片同一种玻璃，浮在内容上，投影更深 */
+  background: linear-gradient(135deg, var(--lg-tint-a), var(--lg-tint-b));
+  -webkit-backdrop-filter: blur(10px) saturate(140%);
+  backdrop-filter: blur(10px) saturate(140%);
+  box-shadow: 0 calc(28 * var(--rpx)) calc(72 * var(--rpx)) var(--lg-lift), 0 calc(6 * var(--rpx)) calc(20 * var(--rpx)) var(--lg-drop);
 }
 
 /* 选中块：一层淡淡的主题色（玄墨主题下仍是浅灰） */
@@ -1878,7 +1858,8 @@
   .reveal,
   .swap-in,
   .terms .term,
-  .pillar-body {
+  .pillar-body,
+  .date-grid {
     animation: none !important;
   }
 }

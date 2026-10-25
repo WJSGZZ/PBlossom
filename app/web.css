@@ -120,26 +120,9 @@ input, textarea { -webkit-user-select: text; user-select: text; }
 .tabbar, .web-sidebar, .circle-btn, .web-popover, .web-dialog, .web-toast-box, .web-image-actions, .web-drop-box {
   box-shadow: 0 14px 36px var(--lg-lift), 0 3px 10px var(--lg-drop);
 }
-/* 小程序底栏自带的反光层不再需要 */
-.tabbar::before { display: none; }
-.tile-active { box-shadow: inset 0 0 0 1.5px var(--accent), 0 6px 20px var(--lg-drop) !important; }
-
-/* 分段控件的选中块：一层淡淡的主题色，与页签栏一致 */
-.seg-thumb { background: rgba(var(--accent-rgb), 0.12); box-shadow: none; }
-
-/* 主按钮：主题色的实心胶囊，与玻璃一样不画高光边，只有一层淡淡的投影；
-   不可点时是一块普通的玻璃，没有投影 */
-.primary-btn {
-  position: relative;
-  background: rgba(var(--accent-rgb), 0.96);
-  box-shadow: 0 8px 20px rgba(var(--accent-rgb), 0.22);
-}
-@media (prefers-color-scheme: dark) { .primary-btn { box-shadow: 0 8px 20px rgba(0, 0, 0, 0.35); } }
-.primary-btn-off {
-  background: linear-gradient(135deg, var(--lg-tint-a), var(--lg-tint-b));
-  -webkit-backdrop-filter: blur(10px) saturate(140%); backdrop-filter: blur(10px) saturate(140%);
-  box-shadow: none;
-}
+/* 主按钮、分段控件、数字格选中的样子与小程序相同（写在 index.wxss 里） */
+/* 上面的玻璃规则后加载，会盖掉小程序里数字格选中的描边，这里补回 */
+.tile.tile-active { box-shadow: inset 0 0 0 1.5px var(--accent), 0 6px 20px var(--lg-drop); }
 
 /* ── 侧边栏：手机上不显示 ── */
 .web-sidebar { display: none; }
@@ -388,11 +371,7 @@ input, textarea { -webkit-user-select: text; user-select: text; }
 .result-bar { animation: web-fade-in 0.3s ease both; }
 @keyframes web-page-in { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
 @keyframes web-fade-in { from { opacity: 0; } to { opacity: 1; } }
-/* 翻月份：日期按方向滑入，往后翻从右边进来、往前翻从左边进来（与节气名的方向一致）；方向由 runtime.js 标上 */
-.date-grid.web-month-fwd { animation: web-month-fwd 0.36s var(--ease) both; }
-.date-grid.web-month-back { animation: web-month-back 0.36s var(--ease) both; }
-@keyframes web-month-fwd { from { opacity: 0; transform: translateX(28px); } to { opacity: 1; transform: none; } }
-@keyframes web-month-back { from { opacity: 0; transform: translateX(-28px); } to { opacity: 1; transform: none; } }
+/* 翻月份的滑入写在小程序里（.month-fwd / .month-back） */
 /* 按下、松开、悬停都缓一下，而不是一下子跳过去 */
 .circle-btn, .nav-btn, .card.about, .prompt-copy, .web-image-btn, .web-dialog-btn {
   transition: transform 0.22s var(--ease), opacity 0.22s ease, background-color 0.25s ease;
@@ -408,5 +387,5 @@ input, textarea { -webkit-user-select: text; user-select: text; }
   .date-cell:hover .date-num:not(.date-selected) { background: rgba(var(--accent-rgb), 0.08); }
 }
 @media (prefers-reduced-motion: reduce) {
-  .content-scroll > .page, .history-screen, .result-bar, .date-grid.web-month-fwd, .date-grid.web-month-back { animation: none !important; }
+  .content-scroll > .page, .history-screen, .result-bar { animation: none !important; }
 }
