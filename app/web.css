@@ -42,6 +42,9 @@ input, textarea { -webkit-user-select: text; user-select: text; }
 }
 .mp-root *, .mp-root *::before, .mp-root *::after { box-sizing: border-box; }
 .app { min-height: 100%; }
+/* 小程序的滚动区高 100vh。手机浏览器里 100vh 是工具栏收起后的最大高度，比实际看得到的高，
+   最下面一截会藏在浏览器的地址栏、工具栏后面拉不出来；改用实际可见高度（dvh），老浏览器仍用 vh */
+.content-scroll { height: 100vh; height: 100dvh; }
 
 /* 小程序组件的网页对应物 */
 .content-scroll, .history-scroll { overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none; }
@@ -237,8 +240,8 @@ input, textarea { -webkit-user-select: text; user-select: text; }
 }
 .web-popover-item:hover, .web-popover-item:focus-visible { background: rgba(var(--accent-rgb, 118, 118, 128), 0.12); }
 .web-mask-image { background: rgba(0, 0, 0, 0.5); }
-.web-image { display: flex; flex-direction: column; align-items: center; gap: 16px; max-width: calc(100vw - 32px); max-height: calc(100vh - 32px); }
-.web-image img { max-width: min(480px, calc(100vw - 32px)); max-height: calc(100vh - 120px); border-radius: 18px; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35); }
+.web-image { display: flex; flex-direction: column; align-items: center; gap: 16px; max-width: calc(100vw - 32px); max-height: calc(100dvh - 32px); }
+.web-image img { max-width: min(480px, calc(100vw - 32px)); max-height: calc(100dvh - 120px); border-radius: 18px; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35); }
 /* 看图下面的操作：一条玻璃胶囊，两个按钮中间一道细线；压在暗色遮罩上，着色比其他浮层更实 */
 .web-image-actions { display: flex; align-items: center; padding: 4px; border-radius: 999px; }
 .web-image-actions { --float-a: rgba(255, 255, 255, 0.86); --float-b: rgba(255, 255, 255, 0.74); }
