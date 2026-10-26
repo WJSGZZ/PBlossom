@@ -74,7 +74,13 @@
       "meihua",
       "liuren",
       "calendar"
-    ]
+    ],
+    "footer": {
+      "layout": "centered",
+      "miniProgramCode": "assets/miniprogram-code.jpg",
+      "lightBackground": "multiply",
+      "darkBackground": "transparent with light code strokes"
+    }
   },
   "verification": {
     "capturedOn": "2026-10-25",

@@ -60,6 +60,7 @@ const fontJs = fs.readFileSync(path.join(MP, 'assets/fonts/PBlossomSerif.js'), '
 const fontB64 = fontJs.match(/'([A-Za-z0-9+/=]+)'/)[1]
 fs.writeFileSync(path.join(WEB, 'assets/fonts/PBlossomSerif.woff'), Buffer.from(fontB64, 'base64'))
 fs.copyFileSync(path.join(MP, 'logo.svg'), path.join(WEB, 'assets/logo.svg'))
+fs.copyFileSync(path.join(MP, 'assets/miniprogram-code.jpg'), path.join(WEB, 'assets/miniprogram-code.jpg'))
 
 // ── WXSS → CSS ──────────────────────────────────────────────────────────────
 

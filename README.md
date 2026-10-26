@@ -104,7 +104,7 @@ PBlossom 是一款将传统易理逻辑与现代数字化技术相结合的探�
 </div>
 
 ### 导出图片
-结果和时令都能一键导出成图片，直接发给朋友或交给 AI 解读；备注、问事也会一起排进图里。
+结果和时令都能一键导出成图片，直接发给朋友或交给 AI 解读；备注、问事也会一起排进图里，底部附小程序码。
 
 <div align="center">
 <table>
@@ -178,4 +178,4 @@ Logo 实际上是一个珊瑚橙
 
 **PBlossom 这个名字和 Logo 不在许可范围内**：`assets/logo.svg` 及其衍生的图形、配色组合，未经同意不得用于其他项目、产品或宣传，也不得用来让人以为某个版本出自本项目。基于本项目修改发布的版本，请换用自己的名字和标志。
 
-内嵌字体取自思源宋体（Noto Serif SC），按 [SIL Open Font License 1.1](assets/fonts/OFL.txt) 分发；Vue 3 为 MIT 许可；网页开关使用 [Puppertino](https://github.com/codedgar/Puppertino)，按 [MIT 许可](vendor/puppertino/LICENSE) 分发，来源与适配见 [组件说明](vendor/puppertino/README.md)。
+内嵌字体取自思源宋体（Noto Serif SC），按 [SIL Open Font License 1.1](assets/fonts/OFL.txt) 分发；Vue 3 为 MIT 许可；网页开关使用原生 checkbox 与 CSS 动效。仓库中保留的 [Puppertino](https://github.com/codedgar/Puppertino) 参考代码按 [MIT 许可](vendor/puppertino/LICENSE) 分发，见 [组件说明](vendor/puppertino/README.md)。

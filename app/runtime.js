@@ -231,7 +231,10 @@
 
   // scroll-view 的节点有 scrollTo；画布节点就是 canvas 元素本身
   function nodeOf(el) {
-    if (el.tagName === 'CANVAS') return el
+    if (el.tagName === 'CANVAS') {
+      el.createImage = () => new Image()
+      return el
+    }
     return {
       scrollTo({ top, animated }) { cancelFaqScroll(); el.scrollTo({ top, behavior: animated ? 'smooth' : 'auto' }) },
     }
@@ -327,6 +330,12 @@
     previewImage(opts) { imageViewer(opts.urls[0]); ok(opts, {}) },
     nextTick(cb) { nextTick(cb) },
     createSelectorQuery: selectorQuery,
+    createOffscreenCanvas({ width, height }) {
+      const canvas = document.createElement('canvas')
+      canvas.width = width
+      canvas.height = height
+      return canvas
+    },
     canvasToTempFilePath(opts) {
       opts.canvas.toBlob((blob) => blob ? ok(opts, { tempFilePath: URL.createObjectURL(blob) }) : fail(opts, {}), 'image/png')
     },
@@ -399,7 +408,7 @@
     const raw = JSON.parse(JSON.stringify(def.data))
     const state = reactive(raw)
 
-    const page = {}
+    const page = { _shareCodePath: new URL('assets/miniprogram-code.jpg', document.baseURI).href }
     Object.keys(def).forEach((k) => { if (k !== 'data') page[k] = typeof def[k] === 'function' ? def[k].bind(page) : def[k] })
     page.data = raw
     page.setData = function (patch, cb) {
@@ -737,7 +746,7 @@
       </div>`,
   }
 
-  // Puppertino 原生 checkbox 开关；业务状态通过 checked 回传，覆盖定位失败等异步结果。
+  // 轻量 checkbox 开关：业务状态通过 checked 回传，保留键盘操作与异步回退。
   const SWITCH = {
     props: ['checked', 'color'],
     emits: ['change'],
@@ -745,9 +754,8 @@
     watch: { checked(v) { this.$refs.input.checked = !!v } },
     mounted() {
       this.label = this.$el.closest('.row')?.querySelector('.row-title')?.textContent.trim() || '开关'
-      window.PuppertinoLiquidGlass.enhance(this.$el.parentElement)
     },
-    template: `<label class="mp-switch p-switch p-switch-touch p-auto-dark-mode" :style="{ '--p-control-accent': color || 'var(--accent)' }"><input ref="input" type="checkbox" role="switch" :aria-label="label" :checked="!!checked" @change="$emit('change', $event.target.checked)" @keydown.enter.prevent="$refs.input.click()"><span aria-hidden="true"></span></label>`,
+    template: `<label class="mp-switch" :class="{ 'mp-switch-monochrome': !color || ['#121211', '#F2F1EE'].includes(color.toUpperCase()) }" :style="{ '--switch-accent': color || 'var(--accent)' }"><input ref="input" type="checkbox" role="switch" :aria-label="label" :checked="!!checked" @change="$emit('change', $event.target.checked)" @keydown.enter.prevent="$refs.input.click()"><span class="mp-switch-track" aria-hidden="true"><span class="mp-switch-thumb"></span></span></label>`,
   }
 
   const LONGPRESS = {
