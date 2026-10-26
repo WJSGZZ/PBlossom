@@ -1088,11 +1088,9 @@ Page({
   enterLiurenResult(liurenResult, sourceTab = 'liuren', extra = {}) {
     this._pauseAmbient(700)
     const displayData = buildLiurenDisplayData(liurenResult)
+    // 结果类型只决定当前如何展示，不能修改新占表单独立保留的模式选择。
     this.setData(Object.assign({
       activeTab: sourceTab,
-      calcMethod: 'liuren',
-      homeDisplayMethod: 'liuren',
-      homeModePhase: '',
       liurenResult,
       liurenMode: true,
       resultMode: true,
