@@ -55,8 +55,8 @@ PBlossom 是一款将传统易理逻辑与现代数字化技术相结合的探�
 | 计算示例 | 返回内容 |
 | --- | --- |
 | [梅花：1、2、3](https://wjsgzz.github.io/PBlossom/compute.html?type=meihua&numbers=1,2,3) | 四柱、卦象与动爻 |
-| [万年历：当下](https://wjsgzz.github.io/PBlossom/compute.html?type=calendar) | 农历、四柱与节气 |
 | [六壬：当下](https://wjsgzz.github.io/PBlossom/compute.html?type=liuren) | 四课、三传与课体 |
+| [万年历：当下](https://wjsgzz.github.io/PBlossom/compute.html?type=calendar) | 农历、四柱与节气 |
 
 **时间**：默认取浏览器当下时刻。需要指定起卦时间时，在链接后追加带时区的参数，例如：
 
